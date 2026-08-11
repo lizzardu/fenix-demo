@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fénix — Seguimento pós-alta, Unidade de Queimados · ULS São José</title>
+<meta name="description" content="Fénix é a plataforma de seguimento pós-alta da Unidade de Queimados da ULS São José: jornada de recuperação, PROMs e dashboard clínico.">
+<link rel="icon" type="image/png" href="assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<a class="skip-link" href="#conteudo">Saltar para o conteúdo</a>
+
+<!-- ======================= CABEÇALHO ======================= -->
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="index.html">
+        <img src="assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="nav-tag">Protótipo · dados fictícios</span>
+      <a class="btn btn-flame btn-sm" href="#acesso">Entrar / Registo</a>
+    </nav>
+  </div>
+</header>
+
+<main id="conteudo">
+
+  <!-- ======================= HERO ======================= -->
+  <section class="section-blue-mid on-blue" style="padding:64px 0 60px;">
+    <div class="wrap">
+      <div class="hero-logo-wrap">
+        <img class="hero-logo" src="assets/img/fenix-logo-full.png" alt="Fénix — apoio que transforma, força que renasce">
+      </div>
+      <div style="max-width:640px; margin:12px auto 0; text-align:center;">
+        <p class="eyebrow" style="justify-content:center;">Apoio a cada fase da recuperação</p>
+        <h1>Da alta ao recomeço,<br>uma jornada acompanhada.</h1>
+        <p style="font-size:1.08rem;">
+          O <strong>Fénix</strong> liga o doente queimado à equipa da Unidade de Queimados
+          da ULS São José depois da alta: recolhe o que o próprio doente sente e relata,
+          organiza a recuperação numa jornada clara, e dá à equipa clínica um retrato
+          fiável da evolução — em cada etapa, até à alta clínica definitiva.
+        </p>
+        <div style="display:flex; gap:14px; margin-top:26px; flex-wrap:wrap; justify-content:center;">
+          <a class="btn btn-flame" href="#acesso">Aceder à plataforma</a>
+          <a class="btn btn-ghost-light" href="#seguranca">Como protegemos o seu acesso</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= APOIO EM CADA FASE ======================= -->
+  <section class="section-white" style="padding:60px 0;">
+    <div class="wrap">
+      <p class="eyebrow">Como funciona</p>
+      <h2 style="max-width:32ch;">Apoio em cada fase da recuperação</h2>
+      <div class="grid g-3" style="margin-top:30px;">
+        <div class="stage-card">
+          <svg class="stage-icon" viewBox="0 0 44 44" fill="none"><rect x="4" y="4" width="36" height="36" rx="8" fill="var(--flame-mist)"/><path d="M14 22h16M22 14v16" stroke="var(--flame-deep)" stroke-width="2.4" stroke-linecap="round"/></svg>
+          <h3>Na unidade</h3>
+          <p style="color:var(--ink-soft); font-size:.92rem;">A equipa regista, no formulário de alta, a extensão e profundidade da queimadura, as cirurgias realizadas e a equipa responsável — dando origem automaticamente ao seu plano de seguimento.</p>
+        </div>
+        <div class="stage-card">
+          <svg class="stage-icon" viewBox="0 0 44 44" fill="none"><rect x="4" y="4" width="36" height="36" rx="8" fill="#E4EEF8"/><path d="M14 18h16M14 24h10" stroke="var(--blue)" stroke-width="2.4" stroke-linecap="round"/></svg>
+          <h3>Em casa</h3>
+          <p style="color:var(--ink-soft); font-size:.92rem;">Recebe lembretes nos marcos definidos (2 semanas, 3, 6 e 12 meses) e responde a questionários breves e validados — dor, prurido, cicatriz, qualidade de vida e bem-estar emocional.</p>
+        </div>
+        <div class="stage-card">
+          <svg class="stage-icon" viewBox="0 0 44 44" fill="none"><rect x="4" y="4" width="36" height="36" rx="8" fill="var(--ok-mist)"/><path d="M14 26l5-6 5 4 6-9" stroke="var(--ok)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          <h3>Na consulta</h3>
+          <p style="color:var(--ink-soft); font-size:.92rem;">A sua equipa vê a evolução dos resultados, é alertada para desvios relevantes, e pode gerar um resumo em PDF para o processo clínico — sem trabalho manual de transcrição.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= ACESSO: LOGIN / REGISTO ======================= -->
+  <section class="section-blue-mid on-blue" id="acesso" style="padding:70px 0;">
+    <div class="wrap grid g-2" style="align-items:center; gap:56px;">
+      <div>
+        <p class="eyebrow">Aceder à plataforma</p>
+        <h2>Entre na sua área</h2>
+        <p>Doentes e familiares acedem com uma conta criada pela equipa clínica. Profissionais de saúde acedem com as suas credenciais institucionais.</p>
+        <div id="seguranca" class="card-on-blue" style="margin-top:28px;">
+          <p class="eyebrow">Segurança do login</p>
+          <ul style="margin:0; padding-left:20px; font-size:.88rem; line-height:1.7;">
+            <li>Conta do doente <strong>criada apenas pela equipa clínica</strong> — sem auto-registo.</li>
+            <li>Ativação por <strong>código de utilização única</strong>, válido 48h, enviado por SMS ou email.</li>
+            <li>Autenticação de <strong>dois fatores</strong> em ambos os portais.</li>
+            <li>Cada perfil só acede aos <strong>dados a que tem direito</strong> (doente: os seus; profissional: a sua equipa).</li>
+            <li>Dados cifrados em trânsito e em repouso; sessões com <strong>expiração automática</strong>.</li>
+            <li>Todos os acessos ficam <strong>registados</strong>, como exige o tratamento de dados de saúde.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab active" role="tab" data-tab="utilizador" onclick="mudarAuthTab('utilizador')">Utilizador</button>
+          <button class="auth-tab" role="tab" data-tab="profissional" onclick="mudarAuthTab('profissional')">Profissional de saúde</button>
+        </div>
+
+        <!-- ---- painel: doente / família ---- -->
+        <div class="auth-panel active" data-panel="utilizador">
+          <div class="auth-note">
+            🔒 A sua conta é criada pela equipa clínica no momento da alta. Não existe auto-registo — isto protege o acesso aos seus dados de saúde.
+          </div>
+          <form onsubmit="event.preventDefault(); window.location.href='area-doente/dashboard.html';">
+            <div class="field">
+              <label for="u-email">Email ou telemóvel</label>
+              <input type="text" id="u-email" placeholder="nome@exemplo.pt" value="doente.demo@exemplo.pt">
+            </div>
+            <div class="field">
+              <label for="u-pass">Palavra-passe</label>
+              <input type="password" id="u-pass" placeholder="••••••" value="123456">
+              <p class="hint">Primeira vez? Use o código de ativação entregue na alta para <a href="#">definir a sua palavra-passe</a>.</p>
+            </div>
+            <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+          </form>
+        </div>
+
+        <!-- ---- painel: profissional ---- -->
+        <div class="auth-panel" data-panel="profissional">
+          <div class="auth-note">
+            🏥 Acesso institucional. Em produção, seria federado com o login profissional do SNS (SMART on FHIR / Chave Móvel Digital).
+          </div>
+          <form onsubmit="event.preventDefault(); window.location.href='area-profissional/dashboard.html';">
+            <div class="field">
+              <label for="p-user">Utilizador institucional</label>
+              <input type="text" id="p-user" value="dr.silva@ulssjose.min-saude.pt">
+            </div>
+            <div class="field">
+              <label for="p-pass">Palavra-passe</label>
+              <input type="password" id="p-pass" value="••••••••">
+            </div>
+            <button class="btn btn-primary btn-block" type="submit">Entrar no portal clínico</button>
+          </form>
+          <hr class="divider">
+          <p class="hint" style="margin:0;">É profissional e precisa de ativar o acesso de um doente? <a href="area-profissional/dashboard.html">Crie a conta a partir da ficha do doente</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= INSTRUMENTOS ======================= -->
+  <section class="section-white" style="padding:60px 0 76px;">
+    <div class="wrap">
+      <div class="card" style="border:1px solid var(--line);">
+        <div class="grid g-2" style="align-items:center;">
+          <div>
+            <p class="eyebrow">Instrumentos incluídos</p>
+            <h2>Validados clinicamente,<br>específicos para queimados</h2>
+            <p style="color:var(--ink-soft);">Cada instrumento está modelado em <span class="mono">HL7&nbsp;FHIR</span> desde a origem — pronto para uma futura integração com o SClínico através da camada de interoperabilidade da SPMS.</p>
+          </div>
+          <table>
+            <thead><tr><th>Instrumento</th><th>Mede</th></tr></thead>
+            <tbody>
+              <tr><td>BSHS-B</td><td>Qualidade de vida específica de queimados</td></tr>
+              <tr><td>POSAS 2.0</td><td>Avaliação da cicatriz (doente)</td></tr>
+              <tr><td>5-D Itch Scale</td><td>Prurido</td></tr>
+              <tr><td>NRS Dor</td><td>Intensidade da dor</td></tr>
+              <tr><td>EQ-5D-5L</td><td>Qualidade de vida genérica</td></tr>
+              <tr><td>PHQ-9 / GAD-7</td><td>Rastreio depressão / ansiedade</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Fénix — Unidade de Queimados, ULS São José. Protótipo de demonstração, dados fictícios.</span>
+    <span class="mono">Modelo de dados: HL7 FHIR R4</span>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<script>
+  function mudarAuthTab(nome){
+    document.querySelectorAll(".auth-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === nome));
+    document.querySelectorAll(".auth-panel").forEach(p => p.classList.toggle("active", p.dataset.panel === nome));
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jornada e Metas — Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team">Dr.ª Silva · Cirurgia Plástica</span>
+      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <a href="dashboard.html">📋 Doentes</a>
+    <a href="#">🔔 Alertas <span class="pill pill-alert" style="margin-left:6px;">2</span></a>
+    <a href="novo-doente.html">➕ Novo Doente</a>
+    <a href="formulario-alta.html">📝 Formulário de Alta</a>
+    <a href="jornada.html" class="active">🎯 Jornada e Metas</a>
+    <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
+    <a href="duvidas.html">💬 Dúvidas</a>
+    <a href="#">📅 Agenda de PROMs</a>
+    <a href="#">👥 Equipa</a>
+    <a href="#">⚙️ Definições</a>
+  </aside>
+
+  <div class="main-area">
+
+    <a href="doente.html" class="hint" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha de Maria Santos</a>
+
+    <p class="eyebrow">Jornada de recuperação — Maria Santos</p>
+    <h1 style="font-size:1.9rem;">Definir e rever metas</h1>
+    <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
+      As metas iniciais devem ser definidas após o Formulário de Alta e ficam sempre
+      visíveis e editáveis para o doente. Devem refletir aquilo que o próprio doente
+      considera importante — não apenas objetivos clínicos.
+    </p>
+
+    <div class="banner-info" style="margin:20px 0 24px;">
+      💡 Reveja a secção <strong>9. Mapa da Recuperação</strong> do Formulário de Alta antes de
+      definir metas — é aí que o doente indica o que mais receia não conseguir fazer sozinho e
+      o que mais o incomoda. Use essa informação para propor metas alinhadas com as suas
+      prioridades, e não apenas com a evolução clínica.
+    </div>
+
+    <div class="card" style="margin-bottom:28px; background:var(--paper-tint);">
+      <p class="eyebrow" style="margin-bottom:10px;">O que a doente indicou como importante (Formulário de Alta)</p>
+      <div class="grid g-2">
+        <div>
+          <p class="hint" style="margin-bottom:4px; font-weight:600; color:var(--blue-deep);">Receia não conseguir fazer sozinha</p>
+          <p style="margin:0; font-size:.9rem;">Tomar banho, preparar refeições, atividade física</p>
+        </div>
+        <div>
+          <p class="hint" style="margin-bottom:4px; font-weight:600; color:var(--blue-deep);">O que mais a incomoda</p>
+          <p style="margin:0; font-size:.9rem;">Cicatriz, rigidez, sono</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+      <p class="eyebrow" style="margin:0;">Metas e marcos da jornada</p>
+      <button type="button" class="btn btn-flame btn-sm" onclick="adicionarMetaEditor()">+ Adicionar meta</button>
+    </div>
+
+    <div id="editor-metas" style="max-width:760px;"></div>
+
+    <div class="card" style="max-width:760px; margin-top:8px;">
+      <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; font-weight:400; color:var(--ink);">
+        <input type="checkbox" id="revisto-conjunto" style="margin-top:3px;" onchange="document.getElementById('campo-data-revisao').style.display = this.checked ? 'block' : 'none';">
+        <span style="font-size:.88rem;">Estas metas foram revistas em conjunto com o doente nesta consulta.</span>
+      </label>
+      <div class="field" id="campo-data-revisao" style="display:none; margin-top:14px; margin-bottom:0;">
+        <label for="data-revisao">Data da revisão</label>
+        <input type="text" id="data-revisao" placeholder="dd/mm/aaaa" style="max-width:200px;">
+      </div>
+    </div>
+
+    <div class="form-actions" style="max-width:760px;">
+      <a href="doente.html" class="btn btn-ghost">Cancelar</a>
+      <button type="button" class="btn btn-primary" onclick="guardarJornada()">Guardar jornada</button>
+    </div>
+
+    <div id="confirm-jornada" class="card" style="max-width:760px; margin-top:8px; display:none; border-color:var(--ok); background:var(--ok-mist);">
+      <span class="pill pill-ok">Guardado</span>
+      <h3 style="margin-top:14px;">Jornada atualizada</h3>
+      <p style="color:var(--ink-soft); margin:0;">As metas ficam já visíveis e editáveis na área do doente. A doente será notificada das novas metas adicionadas.</p>
+    </div>
+
+  </div>
+</div>
+
+<script src="../assets/js/main.js"></script>
+<script>
+  renderMilestonesEditor('editor-metas');
+
+  function guardarJornada(){
+    document.getElementById('confirm-jornada').style.display = 'block';
+    document.getElementById('confirm-jornada').scrollIntoView({behavior:'smooth'});
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A minha jornada — Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body class="page-tint">
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team">Olá, Maria</span>
+      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<nav class="subnav">
+  <div class="wrap">
+    <a href="dashboard.html" class="active">🏠 Início</a>
+    <a href="jornada.html">🎯 Jornada e Metas</a>
+    <a href="plano.html">🏋️ Plano de Tratamento</a>
+    <a href="duvidas.html">💬 Dúvidas</a>
+    <a href="recursos.html">📚 Recursos</a>
+  </div>
+</nav>
+
+<main class="wrap" style="padding:44px 32px 80px;">
+
+  <p class="eyebrow">A sua jornada de recuperação</p>
+  <h1 style="font-size:2rem;">Já percorreu um bom caminho.</h1>
+  <p style="color:var(--ink-soft); max-width:60ch;">
+    Este é o seu percurso desde a alta. Cada ponto é um marco — alguns já alcançados,
+    outros ainda pela frente. Toque num ponto para saber mais.
+  </p>
+
+  <div class="card" style="margin:28px 0 40px;">
+    <p class="eyebrow" style="margin-bottom:16px;">A sua jornada, em resumo</p>
+    <div id="jornada-resumo"></div>
+  </div>
+
+  <div class="grid g-2" style="align-items:start;">
+
+    <!-- PROM pendente -->
+    <div class="card" style="border-color:var(--flame-deep); background:var(--flame-mist);">
+      <span class="pill pill-pending">A responder agora</span>
+      <h3 style="margin-top:14px;">Avaliação dos 3 meses</h3>
+      <p style="color:var(--ink-soft); font-size:.92rem;">
+        Um conjunto curto de perguntas sobre dor, prurido, cicatriz e bem-estar.
+        Demora cerca de 8 minutos. As suas respostas seguem diretamente para a
+        equipa que a acompanha.
+      </p>
+      <a class="btn btn-primary" href="prom.html">Responder agora</a>
+    </div>
+
+    <!-- resumo / contexto -->
+    <div class="card">
+      <p class="eyebrow">A sua equipa</p>
+      <ul style="list-style:none; padding:0; margin:0 0 20px; display:flex; flex-direction:column; gap:8px;">
+        <li>🩺 Cirurgia Plástica</li>
+        <li>🩹 Enfermagem</li>
+        <li>🧑‍⚕️ Fisioterapia</li>
+        <li>🖐️ Terapia Ocupacional</li>
+        <li>💬 Psicologia</li>
+        <li>🥗 Nutrição</li>
+      </ul>
+      <a class="btn btn-ghost btn-sm" href="#">Descarregar o meu resumo em PDF</a>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- teaser Plano de Tratamento -->
+  <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--paper-tint);">
+    <div>
+      <p class="eyebrow" style="margin-bottom:6px;">Fisioterapia · Terapia Ocupacional · Nutrição</p>
+      <h3 style="margin:0;">O seu plano de tratamento</h3>
+      <p style="color:var(--ink-soft); margin:6px 0 0; font-size:.9rem;">Exercícios prescritos e orientação alimentar. Registe cada execução e o esforço sentido.</p>
+    </div>
+    <a class="btn btn-primary" href="plano.html">Ver plano</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- teaser Recursos -->
+  <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--paper-tint);">
+    <div>
+      <p class="eyebrow" style="margin-bottom:6px;">Materiais de apoio</p>
+      <h3 style="margin:0;">Vídeos, folhetos e perguntas frequentes</h3>
+      <p style="color:var(--ink-soft); margin:6px 0 0; font-size:.9rem;">Tudo o que precisa para cuidar da recuperação em casa, entre consultas.</p>
+    </div>
+    <a class="btn btn-primary" href="recursos.html">Ver recursos</a>
+  </div>
+
+  <hr class="divider">
+
+  <p class="eyebrow">Histórico de respostas</p>
+  <div class="card card-flush">
+    <table>
+      <thead><tr><th>Avaliação</th><th>Data</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Avaliação da alta</td><td class="mono">15 Jul 2026</td>
+          <td><span class="pill pill-ok">Concluído</span></td>
+          <td><a href="#" class="btn btn-ghost btn-sm">Ver respostas</a></td>
+        </tr>
+        <tr>
+          <td>Avaliação — 2 semanas</td><td class="mono">29 Jul 2026</td>
+          <td><span class="pill pill-ok">Concluído</span></td>
+          <td><a href="#" class="btn btn-ghost btn-sm">Ver respostas</a></td>
+        </tr>
+        <tr>
+          <td>Avaliação — 3 meses</td><td class="mono">15 Out 2026</td>
+          <td><span class="pill pill-pending">Por responder</span></td>
+          <td><a href="prom.html" class="btn btn-primary btn-sm">Responder</a></td>
+        </tr>
+        <tr>
+          <td>Avaliação — 6 meses</td><td class="mono">prev. 15 Jan 2027</td>
+          <td><span class="pill" style="background:var(--paper); color:var(--ink-soft);">Agendado</span></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
+</footer>
+<script src="../assets/js/main.js"></script>
+<script>
+  renderJornadaResumo("jornada-resumo", { linkHref: "jornada.html" });
+</script>
+</body>
+</html>

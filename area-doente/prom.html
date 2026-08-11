@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avaliação — 3 meses · Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body class="page-tint">
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav><a class="btn btn-ghost-light btn-sm" href="dashboard.html">Guardar e sair</a></nav>
+  </div>
+</header>
+
+<main class="wrap-narrow" style="padding:48px 32px 100px;">
+
+  <p class="eyebrow">Avaliação — 3 meses após a alta</p>
+  <h1 style="font-size:1.9rem;">Como se tem sentido?</h1>
+  <p style="color:var(--ink-soft);">Não há respostas certas ou erradas — responda de acordo com os últimos 7 dias. Demora cerca de 8 minutos.</p>
+
+  <div style="background:var(--line); height:4px; border-radius:4px; margin:24px 0 40px; overflow:hidden;">
+    <div style="width:35%; height:100%; background:var(--flame-deep);"></div>
+  </div>
+
+  <form onsubmit="event.preventDefault(); document.getElementById('confirm').style.display='block'; window.scrollTo(0,0);">
+
+    <!-- NRS Dor -->
+    <div class="card" style="margin-bottom:24px;">
+      <p class="eyebrow">Dor (NRS)</p>
+      <div class="field" style="margin-bottom:0;">
+        <label>Numa escala de 0 a 10, qual foi a sua dor mais intensa nos últimos 7 dias?</label>
+        <div class="scale">
+          <script>for(let i=0;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="dor" value="${i}" ${i===4?'checked':''}><span>${i}</span></label>`);}</script>
+        </div>
+        <div class="scale-labels"><span>Sem dor</span><span>Pior dor imaginável</span></div>
+      </div>
+    </div>
+
+    <!-- 5-D Itch (simplificado) -->
+    <div class="card" style="margin-bottom:24px;">
+      <p class="eyebrow">Prurido (5-D Itch)</p>
+      <div class="field">
+        <label>Nas últimas 2 semanas, com que intensidade sentiu comichão?</label>
+        <div class="likert">
+          <label class="likert-opt"><input type="radio" name="itch-intensidade"><div>Ausente</div></label>
+          <label class="likert-opt"><input type="radio" name="itch-intensidade" checked><div>Leve — não interferiu nas atividades</div></label>
+          <label class="likert-opt"><input type="radio" name="itch-intensidade"><div>Moderada — interferiu ocasionalmente</div></label>
+          <label class="likert-opt"><input type="radio" name="itch-intensidade"><div>Intensa — interferiu frequentemente</div></label>
+          <label class="likert-opt"><input type="radio" name="itch-intensidade"><div>Muito intensa — presente quase sempre</div></label>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>A comichão perturbou o seu sono?</label>
+        <div class="likert">
+          <label class="likert-opt"><input type="radio" name="itch-sono" checked><div>Nunca</div></label>
+          <label class="likert-opt"><input type="radio" name="itch-sono"><div>1–2 noites por semana</div></label>
+          <label class="likert-opt"><input type="radio" name="itch-sono"><div>3 ou mais noites por semana</div></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- BSHS-B excerto -->
+    <div class="card" style="margin-bottom:24px;">
+      <p class="eyebrow">Qualidade de vida (BSHS-B) — Imagem corporal</p>
+      <div class="field" style="margin-bottom:0;">
+        <label>Nas últimas duas semanas, quanto se sentiu incomodado(a) com a sua aparência?</label>
+        <div class="likert">
+          <label class="likert-opt"><input type="radio" name="imagem"><div>Nada</div></label>
+          <label class="likert-opt"><input type="radio" name="imagem" checked><div>Um pouco</div></label>
+          <label class="likert-opt"><input type="radio" name="imagem"><div>Moderadamente</div></label>
+          <label class="likert-opt"><input type="radio" name="imagem"><div>Bastante</div></label>
+          <label class="likert-opt"><input type="radio" name="imagem"><div>Extremamente</div></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHQ-9 excerto -->
+    <div class="card" style="margin-bottom:32px;">
+      <p class="eyebrow">Bem-estar emocional (PHQ-9) — item de rastreio</p>
+      <div class="field" style="margin-bottom:0;">
+        <label>Nas últimas 2 semanas, com que frequência se sentiu em baixo, deprimido(a) ou sem esperança?</label>
+        <div class="likert">
+          <label class="likert-opt"><input type="radio" name="humor" checked><div>Nunca</div></label>
+          <label class="likert-opt"><input type="radio" name="humor"><div>Vários dias</div></label>
+          <label class="likert-opt"><input type="radio" name="humor"><div>Mais de metade dos dias</div></label>
+          <label class="likert-opt"><input type="radio" name="humor"><div>Quase todos os dias</div></label>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-block" type="submit">Submeter respostas</button>
+  </form>
+
+  <div id="confirm" style="display:none; margin-top:28px;" class="card">
+    <span class="pill pill-ok">Enviado</span>
+    <h3 style="margin-top:14px;">Obrigado — as suas respostas foram registadas</h3>
+    <p style="color:var(--ink-soft);">A sua equipa clínica será notificada se algum resultado precisar de atenção antes da próxima consulta.</p>
+    <a class="btn btn-ghost" href="dashboard.html">Voltar à minha jornada</a>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
+</footer>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

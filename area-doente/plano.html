@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano de Tratamento — Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body class="page-tint">
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team">Olá, Maria</span>
+      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<nav class="subnav">
+  <div class="wrap">
+    <a href="dashboard.html">🏠 Início</a>
+    <a href="jornada.html">🎯 Jornada e Metas</a>
+    <a href="plano.html" class="active">🏋️ Plano de Tratamento</a>
+    <a href="duvidas.html">💬 Dúvidas</a>
+    <a href="recursos.html">📚 Recursos</a>
+  </div>
+</nav>
+
+<main class="wrap" style="padding:44px 32px 80px;">
+
+  <p class="eyebrow">Plano de tratamento</p>
+  <h1 style="font-size:2rem;">Cuidados, exercícios e alimentação</h1>
+  <p style="color:var(--ink-soft); max-width:64ch;">
+    Estes cuidados e exercícios foram prescritos pela Enfermagem, Fisioterapia e Terapia
+    Ocupacional — incluindo tratamento de feridas. Sempre
+    que os realizar, registe aqui — ajuda a sua equipa a perceber como está a evoluir e a
+    ajustar o plano se for preciso.
+  </p>
+
+  <p class="eyebrow" style="margin-top:36px;">Cuidados e exercícios prescritos</p>
+  <div id="plano-exercicios" style="max-width:720px; margin-top:14px;"></div>
+
+  <p class="eyebrow" style="margin-top:36px;">Alimentação</p>
+  <div class="card" style="max-width:720px; margin-top:14px;">
+    <div class="milestone-meta" style="margin-bottom:10px;">
+      <span class="milestone-tag">Nutrição</span>
+    </div>
+    <div id="plano-dieta"></div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
+</footer>
+
+<script src="../assets/js/main.js"></script>
+<script>
+  renderPlanoDoente('plano-exercicios');
+  renderDietaDoente('plano-dieta');
+</script>
+</body>
+</html>

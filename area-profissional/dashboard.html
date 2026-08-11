@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doentes — Portal Clínico · Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team">Dr.ª Silva · Cirurgia Plástica</span>
+      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="active" href="dashboard.html">📋 Doentes</a>
+    <a href="novo-doente.html">➕ Novo Doente</a>
+    <a href="#">🔔 Alertas <span class="pill pill-alert" style="margin-left:6px;">2</span></a>
+    <a href="formulario-alta.html">📝 Formulário de Alta</a>
+    <a href="jornada.html">🎯 Jornada e Metas</a>
+    <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
+    <a href="duvidas.html">💬 Dúvidas</a>
+    <a href="#">📅 Agenda de PROMs</a>
+    <a href="#">👥 Equipa</a>
+    <a href="#">⚙️ Definições</a>
+  </aside>
+
+  <div class="main-area">
+
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; flex-wrap:wrap; gap:16px;">
+      <div>
+        <p class="eyebrow">Unidade de Queimados</p>
+        <h1 style="font-size:1.8rem;">Doentes em seguimento pós-alta</h1>
+      </div>
+      <a class="btn btn-primary" href="novo-doente.html">➕ Novo doente</a>
+    </div>
+
+    <div class="grid g-3" style="margin-bottom:28px;">
+      <div class="card stat"><div class="num">34</div><div class="lbl">Doentes em seguimento ativo</div></div>
+      <div class="card stat"><div class="num">2</div><div class="lbl">Alertas por rever</div></div>
+      <div class="card stat"><div class="num">78%</div><div class="lbl">Adesão média aos PROMs</div></div>
+    </div>
+
+    <div class="banner-alert" style="margin-bottom:28px;">
+      <span>⚠️</span>
+      <div>
+        <strong>2 doentes com resultados a requerer atenção.</strong>
+        João Costa (PHQ-9 elevado) e Ana Ferreira (queda acentuada na imagem corporal, BSHS-B) — reveja antes da próxima consulta.
+      </div>
+    </div>
+
+    <div class="card card-flush">
+      <table>
+        <thead>
+          <tr>
+            <th>Doente</th><th>%TBSA</th><th>Última avaliação</th><th>Adesão</th><th>Estado</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-link" onclick="window.location.href='doente.html'">
+            <td><strong>Maria Santos</strong><br><span class="mono" style="font-size:.75rem; color:var(--ink-soft);">PROC-2026-0142</span></td>
+            <td>25%</td>
+            <td>3 meses <span style="color:var(--ink-soft);">· 15 Out 2026</span></td>
+            <td><div class="bar"><span style="width:78%;"></span></div></td>
+            <td><span class="pill pill-ok">Estável</span></td>
+            <td><a class="btn btn-ghost btn-sm" href="doente.html">Ver ficha</a></td>
+          </tr>
+          <tr class="row-link">
+            <td><strong>João Costa</strong><br><span class="mono" style="font-size:.75rem; color:var(--ink-soft);">PROC-2026-0139</span></td>
+            <td>32%</td>
+            <td>3 meses <span style="color:var(--ink-soft);">· 12 Out 2026</span></td>
+            <td><div class="bar"><span style="width:60%;"></span></div></td>
+            <td><span class="pill pill-alert">PHQ-9 elevado</span></td>
+            <td><a class="btn btn-ghost btn-sm" href="#">Ver ficha</a></td>
+          </tr>
+          <tr class="row-link">
+            <td><strong>Ana Ferreira</strong><br><span class="mono" style="font-size:.75rem; color:var(--ink-soft);">PROC-2026-0151</span></td>
+            <td>18%</td>
+            <td>6 semanas <span style="color:var(--ink-soft);">· 30 Set 2026</span></td>
+            <td><div class="bar"><span style="width:45%;"></span></div></td>
+            <td><span class="pill pill-alert">Imagem corporal ↓</span></td>
+            <td><a class="btn btn-ghost btn-sm" href="#">Ver ficha</a></td>
+          </tr>
+          <tr class="row-link">
+            <td><strong>Rui Almeida</strong><br><span class="mono" style="font-size:.75rem; color:var(--ink-soft);">PROC-2026-0128</span></td>
+            <td>12%</td>
+            <td>6 meses <span style="color:var(--ink-soft);">· 02 Ago 2026</span></td>
+            <td><div class="bar"><span style="width:92%;"></span></div></td>
+            <td><span class="pill pill-ok">Estável</span></td>
+            <td><a class="btn btn-ghost btn-sm" href="#">Ver ficha</a></td>
+          </tr>
+          <tr class="row-link">
+            <td><strong>Beatriz Nunes</strong><br><span class="mono" style="font-size:.75rem; color:var(--ink-soft);">PROC-2026-0155</span></td>
+            <td>40%</td>
+            <td>2 semanas <span style="color:var(--ink-soft);">· 28 Jul 2026</span></td>
+            <td><div class="bar"><span style="width:100%;"></span></div></td>
+            <td><span class="pill pill-pending">Em recuperação</span></td>
+            <td><a class="btn btn-ghost btn-sm" href="#">Ver ficha</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A minha jornada — Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body class="page-tint">
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team">Olá, Maria</span>
+      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<nav class="subnav">
+  <div class="wrap">
+    <a href="dashboard.html">🏠 Início</a>
+    <a href="jornada.html" class="active">🎯 Jornada e Metas</a>
+    <a href="plano.html">🏋️ Plano de Tratamento</a>
+    <a href="duvidas.html">💬 Dúvidas</a>
+    <a href="recursos.html">📚 Recursos</a>
+  </div>
+</nav>
+
+<main class="wrap" style="padding:44px 32px 80px;">
+
+  <p class="eyebrow">A sua jornada de recuperação</p>
+  <h1 style="font-size:2rem;">As suas metas</h1>
+  <p style="color:var(--ink-soft); max-width:64ch;">
+    Estas metas foram definidas consigo pela equipa no momento da alta — mas a jornada é sua.
+    Pode marcar uma meta como atingida a qualquer momento, adicionar uma foto para guardar a
+    memória, ou acrescentar uma meta que só para si faz sentido.
+  </p>
+
+  <div class="banner-info" style="margin:20px 0 8px;">
+    ℹ️ Sempre que atinge uma meta, ganha um crachá (badge) na secção "As minhas conquistas", mais abaixo. As metas assinaladas com ★ foram marcadas como importantes para si.
+  </div>
+
+  <!-- ======================= LISTA DE METAS ======================= -->
+  <div id="lista-metas" style="margin-top:28px; max-width:720px;"></div>
+
+  <!-- ======================= ADICIONAR META PESSOAL ======================= -->
+  <div class="card" style="max-width:720px; margin-top:8px; border-style:dashed;">
+    <p class="eyebrow" style="margin-bottom:14px;">Adicionar uma meta minha</p>
+    <form onsubmit="submeterNovaMeta(event)">
+      <div class="field">
+        <label for="nova-meta">O que gostaria de voltar a conseguir fazer?</label>
+        <input type="text" id="nova-meta" placeholder="ex.: Voltar a jogar à bola com os meus filhos" required>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label class="star-toggle">
+          <input type="checkbox" id="nova-meta-importante" checked>
+          <span>★ Isto é importante para mim</span>
+        </label>
+      </div>
+      <button class="btn btn-primary" type="submit">Adicionar meta</button>
+    </form>
+  </div>
+
+  <!-- ======================= BADGES ======================= -->
+  <hr class="divider" style="max-width:720px; margin-left:0;">
+  <p class="eyebrow">As minhas conquistas</p>
+  <p style="color:var(--ink-soft); max-width:64ch; margin-top:-6px;">Cada crachá representa um tipo de meta atingida ao longo da recuperação.</p>
+  <div id="badge-shelf" class="badge-shelf" style="max-width:900px;"></div>
+
+</main>
+
+<footer>
+  <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios. As fotos submetidas ficam apenas nesta sessão do browser.</span></div>
+</footer>
+
+<script src="../assets/js/main.js"></script>
+<script>
+  function onJornadaUpdate(){
+    renderMilestonesDoente('lista-metas');
+    renderBadgeShelf('badge-shelf');
+  }
+  function submeterNovaMeta(ev){
+    ev.preventDefault();
+    const input = document.getElementById('nova-meta');
+    const importante = document.getElementById('nova-meta-importante').checked;
+    adicionarMetaPessoal(input.value, importante);
+    input.value = '';
+  }
+  onJornadaUpdate();
+</script>
+</body>
+</html>

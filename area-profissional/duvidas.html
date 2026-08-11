@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dúvidas dos Doentes — Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team">Dr.ª Silva · Cirurgia Plástica</span>
+      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <a href="dashboard.html">📋 Doentes</a>
+    <a href="#">🔔 Alertas <span class="pill pill-alert" style="margin-left:6px;">2</span></a>
+    <a href="novo-doente.html">➕ Novo Doente</a>
+    <a href="formulario-alta.html">📝 Formulário de Alta</a>
+    <a href="jornada.html">🎯 Jornada e Metas</a>
+    <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
+    <a href="duvidas.html" class="active">💬 Dúvidas <span class="pill pill-alert" style="margin-left:6px;" id="contagem-pendentes"></span></a>
+    <a href="#">📅 Agenda de PROMs</a>
+    <a href="#">👥 Equipa</a>
+    <a href="#">⚙️ Definições</a>
+  </aside>
+
+  <div class="main-area">
+
+    <p class="eyebrow">Caixa de entrada</p>
+    <h1 style="font-size:1.9rem;">Dúvidas dos doentes</h1>
+    <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
+      Perguntas e preocupações enviadas pelos doentes em seguimento. As dúvidas por
+      responder aparecem primeiro. Qualquer elemento da equipa pode responder,
+      independentemente de quem prescreveu o tratamento.
+    </p>
+
+    <div id="lista-duvidas-prof" style="max-width:760px; margin-top:24px;"></div>
+
+  </div>
+</div>
+
+<script src="../assets/js/main.js"></script>
+<script>
+  renderDuvidasProfissional('lista-duvidas-prof');
+  const pendentes = DUVIDAS_DEMO.filter(d => d.estado === 'pendente').length;
+  const contagemEl = document.getElementById('contagem-pendentes');
+  if (pendentes > 0) contagemEl.textContent = pendentes;
+</script>
+</body>
+</html>

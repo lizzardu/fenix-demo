@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dúvidas — Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body class="page-tint">
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team">Olá, Maria</span>
+      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<nav class="subnav">
+  <div class="wrap">
+    <a href="dashboard.html">🏠 Início</a>
+    <a href="jornada.html">🎯 Jornada e Metas</a>
+    <a href="plano.html">🏋️ Plano de Tratamento</a>
+    <a href="duvidas.html" class="active">💬 Dúvidas</a>
+    <a href="recursos.html">📚 Recursos</a>
+  </div>
+</nav>
+
+<main class="wrap" style="padding:44px 32px 80px;">
+
+  <p class="eyebrow">Fale com a sua equipa</p>
+  <h1 style="font-size:2rem;">Dúvidas e preocupações</h1>
+  <p style="color:var(--ink-soft); max-width:64ch;">
+    Tem alguma dúvida sobre a ferida, a medicação, a dor ou como se está a sentir? Escreva
+    aqui — a equipa responde-lhe assim que possível. Para emergências, não espere pela
+    resposta: contacte a unidade diretamente ou dirija-se às urgências.
+  </p>
+
+  <div class="card" style="max-width:720px; margin-top:24px;">
+    <p class="eyebrow" style="margin-bottom:14px;">Nova dúvida</p>
+    <form onsubmit="submeterNovaDuvida(event)">
+      <div class="field">
+        <label for="duvida-categoria">Sobre o que é?</label>
+        <div class="chip-group" id="duvida-categoria">
+          <label class="chip"><input type="radio" name="duvida-cat" value="Ferida" checked><span>Ferida / Cicatriz</span></label>
+          <label class="chip"><input type="radio" name="duvida-cat" value="Dor"><span>Dor</span></label>
+          <label class="chip"><input type="radio" name="duvida-cat" value="Medicação"><span>Medicação</span></label>
+          <label class="chip"><input type="radio" name="duvida-cat" value="Emocional"><span>Como me sinto</span></label>
+          <label class="chip"><input type="radio" name="duvida-cat" value="Outra"><span>Outra</span></label>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label for="duvida-texto">A sua dúvida ou preocupação</label>
+        <textarea id="duvida-texto" rows="3" placeholder="Escreva aqui..." required></textarea>
+      </div>
+      <button class="btn btn-primary" type="submit">Enviar à equipa</button>
+    </form>
+  </div>
+
+  <p class="eyebrow" style="margin-top:36px;">As suas dúvidas</p>
+  <div id="lista-duvidas" style="max-width:720px; margin-top:14px;"></div>
+
+</main>
+
+<footer>
+  <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
+</footer>
+
+<script src="../assets/js/main.js"></script>
+<script>
+  const NOME_DOENTE = "Maria Santos";
+  renderDuvidasDoente('lista-duvidas', NOME_DOENTE);
+
+  function submeterNovaDuvida(ev){
+    ev.preventDefault();
+    const categoria = document.querySelector('input[name="duvida-cat"]:checked').value;
+    const texto = document.getElementById('duvida-texto');
+    submeterDuvida(categoria, texto.value, NOME_DOENTE);
+    texto.value = '';
+  }
+</script>
+</body>
+</html>

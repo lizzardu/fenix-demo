@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maria Santos — Ficha do doente · Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team">Dr.ª Silva · Cirurgia Plástica</span>
+      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <a href="dashboard.html">📋 Doentes</a>
+    <a href="novo-doente.html">➕ Novo Doente</a>
+    <a href="#">🔔 Alertas <span class="pill pill-alert" style="margin-left:6px;">2</span></a>
+    <a href="formulario-alta.html">📝 Formulário de Alta</a>
+    <a href="jornada.html">🎯 Jornada e Metas</a>
+    <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
+    <a href="duvidas.html">💬 Dúvidas</a>
+    <a href="#">📅 Agenda de PROMs</a>
+    <a href="#">👥 Equipa</a>
+    <a href="#">⚙️ Definições</a>
+  </aside>
+
+  <div class="main-area">
+
+    <a href="dashboard.html" class="hint" style="display:inline-block; margin-bottom:14px;">← Voltar à lista de doentes</a>
+
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap; gap:16px;">
+      <div>
+        <p class="eyebrow">Ficha de seguimento pós-alta</p>
+        <h1 style="font-size:1.9rem;">Maria Santos</h1>
+        <p class="mono" style="color:var(--ink-soft); font-size:.85rem;">PROC-2026-0142 · Alta em 15 Jul 2026</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-ghost" onclick="window.print()">🖨️ Gerar PDF-resumo</button>
+        <a class="btn btn-primary" href="#registo-clinico">Editar contexto clínico</a>
+      </div>
+    </div>
+
+    <!-- ---------- contexto clínico ---------- -->
+    <div class="grid g-3" style="margin:24px 0;">
+      <div class="card"><div class="lbl eyebrow" style="margin-bottom:8px;">Extensão</div><div class="stat"><div class="num">25<span style="font-size:1.1rem;">%TBSA</span></div></div></div>
+      <div class="card"><div class="eyebrow" style="margin-bottom:8px;">Profundidade</div><p style="margin:0; font-weight:600;">2º e 3º grau</p></div>
+      <div class="card"><div class="eyebrow" style="margin-bottom:8px;">Zona anatómica</div><p style="margin:0; font-weight:600;">Membro superior esq., tronco anterior</p></div>
+    </div>
+
+    <div class="card" style="margin-bottom:28px;">
+      <p class="eyebrow">Equipa responsável</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <span class="badge-team">🩺 Cirurgia Plástica — Dr.ª Silva</span>
+        <span class="badge-team">🩹 Enfermagem</span>
+        <span class="badge-team">🧑‍⚕️ Fisioterapia — Dr. Marques</span>
+        <span class="badge-team">🖐️ Terapia Ocupacional</span>
+        <span class="badge-team">💬 Psicologia</span>
+        <span class="badge-team">🥗 Nutrição</span>
+      </div>
+    </div>
+
+    <!-- ---------- jornada ---------- -->
+    <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <p class="eyebrow" style="margin:0;">Jornada de recuperação, em resumo</p>
+      <a href="jornada.html" class="hint">Definir / editar metas →</a>
+    </div>
+    <div class="card" style="margin-bottom:32px;">
+      <div id="jornada-resumo"></div>
+    </div>
+
+    <!-- ---------- alerta ativo ---------- -->
+    <div class="banner-alert" style="margin-bottom:28px;">
+      <span>ℹ️</span>
+      <div><strong>Sem alertas ativos para esta doente.</strong> Scores dentro da tendência de recuperação esperada.</div>
+    </div>
+
+    <!-- ---------- evolução PROMs ---------- -->
+    <p class="eyebrow">Evolução dos resultados reportados (PROMs)</p>
+    <div class="grid g-2" style="margin-bottom:12px;">
+      <div class="card">
+        <h3 style="font-size:1rem;">Dor (NRS 0–10)</h3>
+        <div class="chart-box"><canvas id="chart-dor"></canvas></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:1rem;">Prurido (5-D Itch, escala 0–10)</h3>
+        <div class="chart-box"><canvas id="chart-prurido"></canvas></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:1rem;">BSHS-B — score total (0–100)</h3>
+        <div class="chart-box"><canvas id="chart-bshs"></canvas></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:1rem;">PHQ-9 — rastreio depressão (0–27)</h3>
+        <div class="chart-box"><canvas id="chart-phq"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ---------- registo clínico / formulário de alta ---------- -->
+    <div class="divider" id="registo-clinico"></div>
+    <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <p class="eyebrow" style="margin:0;">Formulário de alta — resumo</p>
+      <a href="formulario-alta.html" class="hint">Ver avaliação completa (9 secções) →</a>
+    </div>
+    <div class="card">
+      <div class="grid g-2">
+        <div class="field">
+          <label>% TBSA (superfície corporal total queimada)</label>
+          <input type="text" value="25">
+        </div>
+        <div class="field">
+          <label>Profundidade</label>
+          <input type="text" value="2º e 3º grau">
+        </div>
+        <div class="field">
+          <label>Zona anatómica afetada</label>
+          <input type="text" value="Membro superior esquerdo, tronco anterior">
+        </div>
+        <div class="field">
+          <label>Cirurgias realizadas</label>
+          <input type="text" value="Enxerto cutâneo — 22 Jun 2026">
+        </div>
+      </div>
+      <button class="btn btn-primary" type="button">Guardar e ativar plano de seguimento</button>
+      <p class="hint">Ao guardar, o sistema cria automaticamente o CarePlan e agenda os checkpoints de PROMs (2 sem., 3, 6 e 12 meses).</p>
+    </div>
+
+  </div>
+</div>
+
+<script src="../assets/js/main.js"></script>
+<script>
+  renderJornadaResumo("jornada-resumo", { linkHref: "jornada.html" });
+
+  const s = DEMO_PATIENT.scores;
+  desenharGraficoLinha("chart-dor", s.labels, s.dor, { color: corAlert(), min: 0, max: 10 });
+  desenharGraficoLinha("chart-prurido", s.labels, s.prurido, { color: corSkin(), min: 0, max: 10 });
+  desenharGraficoLinha("chart-bshs", s.labels, s.bshsTotal, { color: corTeal(), min: 0, max: 100 });
+  desenharGraficoLinha("chart-phq", s.labels, s.phq9, { color: corAlert(), min: 0, max: 27 });
+</script>
+</body>
+</html>
