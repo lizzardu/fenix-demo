@@ -20,7 +20,7 @@
         <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
       </a>
     </div>
-    <nav><a class="btn btn-ghost-light btn-sm" href="dashboard.html">Guardar e sair</a></nav>
+    <nav><a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair sem guardar</a></nav>
   </div>
 </header>
 
@@ -34,7 +34,7 @@
     <div style="width:35%; height:100%; background:var(--flame-deep);"></div>
   </div>
 
-  <form onsubmit="event.preventDefault(); document.getElementById('confirm').style.display='block'; window.scrollTo(0,0);">
+  <form id="form-prom" onsubmit="submeterProm(event)">
 
     <!-- NRS Dor -->
     <div class="card" style="margin-bottom:24px;">
@@ -100,7 +100,7 @@
       </div>
     </div>
 
-    <button class="btn btn-primary btn-block" type="submit">Submeter respostas</button>
+    <button class="btn btn-primary btn-block" type="submit" id="btn-submeter">Submeter respostas</button>
   </form>
 
   <div id="confirm" style="display:none; margin-top:28px;" class="card">
@@ -115,6 +115,78 @@
 <footer>
   <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
+<script>
+  let DOENTE_ID = null;
+
+  function valorSelecionado(nome){
+    const el = document.querySelector(`input[name="${nome}"]:checked`);
+    return el ? el.value : null;
+  }
+  function indiceSelecionado(nome){
+    const els = Array.from(document.querySelectorAll(`input[name="${nome}"]`));
+    return els.findIndex(el => el.checked);
+  }
+
+  async function submeterProm(ev){
+    ev.preventDefault();
+    const btn = document.getElementById('btn-submeter');
+    btn.disabled = true; btn.textContent = "A enviar...";
+
+    try {
+      // NRS Dor — escala nativa 0–10, usada diretamente.
+      const dor = parseInt(valorSelecionado('dor'), 10);
+      await fenixApi.submeterProm(DOENTE_ID, 'NRS-dor',
+        { dor }, { total: dor });
+
+      // 5-D Itch (versão reduzida do site) — os dois itens aqui recolhidos
+      // não substituem a escala completa (5 domínios); o score é uma
+      // aproximação ilustrativa para o gráfico, não um cálculo clínico validado.
+      const itchIntensidade = indiceSelecionado('itch-intensidade'); // 0–4
+      const itchSono = indiceSelecionado('itch-sono'); // 0–2
+      const itchScore = Math.round(itchIntensidade * 2.5);
+      await fenixApi.submeterProm(DOENTE_ID, '5D-itch',
+        { intensidade: itchIntensidade, impacto_sono: itchSono }, { total: itchScore });
+
+      // BSHS-B — só o item de imagem corporal está incluído neste
+      // formulário reduzido; score proporcional (0–100), ilustrativo.
+      const imagem = indiceSelecionado('imagem'); // 0–4
+      const bshsScore = Math.round(imagem * 25);
+      await fenixApi.submeterProm(DOENTE_ID, 'BSHS-B',
+        { imagem_corporal: imagem }, { total: bshsScore });
+
+      // PHQ-9 — só o item de rastreio de humor está incluído; score
+      // proporcional (0–27), ilustrativo (não substitui o instrumento completo).
+      const humor = indiceSelecionado('humor'); // 0–3
+      const phqScore = Math.round(humor * 9);
+      await fenixApi.submeterProm(DOENTE_ID, 'PHQ-9',
+        { humor }, { total: phqScore });
+
+      document.getElementById('confirm').style.display = 'block';
+      document.getElementById('form-prom').style.display = 'none';
+      window.scrollTo(0, 0);
+    } catch (e) {
+      alert("Não foi possível enviar as respostas: " + (e.message || e));
+      btn.disabled = false; btn.textContent = "Submeter respostas";
+    }
+  }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "doente") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    DOENTE_ID = sessao.perfil.doente_id;
+  })();
+</script>
 </body>
 </html>

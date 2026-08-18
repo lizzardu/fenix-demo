@@ -21,8 +21,8 @@
       </a>
     </div>
     <nav>
-      <span class="badge-team">Dr.ª Silva · Cirurgia Plástica</span>
-      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+      <span class="badge-team" id="badge-profissional">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
     </nav>
   </div>
 </header>
@@ -43,51 +43,99 @@
 
   <div class="main-area">
 
-    <a href="doente.html" class="hint" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha de Maria Santos</a>
+    <a href="doente.html" class="hint" id="link-voltar" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha do doente</a>
 
-    <p class="eyebrow">Plano de tratamento — Maria Santos</p>
+    <p class="eyebrow" id="titulo-doente">Plano de tratamento</p>
     <h1 style="font-size:1.9rem;">Cuidados, exercícios e alimentação</h1>
     <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
-      Enfermagem, Fisioterapia e Terapia Ocupacional podem prescrever cuidados e exercícios
-      — incluindo tratamento de feridas; a Nutrição pode definir
-      orientações alimentares. O doente regista aqui cada execução e o esforço sentido —
-      pode acompanhar a adesão e o esforço médio de cada exercício.
+      Cirurgia Plástica, Enfermagem, Fisioterapia, Terapia Ocupacional, Psicologia e
+      Nutrição podem prescrever aqui cuidados, exercícios ou orientações — incluindo
+      tratamento de feridas. Cada especialidade só entra quando for realmente
+      necessária: adicione como qualquer outra prescrição, escolhendo a categoria
+      certa. O doente regista cada execução e o esforço sentido — pode acompanhar
+      a adesão e o esforço médio de cada uma.
     </p>
 
     <div style="display:flex; align-items:baseline; justify-content:space-between; margin:28px 0 14px; flex-wrap:wrap; gap:10px;">
-      <p class="eyebrow" style="margin:0;">Cuidados e exercícios prescritos</p>
-      <button type="button" class="btn btn-flame btn-sm" onclick="adicionarExercicio()">+ Prescrever exercício</button>
+      <p class="eyebrow" style="margin:0;">Cuidados, exercícios e prescrições ativas</p>
+      <button type="button" class="btn btn-flame btn-sm" onclick="adicionarExercicio()">+ Nova prescrição</button>
     </div>
     <div id="plano-editor" style="max-width:760px;"></div>
-
-    <p class="eyebrow" style="margin-top:32px;">Alimentação — Nutrição</p>
-    <div class="card" style="max-width:760px; margin-top:14px;">
-      <div id="dieta-editor"></div>
-    </div>
-
-    <div class="form-actions" style="max-width:760px;">
-      <a href="doente.html" class="btn btn-ghost">Cancelar</a>
-      <button type="button" class="btn btn-primary" onclick="guardarPlano()">Guardar plano de tratamento</button>
-    </div>
-
-    <div id="confirm-plano" class="card" style="max-width:760px; margin-top:8px; display:none; border-color:var(--ok); background:var(--ok-mist);">
-      <span class="pill pill-ok">Guardado</span>
-      <h3 style="margin-top:14px;">Plano de tratamento atualizado</h3>
-      <p style="color:var(--ink-soft); margin:0;">As prescrições e orientações ficam já visíveis para o doente na sua área pessoal.</p>
-    </div>
 
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-  renderPlanoEditor('plano-editor');
-  renderDietaEditor('dieta-editor');
+  let DOENTE_ID = null;
 
-  function guardarPlano(){
-    document.getElementById('confirm-plano').style.display = 'block';
-    document.getElementById('confirm-plano').scrollIntoView({behavior:'smooth'});
+  async function carregarPlanoEditor(){
+    const exercicios = await fenixApi.listarExercicios(DOENTE_ID);
+    DEMO_PATIENT.plano.exercicios = exercicios.map(ex => ({
+      id: ex.id, nome: ex.nome, categoria: ex.categoria, descricao: ex.descricao,
+      prescricao: ex.prescricao, registos: ex.plano_registos || []
+    }));
+    renderPlanoEditor('plano-editor');
   }
+
+  /* substitui a versão de demonstração: lê os campos do cartão e grava
+     tudo de uma vez, com feedback visível no próprio botão */
+  async function guardarExercicio(id){
+    const btn = document.getElementById(`btn-guardar-${id}`);
+    const original = btn.textContent;
+    btn.disabled = true; btn.textContent = "A guardar...";
+    try {
+      await fenixApi.atualizarExercicio(id, {
+        nome: document.getElementById(`ex-nome-${id}`).value,
+        categoria: document.getElementById(`ex-categoria-${id}`).value,
+        descricao: document.getElementById(`ex-descricao-${id}`).value,
+        prescricao: document.getElementById(`ex-prescricao-${id}`).value
+      });
+      btn.textContent = "Guardado ✓";
+      setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+    } catch (e) {
+      alert("Não foi possível guardar: " + (e.message || e));
+      btn.disabled = false; btn.textContent = original;
+    }
+  }
+
+  /* substitui a versão de demonstração: remove a sério */
+  async function removerExercicio(id){
+    if (!confirm("Remover este cuidado/exercício prescrito?")) return;
+    await fenixApi.removerExercicio(id);
+    await carregarPlanoEditor();
+  }
+
+  /* substitui a versão de demonstração: prescreve a sério */
+  async function adicionarExercicio(){
+    await fenixApi.prescreverExercicio(DOENTE_ID, {
+      nome: "Novo exercício", categoria: "Fisioterapia", descricao: "", prescricao: ""
+    });
+    await carregarPlanoEditor();
+  }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "profissional") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+
+    const doente = await fenixApi.obterDoentePorProcesso(obterProcessoDaURL("PROC-2026-0142"));
+    DOENTE_ID = doente.id;
+    document.getElementById("titulo-doente").textContent = "Plano de tratamento — " + doente.nome;
+    document.getElementById("link-voltar").href = `doente.html?processo=${encodeURIComponent(doente.processo)}`;
+    carregarPlanoEditor();
+  })();
 </script>
 </body>
 </html>

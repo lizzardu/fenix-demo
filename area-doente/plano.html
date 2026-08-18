@@ -21,8 +21,8 @@
       </a>
     </div>
     <nav>
-      <span class="badge-team">Olá, Maria</span>
-      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+      <span class="badge-team" id="badge-utilizador">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
     </nav>
   </div>
 </header>
@@ -40,24 +40,17 @@
 <main class="wrap" style="padding:44px 32px 80px;">
 
   <p class="eyebrow">Plano de tratamento</p>
-  <h1 style="font-size:2rem;">Cuidados, exercícios e alimentação</h1>
+  <h1 style="font-size:2rem;">Plano de tratamento</h1>
   <p style="color:var(--ink-soft); max-width:64ch;">
-    Estes cuidados e exercícios foram prescritos pela Enfermagem, Fisioterapia e Terapia
-    Ocupacional — incluindo tratamento de feridas. Sempre
-    que os realizar, registe aqui — ajuda a sua equipa a perceber como está a evoluir e a
-    ajustar o plano se for preciso.
+    Estes cuidados, exercícios e orientações foram prescritos pela sua equipa —
+    Cirurgia Plástica, Enfermagem, Fisioterapia, Terapia Ocupacional, Psicologia
+    ou Nutrição, conforme aplicável ao seu caso. Sempre que os realizar, registe
+    aqui — ajuda a sua equipa a perceber como está a evoluir e a ajustar o plano
+    se for preciso.
   </p>
 
-  <p class="eyebrow" style="margin-top:36px;">Cuidados e exercícios prescritos</p>
+  <p class="eyebrow" style="margin-top:36px;">Prescrições ativas</p>
   <div id="plano-exercicios" style="max-width:720px; margin-top:14px;"></div>
-
-  <p class="eyebrow" style="margin-top:36px;">Alimentação</p>
-  <div class="card" style="max-width:720px; margin-top:14px;">
-    <div class="milestone-meta" style="margin-bottom:10px;">
-      <span class="milestone-tag">Nutrição</span>
-    </div>
-    <div id="plano-dieta"></div>
-  </div>
 
 </main>
 
@@ -65,10 +58,59 @@
   <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-  renderPlanoDoente('plano-exercicios');
-  renderDietaDoente('plano-dieta');
+  let DOENTE_ID = null;
+
+  function formatarData(dataISO){
+    if (!dataISO) return "";
+    const d = new Date(dataISO.slice(0, 10) + "T00:00:00");
+    return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  async function carregarPlano(){
+    const exercicios = await fenixApi.listarExercicios(DOENTE_ID);
+    DEMO_PATIENT.plano.exercicios = exercicios.map(ex => ({
+      id: ex.id, nome: ex.nome, categoria: ex.categoria, descricao: ex.descricao, prescricao: ex.prescricao,
+      registos: (ex.plano_registos || [])
+        .slice()
+        .sort((a, b) => a.data.localeCompare(b.data))
+        .map(r => ({ data: formatarData(r.data), esforco: r.esforco, nota: r.nota }))
+    }));
+    renderPlanoDoente('plano-exercicios');
+  }
+
+  /* substitui a versão de demonstração: grava a sério o registo de execução */
+  async function registarExercicio(id){
+    const selecionado = document.querySelector(`input[name="esforco-${id}"]:checked`);
+    if (!selecionado) { alert("Indique o nível de esforço antes de registar."); return; }
+    const nota = document.getElementById(`nota-${id}`).value;
+    try {
+      await fenixApi.registarExecucaoExercicio(id, DOENTE_ID, parseInt(selecionado.value, 10), nota);
+      await carregarPlano();
+    } catch (e) {
+      alert("Não foi possível registar: " + (e.message || e));
+    }
+  }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "doente") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    DOENTE_ID = sessao.perfil.doente_id;
+    document.getElementById("badge-utilizador").textContent = "Olá, " + sessao.perfil.nome.split(" ")[0];
+    carregarPlano();
+  })();
 </script>
 </body>
 </html>

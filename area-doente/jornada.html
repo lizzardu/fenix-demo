@@ -21,8 +21,8 @@
       </a>
     </div>
     <nav>
-      <span class="badge-team">Olá, Maria</span>
-      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+      <span class="badge-team" id="badge-utilizador">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
     </nav>
   </div>
 </header>
@@ -84,20 +84,89 @@
   <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios. As fotos submetidas ficam apenas nesta sessão do browser.</span></div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-  function onJornadaUpdate(){
+  let DOENTE_ID = null;
+  const arquivosReais = {}; // guarda o File real (não a pré-visualização) por meta.id, até ser gravado
+
+  /** Vai buscar as metas reais à base de dados e "empresta" o array a
+   *  DEMO_PATIENT.milestones, para reaproveitar sem alterações as funções
+   *  de desenho já existentes em main.js (renderMilestonesDoente, renderBadgeShelf). */
+  async function carregarJornada(){
+    const linhas = await fenixApi.listarMetas(DOENTE_ID);
+    DEMO_PATIENT.milestones = linhas.map(r => ({
+      id: r.id, label: r.label, tipo: r.tipo, categoria: r.categoria,
+      origem: r.origem, importante: r.importante, estado: r.estado,
+      data: r.data_alvo, foto: r.foto_url
+    }));
     renderMilestonesDoente('lista-metas');
     renderBadgeShelf('badge-shelf');
   }
+
+  /* substitui a versão de demonstração (main.js): guarda o ficheiro real
+     para upload, mantendo a mesma pré-visualização imediata */
+  function prepararFoto(id, input){
+    const file = input.files && input.files[0];
+    if (!file) return;
+    arquivosReais[id] = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const prev = document.getElementById(`foto-preview-${id}`);
+      if (prev) prev.innerHTML = `<div class="milestone-photo"><img src="${e.target.result}" alt="Pré-visualização da foto"></div>`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* substitui a versão de demonstração: grava a sério na base de dados,
+     incluindo o envio da foto para o Storage, se houver uma */
+  async function marcarConquistada(id){
+    const botao = document.querySelector(`#milestone-${id} button`);
+    if (botao) { botao.disabled = true; botao.textContent = "A guardar..."; }
+    try {
+      await fenixApi.marcarMetaConquistada(id, arquivosReais[id] || null);
+      delete arquivosReais[id];
+      await carregarJornada();
+    } catch (e) {
+      alert("Não foi possível guardar: " + (e.message || e));
+      if (botao) { botao.disabled = false; botao.textContent = "Marcar como atingida"; }
+    }
+  }
+
+  /* substitui a versão de demonstração: cria a meta a sério */
+  async function adicionarMetaPessoal(titulo, importante){
+    if (!titulo || !titulo.trim()) return;
+    await fenixApi.adicionarMeta(DOENTE_ID, {
+      label: titulo.trim(), tipo: "Pessoal", categoria: "pessoal",
+      origem: "doente", importante: !!importante, estado: "pending", data_alvo: "meta pessoal"
+    });
+    await carregarJornada();
+  }
+
   function submeterNovaMeta(ev){
     ev.preventDefault();
     const input = document.getElementById('nova-meta');
     const importante = document.getElementById('nova-meta-importante').checked;
-    adicionarMetaPessoal(input.value, importante);
-    input.value = '';
+    adicionarMetaPessoal(input.value, importante).then(() => { input.value = ''; });
   }
-  onJornadaUpdate();
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "doente") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    DOENTE_ID = sessao.perfil.doente_id;
+    document.getElementById("badge-utilizador").textContent = "Olá, " + sessao.perfil.nome.split(" ")[0];
+    carregarJornada();
+  })();
 </script>
 </body>
 </html>

@@ -70,19 +70,16 @@ const DEMO_PATIENT = {
         descricao: "Caminhada em piso plano, com apoio se necessário.",
         prescricao: "15 minutos · 1x por dia",
         registos: []
+      },
+      {
+        id: 4, nome: "Plano nutricional pós-queimadura", categoria: "Nutrição",
+        descricao: "Dieta hiperproteica e hipercalórica para apoiar a cicatrização: incluir proteína em todas as refeições, reforçar vitamina C e zinco, hidratação de 1,5–2L/dia, evitar álcool e tabaco.",
+        prescricao: "Diariamente",
+        registos: [
+          { data: "05 Ago 2026", esforco: 3, nota: "Alguma dificuldade em cumprir a ingestão proteica ao pequeno-almoço." }
+        ]
       }
-    ],
-    dieta: {
-      prescritoPor: "Nutrição",
-      atualizado: "01 Ago 2026",
-      orientacoes: "Dieta hiperproteica e hipercalórica para apoiar a cicatrização. Reforçar hidratação ao longo do dia.",
-      itens: [
-        "Incluir uma fonte de proteína em todas as refeições (carne, peixe, ovos, leguminosas).",
-        "Reforçar ingestão de vitamina C e zinco (citrinos, frutos vermelhos, sementes).",
-        "Beber pelo menos 1,5 a 2 litros de água por dia, salvo indicação em contrário.",
-        "Evitar álcool e tabaco, que atrasam a cicatrização."
-      ]
-    }
+    ]
   }
 };
 
@@ -372,7 +369,7 @@ function duvidaEditorHTML(d) {
           <option value="Nutrição">Nutrição</option>
         </select>
         <textarea id="resp-texto-${d.id}" rows="3" placeholder="Escreva a resposta para o doente..."></textarea>
-        <button type="button" class="btn btn-flame btn-sm" style="margin-top:10px;" onclick="responderDuvida(${d.id})">Enviar resposta</button>
+        <button type="button" class="btn btn-flame btn-sm" style="margin-top:10px;" onclick="responderDuvida('${d.id}')">Enviar resposta</button>
       </div>`;
 
   return `
@@ -401,7 +398,7 @@ function renderDuvidasProfissional(containerId) {
 }
 
 function responderDuvida(id) {
-  const d = DUVIDAS_DEMO.find(x => x.id === id);
+  const d = DUVIDAS_DEMO.find(x => String(x.id) === String(id));
   if (!d) return;
   const texto = document.getElementById(`resp-texto-${id}`).value;
   if (!texto || !texto.trim()) { alert("Escreva uma resposta antes de enviar."); return; }
@@ -412,6 +409,12 @@ function responderDuvida(id) {
   d.respondidoPor = respondidoPor;
   d.dataResposta = hoje;
   renderDuvidasProfissional("lista-duvidas-prof");
+}
+
+/* ---------- navegação entre doentes (área profissional) ---------- */
+function obterProcessoDaURL(padrao) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("processo") || padrao;
 }
 
 /* ---------- toggle simples de menu mobile / tabs, se necessário ---------- */
@@ -455,11 +458,11 @@ function milestoneCardHTML(m) {
   } else {
     actionHTML = `
       <label class="photo-upload" for="foto-${m.id}">
-        <input type="file" accept="image/*" id="foto-${m.id}" onchange="prepararFoto(${m.id}, this)">
+        <input type="file" accept="image/*" id="foto-${m.id}" onchange="prepararFoto('${m.id}', this)">
         <div class="lbl">📷 Adicionar uma foto (opcional)</div>
       </label>
       <div id="foto-preview-${m.id}"></div>
-      <button type="button" class="btn btn-flame btn-sm" style="margin-top:12px;" onclick="marcarConquistada(${m.id})">Marcar como atingida</button>
+      <button type="button" class="btn btn-flame btn-sm" style="margin-top:12px;" onclick="marcarConquistada('${m.id}')">Marcar como atingida</button>
     `;
   }
 
@@ -542,21 +545,21 @@ function editorRowHTML(m, idx) {
     <div class="form-row">
       <div class="field" style="margin-bottom:12px;">
         <label>Título da meta</label>
-        <input type="text" value="${m.label.replace(/"/g, '&quot;')}" oninput="atualizarMeta(${idx}, 'label', this.value)">
+        <input type="text" id="meta-label-${m.id}" value="${m.label.replace(/"/g, '&quot;')}">
       </div>
       <div class="field" style="margin-bottom:12px;">
         <label>Data alvo</label>
-        <input type="text" value="${m.data.replace(/"/g, '&quot;')}" oninput="atualizarMeta(${idx}, 'data', this.value)">
+        <input type="text" id="meta-data-${m.id}" value="${m.data.replace(/"/g, '&quot;')}">
       </div>
     </div>
     <div class="form-row">
       <div class="field" style="margin-bottom:12px;">
         <label>Categoria (badge associado)</label>
-        <select onchange="atualizarMeta(${idx}, 'categoria', this.value)">${catOptions}</select>
+        <select id="meta-categoria-${m.id}">${catOptions}</select>
       </div>
       <div class="field" style="margin-bottom:12px;">
         <label>Estado</label>
-        <select onchange="atualizarMeta(${idx}, 'estado', this.value)">
+        <select id="meta-estado-${m.id}">
           <option value="pending" ${m.estado === "pending" ? "selected" : ""}>Por iniciar</option>
           <option value="active" ${m.estado === "active" ? "selected" : ""}>Em curso</option>
           <option value="done" ${m.estado === "done" ? "selected" : ""}>Concluída</option>
@@ -566,14 +569,28 @@ function editorRowHTML(m, idx) {
     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <label class="star-toggle">
-          <input type="checkbox" ${m.importante ? "checked" : ""} onchange="atualizarMeta(${idx}, 'importante', this.checked)">
+          <input type="checkbox" id="meta-importante-${m.id}" ${m.importante ? "checked" : ""}>
           <span>★ Importante para o doente</span>
         </label>
         <span class="milestone-tag ${m.origem === "doente" ? "origem-doente" : ""}">${m.origem === "doente" ? "Proposta pelo doente" : "Definida pela equipa"}</span>
       </div>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="removerMeta(${idx})">Remover</button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-primary btn-sm" id="btn-guardar-meta-${m.id}" onclick="guardarMeta('${m.id}')">Guardar alterações</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="removerMeta('${m.id}')">Remover</button>
+      </div>
     </div>
   </div>`;
+}
+
+/* versão de demonstração (sem base de dados): só atualiza o objeto local */
+function guardarMeta(id) {
+  const meta = DEMO_PATIENT.milestones.find(m => String(m.id) === String(id));
+  if (!meta) return;
+  meta.label = document.getElementById(`meta-label-${id}`).value;
+  meta.data = document.getElementById(`meta-data-${id}`).value;
+  meta.categoria = document.getElementById(`meta-categoria-${id}`).value;
+  meta.estado = document.getElementById(`meta-estado-${id}`).value;
+  meta.importante = document.getElementById(`meta-importante-${id}`).checked;
 }
 
 function renderMilestonesEditor(containerId) {
@@ -582,13 +599,8 @@ function renderMilestonesEditor(containerId) {
   el.innerHTML = DEMO_PATIENT.milestones.map(editorRowHTML).join("");
 }
 
-function atualizarMeta(idx, campo, valor) {
-  if (!DEMO_PATIENT.milestones[idx]) return;
-  DEMO_PATIENT.milestones[idx][campo] = valor;
-}
-
-function removerMeta(idx) {
-  DEMO_PATIENT.milestones.splice(idx, 1);
+function removerMeta(id) {
+  DEMO_PATIENT.milestones = DEMO_PATIENT.milestones.filter(m => String(m.id) !== String(id));
   renderMilestonesEditor("editor-metas");
 }
 
@@ -643,7 +655,7 @@ function exercicioCardDoente(ex) {
           ${Array.from({length: 11}, (_, i) => `<label class="scale-opt"><input type="radio" name="esforco-${ex.id}" value="${i}"><span>${i}</span></label>`).join("")}
         </div>
         <input type="text" id="nota-${ex.id}" placeholder="Nota (opcional)" style="margin-top:10px;">
-        <button type="button" class="btn btn-flame btn-sm" style="margin-top:12px;" onclick="registarExercicio(${ex.id})">Registar realização de hoje</button>
+        <button type="button" class="btn btn-flame btn-sm" style="margin-top:12px;" onclick="registarExercicio('${ex.id}')">Registar realização de hoje</button>
       </div>
 
       <hr class="divider" style="margin:16px 0 10px;">
@@ -680,35 +692,46 @@ function exercicioEditorHTML(ex) {
       <div class="form-row">
         <div class="field" style="margin-bottom:12px;">
           <label>Nome do exercício</label>
-          <input type="text" value="${ex.nome.replace(/"/g, '&quot;')}" oninput="atualizarExercicio(${ex.id}, 'nome', this.value)">
+          <input type="text" id="ex-nome-${ex.id}" value="${ex.nome.replace(/"/g, '&quot;')}">
         </div>
         <div class="field" style="margin-bottom:12px;">
           <label>Prescrito por</label>
-          <select onchange="atualizarExercicio(${ex.id}, 'categoria', this.value)">
+          <select id="ex-categoria-${ex.id}">
+            <option value="Cirurgia Plástica" ${ex.categoria === "Cirurgia Plástica" ? "selected" : ""}>Cirurgia Plástica</option>
             <option value="Enfermagem" ${ex.categoria === "Enfermagem" ? "selected" : ""}>Enfermagem</option>
             <option value="Fisioterapia" ${ex.categoria === "Fisioterapia" ? "selected" : ""}>Fisioterapia</option>
             <option value="Terapia Ocupacional" ${ex.categoria === "Terapia Ocupacional" ? "selected" : ""}>Terapia Ocupacional</option>
+            <option value="Psicologia" ${ex.categoria === "Psicologia" ? "selected" : ""}>Psicologia</option>
+            <option value="Nutrição" ${ex.categoria === "Nutrição" ? "selected" : ""}>Nutrição</option>
           </select>
         </div>
       </div>
       <div class="field" style="margin-bottom:12px;">
         <label>Descrição</label>
-        <textarea rows="2" oninput="atualizarExercicio(${ex.id}, 'descricao', this.value)">${ex.descricao}</textarea>
+        <textarea id="ex-descricao-${ex.id}" rows="2">${ex.descricao}</textarea>
       </div>
       <div class="field" style="margin-bottom:14px;">
         <label>Prescrição (séries / repetições / frequência)</label>
-        <input type="text" value="${ex.prescricao.replace(/"/g, '&quot;')}" oninput="atualizarExercicio(${ex.id}, 'prescricao', this.value)">
+        <input type="text" id="ex-prescricao-${ex.id}" value="${ex.prescricao.replace(/"/g, '&quot;')}">
       </div>
       <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
         <span class="pill pill-flame">Adesão: ${totalRegistos} registo(s) · esforço médio ${mediaEsforco}</span>
-        <button type="button" class="btn btn-ghost btn-sm" onclick="removerExercicio(${ex.id})">Remover</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-guardar-${ex.id}" onclick="guardarExercicio('${ex.id}')">Guardar alterações</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="removerExercicio('${ex.id}')">Remover</button>
+        </div>
       </div>
     </div>`;
 }
 
-function atualizarExercicio(id, campo, valor) {
+/* versão de demonstração (sem base de dados): só atualiza o objeto local */
+function guardarExercicio(id) {
   const ex = DEMO_PATIENT.plano.exercicios.find(e => e.id === id);
-  if (ex) ex[campo] = valor;
+  if (!ex) return;
+  ex.nome = document.getElementById(`ex-nome-${id}`).value;
+  ex.categoria = document.getElementById(`ex-categoria-${id}`).value;
+  ex.descricao = document.getElementById(`ex-descricao-${id}`).value;
+  ex.prescricao = document.getElementById(`ex-prescricao-${id}`).value;
 }
 
 function removerExercicio(id) {
@@ -724,36 +747,4 @@ function adicionarExercicio() {
     descricao: "", prescricao: "", registos: []
   });
   renderPlanoEditor("plano-editor");
-}
-
-/* ---------- dieta / nutrição (leitura no doente, edição no profissional) ---------- */
-function renderDietaDoente(containerId) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  const d = DEMO_PATIENT.plano.dieta;
-  el.innerHTML = `
-    <p class="hint" style="margin-bottom:10px;">Prescrito por ${d.prescritoPor} · atualizado em ${d.atualizado}</p>
-    <p>${d.orientacoes}</p>
-    <ul style="margin:10px 0 0; padding-left:20px; font-size:.92rem; color:var(--ink-soft); line-height:1.7;">
-      ${d.itens.map(i => `<li>${i}</li>`).join("")}
-    </ul>`;
-}
-
-function renderDietaEditor(containerId) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  const d = DEMO_PATIENT.plano.dieta;
-  el.innerHTML = `
-    <div class="field">
-      <label>Orientações gerais</label>
-      <textarea rows="2" oninput="DEMO_PATIENT.plano.dieta.orientacoes = this.value">${d.orientacoes}</textarea>
-    </div>
-    <div class="field" style="margin-bottom:0;">
-      <label>Recomendações específicas (uma por linha)</label>
-      <textarea rows="5" id="dieta-itens" oninput="atualizarItensDieta(this.value)">${d.itens.join("\n")}</textarea>
-    </div>`;
-}
-
-function atualizarItensDieta(texto) {
-  DEMO_PATIENT.plano.dieta.itens = texto.split("\n").map(s => s.trim()).filter(Boolean);
 }

@@ -21,8 +21,8 @@
       </a>
     </div>
     <nav>
-      <span class="badge-team">Olá, Maria</span>
-      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+      <span class="badge-team" id="badge-utilizador">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
     </nav>
   </div>
 </header>
@@ -77,18 +77,60 @@
   <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-  const NOME_DOENTE = "Maria Santos";
-  renderDuvidasDoente('lista-duvidas', NOME_DOENTE);
+  let DOENTE_ID = null;
 
-  function submeterNovaDuvida(ev){
+  function formatarData(dataISO){
+    if (!dataISO) return "";
+    const d = new Date(dataISO + "T00:00:00");
+    return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  function mapearDuvida(row){
+    return {
+      id: row.id, doente: "", categoria: row.categoria, pergunta: row.pergunta,
+      data: formatarData(row.data), estado: row.estado, resposta: row.resposta,
+      respondidoPor: row.respondido_por, dataResposta: formatarData(row.data_resposta)
+    };
+  }
+
+  async function carregarDuvidas(){
+    const linhas = await fenixApi.listarDuvidas(DOENTE_ID);
+    const el = document.getElementById("lista-duvidas");
+    el.innerHTML = linhas.length
+      ? linhas.map(r => duvidaCardHTML(mapearDuvida(r), false)).join("")
+      : `<p class="hint">Ainda não enviou nenhuma dúvida.</p>`;
+  }
+
+  async function submeterNovaDuvida(ev){
     ev.preventDefault();
     const categoria = document.querySelector('input[name="duvida-cat"]:checked').value;
     const texto = document.getElementById('duvida-texto');
-    submeterDuvida(categoria, texto.value, NOME_DOENTE);
+    if (!texto.value.trim()) return;
+    await fenixApi.submeterDuvida(DOENTE_ID, categoria, texto.value);
     texto.value = '';
+    carregarDuvidas();
   }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "doente") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    DOENTE_ID = sessao.perfil.doente_id;
+    document.getElementById("badge-utilizador").textContent = "Olá, " + sessao.perfil.nome.split(" ")[0];
+    carregarDuvidas();
+  })();
 </script>
 </body>
 </html>

@@ -22,8 +22,8 @@
       </a>
     </div>
     <nav>
-      <span class="badge-team">Dr.ª Silva · Cirurgia Plástica</span>
-      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+      <span class="badge-team" id="badge-profissional">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
     </nav>
   </div>
 </header>
@@ -49,32 +49,25 @@
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap; gap:16px;">
       <div>
         <p class="eyebrow">Ficha de seguimento pós-alta</p>
-        <h1 style="font-size:1.9rem;">Maria Santos</h1>
-        <p class="mono" style="color:var(--ink-soft); font-size:.85rem;">PROC-2026-0142 · Alta em 15 Jul 2026</p>
+        <h1 style="font-size:1.9rem;" id="nome-doente">A carregar...</h1>
+        <p class="mono" style="color:var(--ink-soft); font-size:.85rem;" id="meta-doente"></p>
       </div>
       <div style="display:flex; gap:10px;">
         <button class="btn btn-ghost" onclick="window.print()">🖨️ Gerar PDF-resumo</button>
-        <a class="btn btn-primary" href="#registo-clinico">Editar contexto clínico</a>
+        <a class="btn btn-primary" id="link-formulario-alta" href="formulario-alta.html">Ver formulário de alta</a>
       </div>
     </div>
 
     <!-- ---------- contexto clínico ---------- -->
     <div class="grid g-3" style="margin:24px 0;">
-      <div class="card"><div class="lbl eyebrow" style="margin-bottom:8px;">Extensão</div><div class="stat"><div class="num">25<span style="font-size:1.1rem;">%TBSA</span></div></div></div>
-      <div class="card"><div class="eyebrow" style="margin-bottom:8px;">Profundidade</div><p style="margin:0; font-weight:600;">2º e 3º grau</p></div>
-      <div class="card"><div class="eyebrow" style="margin-bottom:8px;">Zona anatómica</div><p style="margin:0; font-weight:600;">Membro superior esq., tronco anterior</p></div>
+      <div class="card"><div class="lbl eyebrow" style="margin-bottom:8px;">Extensão</div><div class="stat"><div class="num" id="ctx-tbsa">—<span style="font-size:1.1rem;">%TBSA</span></div></div></div>
+      <div class="card"><div class="eyebrow" style="margin-bottom:8px;">Profundidade</div><p style="margin:0; font-weight:600;" id="ctx-profundidade">—</p></div>
+      <div class="card"><div class="eyebrow" style="margin-bottom:8px;">Zona anatómica</div><p style="margin:0; font-weight:600;" id="ctx-zona">—</p></div>
     </div>
 
     <div class="card" style="margin-bottom:28px;">
       <p class="eyebrow">Equipa responsável</p>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <span class="badge-team">🩺 Cirurgia Plástica — Dr.ª Silva</span>
-        <span class="badge-team">🩹 Enfermagem</span>
-        <span class="badge-team">🧑‍⚕️ Fisioterapia — Dr. Marques</span>
-        <span class="badge-team">🖐️ Terapia Ocupacional</span>
-        <span class="badge-team">💬 Psicologia</span>
-        <span class="badge-team">🥗 Nutrição</span>
-      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;" id="equipa-doente"></div>
     </div>
 
     <!-- ---------- jornada ---------- -->
@@ -86,15 +79,12 @@
       <div id="jornada-resumo"></div>
     </div>
 
-    <!-- ---------- alerta ativo ---------- -->
-    <div class="banner-alert" style="margin-bottom:28px;">
-      <span>ℹ️</span>
-      <div><strong>Sem alertas ativos para esta doente.</strong> Scores dentro da tendência de recuperação esperada.</div>
-    </div>
-
     <!-- ---------- evolução PROMs ---------- -->
     <p class="eyebrow">Evolução dos resultados reportados (PROMs)</p>
-    <div class="grid g-2" style="margin-bottom:12px;">
+    <div id="proms-vazio" class="banner-info" style="margin-bottom:20px; display:none;">
+      ℹ️ Este doente ainda não tem respostas a PROMs registadas. Os gráficos aparecem aqui assim que houver avaliações.
+    </div>
+    <div class="grid g-2" style="margin-bottom:12px;" id="grid-charts">
       <div class="card">
         <h3 style="font-size:1rem;">Dor (NRS 0–10)</h3>
         <div class="chart-box"><canvas id="chart-dor"></canvas></div>
@@ -113,47 +103,99 @@
       </div>
     </div>
 
-    <!-- ---------- registo clínico / formulário de alta ---------- -->
-    <div class="divider" id="registo-clinico"></div>
-    <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-      <p class="eyebrow" style="margin:0;">Formulário de alta — resumo</p>
-      <a href="formulario-alta.html" class="hint">Ver avaliação completa (9 secções) →</a>
-    </div>
-    <div class="card">
-      <div class="grid g-2">
-        <div class="field">
-          <label>% TBSA (superfície corporal total queimada)</label>
-          <input type="text" value="25">
-        </div>
-        <div class="field">
-          <label>Profundidade</label>
-          <input type="text" value="2º e 3º grau">
-        </div>
-        <div class="field">
-          <label>Zona anatómica afetada</label>
-          <input type="text" value="Membro superior esquerdo, tronco anterior">
-        </div>
-        <div class="field">
-          <label>Cirurgias realizadas</label>
-          <input type="text" value="Enxerto cutâneo — 22 Jun 2026">
-        </div>
-      </div>
-      <button class="btn btn-primary" type="button">Guardar e ativar plano de seguimento</button>
-      <p class="hint">Ao guardar, o sistema cria automaticamente o CarePlan e agenda os checkpoints de PROMs (2 sem., 3, 6 e 12 meses).</p>
-    </div>
-
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-  renderJornadaResumo("jornada-resumo", { linkHref: "jornada.html" });
+  let DOENTE = null;
 
-  const s = DEMO_PATIENT.scores;
-  desenharGraficoLinha("chart-dor", s.labels, s.dor, { color: corAlert(), min: 0, max: 10 });
-  desenharGraficoLinha("chart-prurido", s.labels, s.prurido, { color: corSkin(), min: 0, max: 10 });
-  desenharGraficoLinha("chart-bshs", s.labels, s.bshsTotal, { color: corTeal(), min: 0, max: 100 });
-  desenharGraficoLinha("chart-phq", s.labels, s.phq9, { color: corAlert(), min: 0, max: 27 });
+  function formatarData(dataISO){
+    if (!dataISO) return "";
+    const d = new Date(dataISO.slice(0, 10) + "T00:00:00");
+    return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  const ICONES_EQUIPA = {
+    "Cirurgia Plástica": "🩺", "Enfermagem": "🩹", "Fisioterapia": "🧑‍⚕️",
+    "Terapia Ocupacional": "🖐️", "Psicologia": "💬", "Nutrição": "🥗"
+  };
+
+  async function carregarFicha(){
+    const processo = obterProcessoDaURL("PROC-2026-0142");
+    DOENTE = await fenixApi.obterDoentePorProcesso(processo);
+
+    document.getElementById("nome-doente").textContent = DOENTE.nome;
+    document.getElementById("meta-doente").textContent =
+      `${DOENTE.processo}${DOENTE.data_alta ? " · Alta em " + formatarData(DOENTE.data_alta) : ""}`;
+    document.getElementById("ctx-tbsa").innerHTML = (DOENTE.tbsa != null ? DOENTE.tbsa : "—") + '<span style="font-size:1.1rem;">%TBSA</span>';
+    document.getElementById("ctx-profundidade").textContent = DOENTE.profundidade || "—";
+    document.getElementById("ctx-zona").textContent = DOENTE.zona_anatomica || "—";
+    document.getElementById("link-formulario-alta").href = `formulario-alta.html?processo=${encodeURIComponent(DOENTE.processo)}`;
+
+    document.getElementById("equipa-doente").innerHTML = (DOENTE.equipa || []).map(e =>
+      `<span class="badge-team">${ICONES_EQUIPA[e] || "•"} ${e}</span>`
+    ).join("") || `<p class="hint" style="margin:0;">Sem equipa atribuída ainda.</p>`;
+
+    // jornada em resumo
+    const metas = await fenixApi.listarMetas(DOENTE.id);
+    DEMO_PATIENT.milestones = metas.map(r => ({
+      id: r.id, label: r.label, tipo: r.tipo, categoria: r.categoria,
+      origem: r.origem, importante: r.importante, estado: r.estado,
+      data: r.data_alvo, foto: r.foto_url
+    }));
+    renderJornadaResumo("jornada-resumo", { linkHref: `jornada.html?processo=${encodeURIComponent(DOENTE.processo)}` });
+
+    // PROMs — gráficos de evolução
+    const mapaInstrumentos = [
+      { instrumento: "NRS-dor",  canvas: "chart-dor",     cor: () => corAlert(), min: 0, max: 10 },
+      { instrumento: "5D-itch",  canvas: "chart-prurido", cor: () => corSkin(),  min: 0, max: 10 },
+      { instrumento: "BSHS-B",   canvas: "chart-bshs",    cor: () => corTeal(),  min: 0, max: 100 },
+      { instrumento: "PHQ-9",    canvas: "chart-phq",     cor: () => corAlert(), min: 0, max: 27 }
+    ];
+    let totalRespostas = 0;
+    let erroCarregamento = null;
+    for (const m of mapaInstrumentos) {
+      try {
+        const respostas = await fenixApi.listarPromsDoente(DOENTE.id, m.instrumento);
+        console.log(`PROMs "${m.instrumento}" para ${DOENTE.nome} (${DOENTE.id}):`, respostas);
+        totalRespostas += respostas.length;
+        const labels = respostas.map(r => formatarData(r.data_resposta));
+        const valores = respostas.map(r => (r.scores && r.scores.total != null) ? r.scores.total : null);
+        desenharGraficoLinha(m.canvas, labels, valores, { color: m.cor(), min: m.min, max: m.max });
+      } catch (e) {
+        console.error(`Erro ao carregar PROMs "${m.instrumento}":`, e);
+        erroCarregamento = e;
+      }
+    }
+    if (erroCarregamento) {
+      document.getElementById("proms-vazio").innerHTML =
+        `⚠️ Não foi possível carregar os PROMs: ${erroCarregamento.message || erroCarregamento}. Veja a consola (F12) para mais detalhe.`;
+      document.getElementById("proms-vazio").style.display = "flex";
+      document.getElementById("grid-charts").style.display = "none";
+    } else if (totalRespostas === 0) {
+      document.getElementById("proms-vazio").style.display = "flex";
+      document.getElementById("grid-charts").style.display = "none";
+    }
+  }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "profissional") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+    carregarFicha();
+  })();
 </script>
 </body>
 </html>

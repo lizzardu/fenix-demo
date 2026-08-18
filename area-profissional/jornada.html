@@ -21,8 +21,8 @@
       </a>
     </div>
     <nav>
-      <span class="badge-team">Dr.ª Silva · Cirurgia Plástica</span>
-      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+      <span class="badge-team" id="badge-profissional">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
     </nav>
   </div>
 </header>
@@ -43,9 +43,9 @@
 
   <div class="main-area">
 
-    <a href="doente.html" class="hint" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha de Maria Santos</a>
+    <a href="doente.html" class="hint" id="link-voltar" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha do doente</a>
 
-    <p class="eyebrow">Jornada de recuperação — Maria Santos</p>
+    <p class="eyebrow" id="titulo-doente">Jornada de recuperação</p>
     <h1 style="font-size:1.9rem;">Definir e rever metas</h1>
     <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
       As metas iniciais devem ser definidas após o Formulário de Alta e ficam sempre
@@ -90,11 +90,12 @@
         <label for="data-revisao">Data da revisão</label>
         <input type="text" id="data-revisao" placeholder="dd/mm/aaaa" style="max-width:200px;">
       </div>
+      <p class="hint" style="margin:14px 0 0;">Nota: cada meta é gravada individualmente ao clicar em "Guardar alterações" no respetivo cartão, acima. Este registo de revisão é só para assinalar que houve conversa com a doente sobre as metas nesta consulta.</p>
     </div>
 
     <div class="form-actions" style="max-width:760px;">
-      <a href="doente.html" class="btn btn-ghost">Cancelar</a>
-      <button type="button" class="btn btn-primary" onclick="guardarJornada()">Guardar jornada</button>
+      <a href="doente.html" class="btn btn-ghost">Voltar</a>
+      <button type="button" class="btn btn-primary" onclick="guardarJornada()">Registar revisão</button>
     </div>
 
     <div id="confirm-jornada" class="card" style="max-width:760px; margin-top:8px; display:none; border-color:var(--ok); background:var(--ok-mist);">
@@ -106,14 +107,89 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-  renderMilestonesEditor('editor-metas');
+  let DOENTE_ID = null;
+
+  /** Vai buscar as metas reais e "empresta" o array a DEMO_PATIENT.milestones,
+   *  para reaproveitar renderMilestonesEditor/editorRowHTML sem alterações. */
+  async function carregarEditor(){
+    const linhas = await fenixApi.listarMetas(DOENTE_ID);
+    DEMO_PATIENT.milestones = linhas.map(r => ({
+      id: r.id, label: r.label, tipo: r.tipo, categoria: r.categoria,
+      origem: r.origem, importante: r.importante, estado: r.estado,
+      data: r.data_alvo, foto: r.foto_url
+    }));
+    renderMilestonesEditor('editor-metas');
+  }
+
+  /* substitui a versão de demonstração: lê todos os campos do cartão e
+     grava de uma vez, com feedback visível no próprio botão */
+  async function guardarMeta(id){
+    const btn = document.getElementById(`btn-guardar-meta-${id}`);
+    const original = btn.textContent;
+    btn.disabled = true; btn.textContent = "A guardar...";
+    try {
+      await fenixApi.atualizarMeta(id, {
+        label: document.getElementById(`meta-label-${id}`).value,
+        data_alvo: document.getElementById(`meta-data-${id}`).value,
+        categoria: document.getElementById(`meta-categoria-${id}`).value,
+        estado: document.getElementById(`meta-estado-${id}`).value,
+        importante: document.getElementById(`meta-importante-${id}`).checked
+      });
+      btn.textContent = "Guardado ✓";
+      setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+    } catch (e) {
+      alert("Não foi possível guardar: " + (e.message || e));
+      btn.disabled = false; btn.textContent = original;
+    }
+  }
+
+  /* substitui a versão de demonstração: remove a sério */
+  async function removerMeta(id){
+    const meta = DEMO_PATIENT.milestones.find(m => String(m.id) === String(id));
+    if (!meta) return;
+    if (!confirm(`Remover a meta "${meta.label}"?`)) return;
+    await fenixApi.removerMeta(id);
+    await carregarEditor();
+  }
+
+  /* substitui a versão de demonstração: cria a sério */
+  async function adicionarMetaEditor(){
+    await fenixApi.adicionarMeta(DOENTE_ID, {
+      label: "Nova meta", tipo: "Funcional", categoria: "funcional",
+      origem: "clinica", importante: false, estado: "pending", data_alvo: "a definir"
+    });
+    await carregarEditor();
+  }
 
   function guardarJornada(){
     document.getElementById('confirm-jornada').style.display = 'block';
     document.getElementById('confirm-jornada').scrollIntoView({behavior:'smooth'});
   }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "profissional") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+
+    const doente = await fenixApi.obterDoentePorProcesso(obterProcessoDaURL("PROC-2026-0142"));
+    DOENTE_ID = doente.id;
+    document.getElementById("titulo-doente").textContent = "Jornada de recuperação — " + doente.nome;
+    document.getElementById("link-voltar").href = `doente.html?processo=${encodeURIComponent(doente.processo)}`;
+    carregarEditor();
+  })();
 </script>
 </body>
 </html>

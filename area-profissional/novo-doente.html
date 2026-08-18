@@ -21,8 +21,8 @@
       </a>
     </div>
     <nav>
-      <span class="badge-team">Dr.ª Silva · Cirurgia Plástica</span>
-      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+      <span class="badge-team" id="badge-profissional">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
     </nav>
   </div>
 </header>
@@ -123,12 +123,12 @@
           <div class="card" style="margin-bottom:20px;">
             <p class="eyebrow" style="margin-bottom:16px;">Equipa responsável</p>
             <div class="chip-group">
-              <label class="chip"><input type="checkbox" checked><span>Cirurgia Plástica</span></label>
-              <label class="chip"><input type="checkbox"><span>Fisioterapia</span></label>
-              <label class="chip"><input type="checkbox"><span>Terapia Ocupacional</span></label>
-              <label class="chip"><input type="checkbox"><span>Psicologia</span></label>
-              <label class="chip"><input type="checkbox"><span>Nutrição</span></label>
-              <label class="chip"><input type="checkbox"><span>Enfermagem</span></label>
+              <label class="chip"><input type="checkbox" value="Cirurgia Plástica" checked><span>Cirurgia Plástica</span></label>
+              <label class="chip"><input type="checkbox" value="Fisioterapia"><span>Fisioterapia</span></label>
+              <label class="chip"><input type="checkbox" value="Terapia Ocupacional"><span>Terapia Ocupacional</span></label>
+              <label class="chip"><input type="checkbox" value="Psicologia"><span>Psicologia</span></label>
+              <label class="chip"><input type="checkbox" value="Nutrição"><span>Nutrição</span></label>
+              <label class="chip"><input type="checkbox" value="Enfermagem"><span>Enfermagem</span></label>
             </div>
           </div>
 
@@ -191,6 +191,7 @@
             <li>A partir de agora, o doente aparece na lista de doentes em seguimento.</li>
           </ul>
           <a class="btn btn-primary btn-sm" href="dashboard.html" style="margin-top:6px;">Ver lista de doentes</a>
+          <a class="btn btn-ghost btn-sm" id="link-ficha-criada" href="dashboard.html" style="margin-top:6px;">Abrir ficha do doente</a>
         </div>
       </div>
     </div>
@@ -198,33 +199,79 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
   function mudarTitular(tipo){
     document.getElementById('campo-familiar').style.display = (tipo === 'familiar') ? 'block' : 'none';
   }
 
-  function gerarCodigoSimulado(){
-    const grupo = () => Math.floor(100 + Math.random() * 900);
-    return `${grupo()} ${grupo()}`;
+  /* converte "dd/mm/aaaa" (formato usado nos campos) para "aaaa-mm-dd" (formato que a base de dados espera) */
+  function paraISO(dataBR){
+    if (!dataBR) return null;
+    const m = dataBR.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!m) return null;
+    const [, d, mo, y] = m;
+    return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
   }
 
-  function criarConta(ev){
+  async function criarConta(ev){
     ev.preventDefault();
-    const nome = document.getElementById('nome').value || 'Doente';
-    const canal = document.querySelector('input[name="canal"]:checked').closest('label').innerText.trim();
+    const btn = document.querySelector('#form-novo-doente button[type="submit"]');
+    btn.disabled = true; btn.textContent = "A criar...";
+
+    const nome = document.getElementById('nome').value.trim();
+    const processo = document.getElementById('processo').value.trim();
+    const nascimento = document.getElementById('nascimento').value;
+    const dataAlta = document.getElementById('data-alta').value;
+    const titularTipo = document.querySelector('input[name="titular"]:checked').closest('label').innerText.includes('próprio') ? 'proprio' : 'familiar';
+    const nomeFamiliar = document.getElementById('nome-familiar').value;
     const telemovel = document.getElementById('telemovel').value;
     const email = document.getElementById('email').value;
-    const contacto = telemovel || email || 'contacto indicado';
+    const canal = document.querySelector('input[name="canal"]:checked').closest('label').innerText.trim().toLowerCase();
+    const equipa = Array.from(document.querySelectorAll('.card .chip-group input[type="checkbox"]:checked')).map(el => el.value);
 
-    document.getElementById('resumo-conta').textContent =
-      `${nome} foi adicionado(a) à lista de doentes em seguimento. Foi enviado um código de ativação por ${canal.toLowerCase()} para ${contacto}.`;
-    document.getElementById('codigo-simulado').textContent = gerarCodigoSimulado();
+    try {
+      const { doente, codigo } = await fenixApi.criarDoenteEConta({
+        nome, processo, dataNascimento: paraISO(nascimento), dataAlta: paraISO(dataAlta),
+        equipa, titularTipo, nomeFamiliar, telemovel, email, canal
+      });
 
-    document.getElementById('form-novo-doente').style.display = 'none';
-    document.getElementById('confirmacao').style.display = 'block';
-    document.getElementById('confirmacao').scrollIntoView({behavior:'smooth'});
+      const contacto = telemovel || email || 'contacto indicado';
+      document.getElementById('resumo-conta').textContent =
+        `${doente.nome} foi adicionado(a) à lista de doentes em seguimento. Foi enviado um código de ativação por ${canal} para ${contacto}.`;
+      document.getElementById('codigo-simulado').textContent = codigo.slice(0,3) + " " + codigo.slice(3);
+
+      const linkFicha = document.getElementById('link-ficha-criada');
+      if (linkFicha) linkFicha.href = `doente.html?processo=${encodeURIComponent(doente.processo)}`;
+
+      document.getElementById('form-novo-doente').style.display = 'none';
+      document.getElementById('confirmacao').style.display = 'block';
+      document.getElementById('confirmacao').scrollIntoView({behavior:'smooth'});
+    } catch (e) {
+      const msg = (e.message || "").includes("duplicate key")
+        ? "Já existe um doente registado com este número de processo."
+        : (e.message || "Ocorreu um erro ao criar o doente.");
+      alert("Não foi possível criar o doente: " + msg);
+      btn.disabled = false; btn.textContent = "Criar doente e gerar conta";
+    }
   }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "profissional") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+  })();
 </script>
 </body>
 </html>

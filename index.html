@@ -112,17 +112,18 @@
           <div class="auth-note">
             🔒 A sua conta é criada pela equipa clínica no momento da alta. Não existe auto-registo — isto protege o acesso aos seus dados de saúde.
           </div>
-          <form onsubmit="event.preventDefault(); window.location.href='area-doente/dashboard.html';">
+          <div id="erro-utilizador" class="banner-alert" style="display:none; margin-bottom:16px;"></div>
+          <form onsubmit="return fazerLogin(event, 'utilizador');">
             <div class="field">
               <label for="u-email">Email ou telemóvel</label>
-              <input type="text" id="u-email" placeholder="nome@exemplo.pt" value="doente.demo@exemplo.pt">
+              <input type="text" id="u-email" placeholder="nome@exemplo.pt" value="doente@teste.pt" required>
             </div>
             <div class="field">
               <label for="u-pass">Palavra-passe</label>
-              <input type="password" id="u-pass" placeholder="••••••" value="123456">
+              <input type="password" id="u-pass" placeholder="A sua palavra-passe" required>
               <p class="hint">Primeira vez? Use o código de ativação entregue na alta para <a href="#">definir a sua palavra-passe</a>.</p>
             </div>
-            <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+            <button class="btn btn-primary btn-block" type="submit" id="btn-login-utilizador">Entrar</button>
           </form>
         </div>
 
@@ -131,16 +132,17 @@
           <div class="auth-note">
             🏥 Acesso institucional. Em produção, seria federado com o login profissional do SNS (SMART on FHIR / Chave Móvel Digital).
           </div>
-          <form onsubmit="event.preventDefault(); window.location.href='area-profissional/dashboard.html';">
+          <div id="erro-profissional" class="banner-alert" style="display:none; margin-bottom:16px;"></div>
+          <form onsubmit="return fazerLogin(event, 'profissional');">
             <div class="field">
               <label for="p-user">Utilizador institucional</label>
-              <input type="text" id="p-user" value="dr.silva@ulssjose.min-saude.pt">
+              <input type="text" id="p-user" value="profissional@teste.pt" required>
             </div>
             <div class="field">
               <label for="p-pass">Palavra-passe</label>
-              <input type="password" id="p-pass" value="••••••••">
+              <input type="password" id="p-pass" placeholder="A sua palavra-passe" required>
             </div>
-            <button class="btn btn-primary btn-block" type="submit">Entrar no portal clínico</button>
+            <button class="btn btn-primary btn-block" type="submit" id="btn-login-profissional">Entrar no portal clínico</button>
           </form>
           <hr class="divider">
           <p class="hint" style="margin:0;">É profissional e precisa de ativar o acesso de um doente? <a href="area-profissional/dashboard.html">Crie a conta a partir da ficha do doente</a>.</p>
@@ -184,11 +186,56 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
 <script src="assets/js/main.js"></script>
 <script>
   function mudarAuthTab(nome){
     document.querySelectorAll(".auth-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === nome));
     document.querySelectorAll(".auth-panel").forEach(p => p.classList.toggle("active", p.dataset.panel === nome));
+  }
+
+  function mostrarErroLogin(painel, mensagem){
+    const el = document.getElementById("erro-" + painel);
+    el.textContent = "⚠️ " + mensagem;
+    el.style.display = "flex";
+  }
+
+  function fazerLogin(ev, painel){
+    ev.preventDefault();
+    const emailId = painel === "utilizador" ? "u-email" : "p-user";
+    const passId = painel === "utilizador" ? "u-pass" : "p-pass";
+    const btn = document.getElementById("btn-login-" + painel);
+    const email = document.getElementById(emailId).value;
+    const password = document.getElementById(passId).value;
+    const papelEsperado = painel === "utilizador" ? "doente" : "profissional";
+
+    document.getElementById("erro-" + painel).style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "A entrar...";
+
+    (async () => {
+      try {
+        await fenixApi.login(email, password);
+        const { perfil } = await fenixApi.utilizadorAtual();
+
+        if (!perfil) {
+          throw new Error("Este login não tem um perfil associado na tabela 'perfis'. Verifique o guia (Passo B6/B7).");
+        }
+        if (perfil.papel !== papelEsperado) {
+          throw new Error(`Esta conta está registada como "${perfil.papel}", não como "${papelEsperado}". Use o separador correto.`);
+        }
+
+        window.location.href = papelEsperado === "doente" ? "area-doente/dashboard.html" : "area-profissional/dashboard.html";
+      } catch (e) {
+        mostrarErroLogin(painel, e.message || "Não foi possível entrar. Verifique o email e a palavra-passe.");
+        btn.disabled = false;
+        btn.textContent = painel === "utilizador" ? "Entrar" : "Entrar no portal clínico";
+      }
+    })();
+
+    return false;
   }
 </script>
 </body>

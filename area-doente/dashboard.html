@@ -21,8 +21,8 @@
       </a>
     </div>
     <nav>
-      <span class="badge-team">Olá, Maria</span>
-      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+      <span class="badge-team" id="badge-utilizador">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
     </nav>
   </div>
 </header>
@@ -46,17 +46,23 @@
     outros ainda pela frente. Toque num ponto para saber mais.
   </p>
 
-  <div class="card" style="margin:28px 0 40px;">
+  <div class="grid g-3" style="margin:28px 0;" id="grid-contexto-clinico">
+    <div class="card"><p class="eyebrow" style="margin-bottom:8px;">Extensão</p><div class="stat"><div class="num" id="ctx-tbsa">—<span style="font-size:1.1rem;">%TBSA</span></div></div></div>
+    <div class="card"><p class="eyebrow" style="margin-bottom:8px;">Profundidade</p><p style="margin:0; font-weight:600;" id="ctx-profundidade">—</p></div>
+    <div class="card"><p class="eyebrow" style="margin-bottom:8px;">Zona anatómica</p><p style="margin:0; font-weight:600;" id="ctx-zona">—</p></div>
+  </div>
+
+  <div class="card" style="margin:0 0 40px;">
     <p class="eyebrow" style="margin-bottom:16px;">A sua jornada, em resumo</p>
     <div id="jornada-resumo"></div>
   </div>
 
   <div class="grid g-2" style="align-items:start;">
 
-    <!-- PROM pendente -->
+    <!-- Nova avaliação -->
     <div class="card" style="border-color:var(--flame-deep); background:var(--flame-mist);">
-      <span class="pill pill-pending">A responder agora</span>
-      <h3 style="margin-top:14px;">Avaliação dos 3 meses</h3>
+      <span class="pill pill-pending">Disponível</span>
+      <h3 style="margin-top:14px;">Responder a uma avaliação</h3>
       <p style="color:var(--ink-soft); font-size:.92rem;">
         Um conjunto curto de perguntas sobre dor, prurido, cicatriz e bem-estar.
         Demora cerca de 8 minutos. As suas respostas seguem diretamente para a
@@ -68,13 +74,8 @@
     <!-- resumo / contexto -->
     <div class="card">
       <p class="eyebrow">A sua equipa</p>
-      <ul style="list-style:none; padding:0; margin:0 0 20px; display:flex; flex-direction:column; gap:8px;">
-        <li>🩺 Cirurgia Plástica</li>
-        <li>🩹 Enfermagem</li>
-        <li>🧑‍⚕️ Fisioterapia</li>
-        <li>🖐️ Terapia Ocupacional</li>
-        <li>💬 Psicologia</li>
-        <li>🥗 Nutrição</li>
+      <ul style="list-style:none; padding:0; margin:0 0 20px; display:flex; flex-direction:column; gap:8px;" id="lista-equipa">
+        <li class="hint">A carregar...</li>
       </ul>
       <a class="btn btn-ghost btn-sm" href="#">Descarregar o meu resumo em PDF</a>
     </div>
@@ -85,9 +86,9 @@
   <!-- teaser Plano de Tratamento -->
   <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--paper-tint);">
     <div>
-      <p class="eyebrow" style="margin-bottom:6px;">Fisioterapia · Terapia Ocupacional · Nutrição</p>
+      <p class="eyebrow" style="margin-bottom:6px;">Enfermagem · Fisioterapia · Terapia Ocupacional · Nutrição</p>
       <h3 style="margin:0;">O seu plano de tratamento</h3>
-      <p style="color:var(--ink-soft); margin:6px 0 0; font-size:.9rem;">Exercícios prescritos e orientação alimentar. Registe cada execução e o esforço sentido.</p>
+      <p style="color:var(--ink-soft); margin:6px 0 0; font-size:.9rem;">Cuidados, exercícios e orientação alimentar prescritos. Registe cada execução e o esforço sentido.</p>
     </div>
     <a class="btn btn-primary" href="plano.html">Ver plano</a>
   </div>
@@ -109,28 +110,9 @@
   <p class="eyebrow">Histórico de respostas</p>
   <div class="card card-flush">
     <table>
-      <thead><tr><th>Avaliação</th><th>Data</th><th>Estado</th><th></th></tr></thead>
-      <tbody>
-        <tr>
-          <td>Avaliação da alta</td><td class="mono">15 Jul 2026</td>
-          <td><span class="pill pill-ok">Concluído</span></td>
-          <td><a href="#" class="btn btn-ghost btn-sm">Ver respostas</a></td>
-        </tr>
-        <tr>
-          <td>Avaliação — 2 semanas</td><td class="mono">29 Jul 2026</td>
-          <td><span class="pill pill-ok">Concluído</span></td>
-          <td><a href="#" class="btn btn-ghost btn-sm">Ver respostas</a></td>
-        </tr>
-        <tr>
-          <td>Avaliação — 3 meses</td><td class="mono">15 Out 2026</td>
-          <td><span class="pill pill-pending">Por responder</span></td>
-          <td><a href="prom.html" class="btn btn-primary btn-sm">Responder</a></td>
-        </tr>
-        <tr>
-          <td>Avaliação — 6 meses</td><td class="mono">prev. 15 Jan 2027</td>
-          <td><span class="pill" style="background:var(--paper); color:var(--ink-soft);">Agendado</span></td>
-          <td></td>
-        </tr>
+      <thead><tr><th>Data</th><th>Instrumentos respondidos</th><th>Estado</th></tr></thead>
+      <tbody id="linhas-historico-prom">
+        <tr><td colspan="3" class="hint" style="padding:16px;">A carregar histórico...</td></tr>
       </tbody>
     </table>
   </div>
@@ -140,9 +122,86 @@
 <footer>
   <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-  renderJornadaResumo("jornada-resumo", { linkHref: "jornada.html" });
+  let DOENTE_ID = null;
+
+  const ICONES_EQUIPA = {
+    "Cirurgia Plástica": "🩺", "Enfermagem": "🩹", "Fisioterapia": "🧑‍⚕️",
+    "Terapia Ocupacional": "🖐️", "Psicologia": "💬", "Nutrição": "🥗"
+  };
+
+  function formatarData(dataISO){
+    if (!dataISO) return "";
+    const d = new Date(dataISO.slice(0, 10) + "T00:00:00");
+    return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  async function carregarHistoricoProms(){
+    const respostas = await fenixApi.listarPromsDoente(DOENTE_ID);
+    const tbody = document.getElementById('linhas-historico-prom');
+
+    if (!respostas.length) {
+      tbody.innerHTML = `<tr><td colspan="3" class="hint" style="padding:16px;">Ainda não respondeu a nenhuma avaliação.</td></tr>`;
+      return;
+    }
+
+    // agrupar por data (uma submissão gera várias linhas, uma por instrumento)
+    const porData = {};
+    respostas.forEach(r => {
+      if (!porData[r.data_resposta]) porData[r.data_resposta] = [];
+      porData[r.data_resposta].push(r.instrumento);
+    });
+    const datas = Object.keys(porData).sort().reverse();
+
+    tbody.innerHTML = datas.map(data => `
+      <tr>
+        <td class="mono">${formatarData(data)}</td>
+        <td>${porData[data].join(', ')}</td>
+        <td><span class="pill pill-ok">Concluída</span></td>
+      </tr>`).join('');
+  }
+
+  async function carregarDashboard(){
+    const doente = await fenixApi.obterDoente(DOENTE_ID);
+
+    document.getElementById('ctx-tbsa').innerHTML = (doente.tbsa != null ? doente.tbsa : "—") + '<span style="font-size:1.1rem;">%TBSA</span>';
+    document.getElementById('ctx-profundidade').textContent = doente.profundidade || "—";
+    document.getElementById('ctx-zona').textContent = doente.zona_anatomica || "—";
+
+    document.getElementById('lista-equipa').innerHTML = (doente.equipa || []).map(e =>
+      `<li>${ICONES_EQUIPA[e] || "•"} ${e}</li>`
+    ).join('') || `<li class="hint">Sem equipa atribuída ainda.</li>`;
+
+    const metas = await fenixApi.listarMetas(DOENTE_ID);
+    DEMO_PATIENT.milestones = metas.map(r => ({
+      id: r.id, label: r.label, tipo: r.tipo, categoria: r.categoria,
+      origem: r.origem, importante: r.importante, estado: r.estado,
+      data: r.data_alvo, foto: r.foto_url
+    }));
+    renderJornadaResumo("jornada-resumo", { linkHref: "jornada.html" });
+
+    carregarHistoricoProms();
+  }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "doente") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    DOENTE_ID = sessao.perfil.doente_id;
+    document.getElementById("badge-utilizador").textContent = "Olá, " + sessao.perfil.nome.split(" ")[0];
+    carregarDashboard();
+  })();
 </script>
 </body>
 </html>

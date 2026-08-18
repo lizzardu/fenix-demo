@@ -21,8 +21,8 @@
       </a>
     </div>
     <nav>
-      <span class="badge-team">Dr.ª Silva · Cirurgia Plástica</span>
-      <a class="btn btn-ghost-light btn-sm" href="../index.html#acesso">Sair</a>
+      <span class="badge-team" id="badge-profissional">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
     </nav>
   </div>
 </header>
@@ -43,12 +43,12 @@
 
   <div class="main-area">
 
-    <a href="dashboard.html" class="hint" style="display:inline-block; margin-bottom:14px;">← Voltar à lista de doentes</a>
+    <a href="dashboard.html" class="hint" id="link-voltar" style="display:inline-block; margin-bottom:14px;">← Voltar à lista de doentes</a>
 
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap; gap:16px;">
       <div>
         <p class="eyebrow">Avaliação clínica</p>
-        <h1 style="font-size:1.9rem;">Formulário de Alta — Avaliação Inicial Pré-Alta</h1>
+        <h1 style="font-size:1.9rem;" id="titulo-formulario">Formulário de Alta — Avaliação Inicial Pré-Alta</h1>
         <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
           Preenchido pela equipa antes da alta hospitalar. Regista a avaliação clínica e
           funcional inicial do doente e serve de base de comparação para as avaliações
@@ -77,7 +77,7 @@
       </nav>
 
       <!-- ---------- formulário ---------- -->
-      <form onsubmit="event.preventDefault(); document.getElementById('confirm-alta').scrollIntoView({behavior:'smooth'});">
+      <form id="form-alta" onsubmit="submeterFormulario(event)">
 
         <div class="card field" style="margin-bottom:24px;">
           <div class="form-row">
@@ -430,17 +430,7 @@
 
           <table class="adesao-table">
             <thead><tr><th>Cuidado</th><th>Sim / Não</th><th>Adesão</th></tr></thead>
-            <tbody>
-              <script>
-                ["Compressão","Silicone","Exercícios","Massagem / mobilização cicatricial","Hidratação","Proteção solar"].forEach((label, idx) => {
-                  document.write(`<tr>
-                    <td>${label}</td>
-                    <td><div class="chip-group"><label class="chip"><input type="radio" name="auto-${idx}-sn"><span>Sim</span></label><label class="chip"><input type="radio" name="auto-${idx}-sn"><span>Não</span></label></div></td>
-                    <td><div class="chip-group"><label class="chip"><input type="radio" name="auto-${idx}-ad"><span>Boa</span></label><label class="chip"><input type="radio" name="auto-${idx}-ad"><span>Parcial</span></label><label class="chip"><input type="radio" name="auto-${idx}-ad"><span>Fraca</span></label></div></td>
-                  </tr>`);
-                });
-              </script>
-            </tbody>
+            <tbody id="tbody-autocuidado"></tbody>
           </table>
 
           <div class="subfield" style="margin-top:22px; margin-bottom:0;">
@@ -538,7 +528,7 @@
 
         <div class="form-actions">
           <button type="button" class="btn btn-ghost">Guardar rascunho</button>
-          <button type="submit" class="btn btn-primary">Guardar e ativar plano de seguimento</button>
+          <button type="submit" class="btn btn-primary" id="btn-submeter-alta">Guardar e ativar plano de seguimento</button>
         </div>
 
         <div id="confirm-alta" class="card" style="margin-top:20px; display:none;">
@@ -553,13 +543,260 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
+  let DOENTE_ID = null;
+  let DOENTE_PROCESSO = null;
+
   function mostrarEscala(nome){
     document.querySelectorAll('.escala-painel').forEach(p => p.style.display = 'none');
     const alvo = document.getElementById('escala-' + nome);
     if (alvo) alvo.style.display = 'block';
   }
+
+  function construirTabelaAutocuidado(){
+    const cuidados = ["Compressão","Silicone","Exercícios","Massagem / mobilização cicatricial","Hidratação","Proteção solar"];
+    const tbody = document.getElementById('tbody-autocuidado');
+    tbody.innerHTML = cuidados.map((label, idx) => `
+      <tr>
+        <td>${label}</td>
+        <td><div class="chip-group"><label class="chip"><input type="radio" name="auto-${idx}-sn"><span>Sim</span></label><label class="chip"><input type="radio" name="auto-${idx}-sn"><span>Não</span></label></div></td>
+        <td><div class="chip-group"><label class="chip"><input type="radio" name="auto-${idx}-ad"><span>Boa</span></label><label class="chip"><input type="radio" name="auto-${idx}-ad"><span>Parcial</span></label><label class="chip"><input type="radio" name="auto-${idx}-ad"><span>Fraca</span></label></div></td>
+      </tr>`).join('');
+  }
+  construirTabelaAutocuidado();
+
+  function paraISO(dataBR){
+    if (!dataBR) return null;
+    const m = dataBR.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!m) return null;
+    const [, d, mo, y] = m;
+    return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+
+  /* --- serialização genérica de uma secção: cada .subfield vira uma
+     entrada { "texto do label": valor }, cobrindo texto, escolha única
+     (radio) e escolha múltipla (checkbox) --- */
+  function valorDoCampo(campo){
+    const checkboxes = campo.querySelectorAll('.chip-group input[type="checkbox"]');
+    if (checkboxes.length) {
+      return Array.from(checkboxes).filter(c => c.checked).map(c => c.nextElementSibling.textContent.trim());
+    }
+    const radios = campo.querySelectorAll('.chip-group input[type="radio"], .scale input[type="radio"]');
+    if (radios.length) {
+      const marcado = Array.from(radios).find(r => r.checked);
+      return marcado ? marcado.nextElementSibling.textContent.trim() : null;
+    }
+    const select = campo.querySelector('select');
+    if (select) return select.value;
+    const inputs = campo.querySelectorAll('input[type="text"], textarea');
+    if (inputs.length === 1) return inputs[0].value;
+    if (inputs.length > 1) return Array.from(inputs).map(i => i.value);
+    return null;
+  }
+
+  function serializarSeccao(section){
+    const resultado = {};
+    section.querySelectorAll('.subfield').forEach(campo => {
+      const labelEl = campo.querySelector('label');
+      if (!labelEl) return;
+      resultado[labelEl.textContent.trim()] = valorDoCampo(campo);
+    });
+    return resultado;
+  }
+
+  function serializarRomTable(){
+    const linhas = {};
+    document.querySelectorAll('#amplitude .rom-table tbody tr').forEach(tr => {
+      const label = tr.children[0].textContent.trim();
+      const inputs = tr.querySelectorAll('input');
+      linhas[label] = { ativo: inputs[0].value, passivo: inputs[1].value };
+    });
+    return linhas;
+  }
+
+  function serializarAdesaoTable(){
+    const linhas = {};
+    document.querySelectorAll('#autocuidado .adesao-table tbody tr').forEach(tr => {
+      const label = tr.children[0].textContent.trim();
+      const simNao = tr.children[1].querySelector('input:checked');
+      const adesao = tr.children[2].querySelector('input:checked');
+      linhas[label] = {
+        realiza: simNao ? simNao.nextElementSibling.textContent.trim() : null,
+        adesao: adesao ? adesao.nextElementSibling.textContent.trim() : null
+      };
+    });
+    return linhas;
+  }
+
+  async function submeterFormulario(ev){
+    ev.preventDefault();
+    const btn = document.getElementById('btn-submeter-alta');
+    btn.disabled = true; btn.textContent = "A guardar...";
+
+    try {
+      const dataAlta = paraISO(document.getElementById('data-alta').value);
+      const contactoTipo = document.querySelector('input[name="contacto-tipo"]:checked').closest('label').innerText.includes('Próprio') ? 'proprio' : 'familiar';
+
+      const dados = {};
+      document.querySelectorAll('.form-section').forEach(section => {
+        dados[section.id] = serializarSeccao(section);
+      });
+      dados.amplitude_tabela = serializarRomTable();
+      dados.autocuidado_tabela = serializarAdesaoTable();
+
+      await fenixApi.guardarFormularioAlta(DOENTE_ID, dados, dataAlta, contactoTipo);
+
+      // a secção 1 (queimadura) atualiza automaticamente o contexto clínico do doente
+      const secQueimadura = dados.queimadura || {};
+      const tbsaTexto = secQueimadura['% Superfície corporal queimada (%SCQ)'] || '';
+      const tbsaNum = parseFloat(String(tbsaTexto).replace(',', '.').replace('%', '').trim());
+      const profundidade = secQueimadura['Profundidade'] || null;
+      const zonaArr = secQueimadura['Localização anatómica'];
+      const zona = Array.isArray(zonaArr) && zonaArr.length ? zonaArr.join(', ') : null;
+
+      const contexto = {};
+      if (!isNaN(tbsaNum)) contexto.tbsa = tbsaNum;
+      if (profundidade) contexto.profundidade = profundidade;
+      if (zona) contexto.zona_anatomica = zona;
+      if (dataAlta) contexto.data_alta = dataAlta;
+      if (Object.keys(contexto).length) {
+        await fenixApi.atualizarDoenteContexto(DOENTE_ID, contexto);
+      }
+
+      document.getElementById('confirm-alta').style.display = 'block';
+      document.getElementById('confirm-alta').scrollIntoView({behavior:'smooth'});
+      btn.textContent = "Guardado ✓";
+    } catch (e) {
+      alert("Não foi possível guardar o formulário: " + (e.message || e));
+      btn.disabled = false; btn.textContent = "Guardar e ativar plano de seguimento";
+    }
+  }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  /* --- repovoamento: inverso de valorDoCampo/serializarSeccao --- */
+  function repovoarCampo(campo, valor){
+    if (valor == null) return;
+
+    const checkboxes = campo.querySelectorAll('.chip-group input[type="checkbox"]');
+    if (checkboxes.length) {
+      const selecionados = Array.isArray(valor) ? valor : [valor];
+      checkboxes.forEach(c => {
+        const texto = c.nextElementSibling.textContent.trim();
+        c.checked = selecionados.includes(texto);
+      });
+      return;
+    }
+    const radios = campo.querySelectorAll('.chip-group input[type="radio"], .scale input[type="radio"]');
+    if (radios.length) {
+      radios.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === valor); });
+      return;
+    }
+    const select = campo.querySelector('select');
+    if (select) { select.value = valor; return; }
+    const inputs = campo.querySelectorAll('input[type="text"], textarea');
+    if (inputs.length === 1) { inputs[0].value = valor; return; }
+    if (inputs.length > 1 && Array.isArray(valor)) {
+      inputs.forEach((input, i) => { if (valor[i] != null) input.value = valor[i]; });
+    }
+  }
+
+  function repovoarSeccao(section, dadosSecao){
+    if (!dadosSecao) return;
+    section.querySelectorAll('.subfield').forEach(campo => {
+      const labelEl = campo.querySelector('label');
+      if (!labelEl) return;
+      const chave = labelEl.textContent.trim();
+      if (chave in dadosSecao) repovoarCampo(campo, dadosSecao[chave]);
+    });
+  }
+
+  function repovoarRomTable(linhas){
+    if (!linhas) return;
+    document.querySelectorAll('#amplitude .rom-table tbody tr').forEach(tr => {
+      const label = tr.children[0].textContent.trim();
+      if (!linhas[label]) return;
+      const inputs = tr.querySelectorAll('input');
+      inputs[0].value = linhas[label].ativo || '';
+      inputs[1].value = linhas[label].passivo || '';
+    });
+  }
+
+  function repovoarAdesaoTable(linhas){
+    if (!linhas) return;
+    document.querySelectorAll('#autocuidado .adesao-table tbody tr').forEach(tr => {
+      const label = tr.children[0].textContent.trim();
+      if (!linhas[label]) return;
+      const simNaoInputs = tr.children[1].querySelectorAll('input[type="radio"]');
+      simNaoInputs.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === linhas[label].realiza); });
+      const adesaoInputs = tr.children[2].querySelectorAll('input[type="radio"]');
+      adesaoInputs.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === linhas[label].adesao); });
+    });
+  }
+
+  function paraBR(dataISO){
+    if (!dataISO) return '';
+    const [y, m, d] = dataISO.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  async function carregarUltimoFormulario(){
+    const ultimo = await fenixApi.obterUltimoFormularioAlta(DOENTE_ID);
+    if (!ultimo) return;
+
+    if (ultimo.data_alta) document.getElementById('data-alta').value = paraBR(ultimo.data_alta);
+    if (ultimo.contacto_tipo) {
+      document.querySelectorAll('input[name="contacto-tipo"]').forEach(r => {
+        r.checked = (ultimo.contacto_tipo === 'proprio') === r.closest('label').innerText.includes('Próprio');
+      });
+    }
+
+    const dados = ultimo.dados || {};
+    document.querySelectorAll('.form-section').forEach(section => {
+      repovoarSeccao(section, dados[section.id]);
+    });
+    repovoarRomTable(dados.amplitude_tabela);
+    repovoarAdesaoTable(dados.autocuidado_tabela);
+
+    // revelar o painel de escala (VSS/POSAS) correspondente à escolha guardada
+    const escalaEscolhida = document.querySelector('#cicatriz input[name="escala-cicatriz"]:checked');
+    if (escalaEscolhida) {
+      const nomePainel = escalaEscolhida.nextElementSibling.textContent.trim() === 'VSS' ? 'vss'
+        : escalaEscolhida.nextElementSibling.textContent.trim().includes('Observador') ? 'posas-obs' : 'posas-doente';
+      mostrarEscala(nomePainel);
+    }
+
+    const dataUltimo = new Date(ultimo.criado_em).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
+    const aviso = document.createElement('div');
+    aviso.className = 'banner-info';
+    aviso.style.marginBottom = '20px';
+    aviso.innerHTML = `📋 Mostrando a avaliação mais recente, preenchida em ${dataUltimo}. Ao guardar, isto cria uma <strong>nova</strong> avaliação (não substitui a anterior).`;
+    document.querySelector('.main-area').insertBefore(aviso, document.querySelector('.grid'));
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "profissional") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+
+    const doente = await fenixApi.obterDoentePorProcesso(obterProcessoDaURL("PROC-2026-0142"));
+    DOENTE_ID = doente.id;
+    DOENTE_PROCESSO = doente.processo;
+    document.getElementById("titulo-formulario").textContent = "Formulário de Alta — " + doente.nome;
+    document.getElementById("link-voltar").href = `doente.html?processo=${encodeURIComponent(doente.processo)}`;
+    document.getElementById("link-voltar").textContent = "← Voltar à ficha do doente";
+    await carregarUltimoFormulario();
+  })();
 </script>
 </body>
 </html>
