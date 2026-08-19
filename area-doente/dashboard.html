@@ -46,13 +46,7 @@
     outros ainda pela frente. Toque num ponto para saber mais.
   </p>
 
-  <div class="grid g-3" style="margin:28px 0;" id="grid-contexto-clinico">
-    <div class="card"><p class="eyebrow" style="margin-bottom:8px;">Extensão</p><div class="stat"><div class="num" id="ctx-tbsa">—<span style="font-size:1.1rem;">%TBSA</span></div></div></div>
-    <div class="card"><p class="eyebrow" style="margin-bottom:8px;">Profundidade</p><p style="margin:0; font-weight:600;" id="ctx-profundidade">—</p></div>
-    <div class="card"><p class="eyebrow" style="margin-bottom:8px;">Zona anatómica</p><p style="margin:0; font-weight:600;" id="ctx-zona">—</p></div>
-  </div>
-
-  <div class="card" style="margin:0 0 40px;">
+  <div class="card" style="margin:28px 0 40px;">
     <p class="eyebrow" style="margin-bottom:16px;">A sua jornada, em resumo</p>
     <div id="jornada-resumo"></div>
   </div>
@@ -122,7 +116,7 @@
 <footer>
   <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
 </footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
@@ -167,10 +161,6 @@
 
   async function carregarDashboard(){
     const doente = await fenixApi.obterDoente(DOENTE_ID);
-
-    document.getElementById('ctx-tbsa').innerHTML = (doente.tbsa != null ? doente.tbsa : "—") + '<span style="font-size:1.1rem;">%TBSA</span>';
-    document.getElementById('ctx-profundidade').textContent = doente.profundidade || "—";
-    document.getElementById('ctx-zona').textContent = doente.zona_anatomica || "—";
 
     document.getElementById('lista-equipa').innerHTML = (doente.equipa || []).map(e =>
       `<li>${ICONES_EQUIPA[e] || "•"} ${e}</li>`

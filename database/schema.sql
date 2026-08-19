@@ -122,7 +122,7 @@ create table plano_exercicios (
   id            uuid primary key default gen_random_uuid(),
   doente_id     uuid references doentes(id) on delete cascade,
   nome          text not null,
-  categoria     text check (categoria in ('Enfermagem','Fisioterapia','Terapia Ocupacional')),
+  categoria     text check (categoria in ('Cirurgia Plástica','Enfermagem','Fisioterapia','Terapia Ocupacional','Psicologia','Nutrição')),
   descricao     text,
   prescricao    text,       -- ex.: "3 séries de 10 repetições · 2x por dia"
   criado_em     timestamptz default now()
@@ -141,18 +141,6 @@ create table plano_registos (
   esforco       int check (esforco between 0 and 10),
   nota          text,
   criado_em     timestamptz default now()
-);
-
--- ---------------------------------------------------------------------------
--- 9. PLANO_DIETA — orientação alimentar (Nutrição)
--- ---------------------------------------------------------------------------
-create table plano_dieta (
-  id              uuid primary key default gen_random_uuid(),
-  doente_id       uuid references doentes(id) on delete cascade,
-  prescrito_por   text default 'Nutrição',
-  orientacoes     text,
-  itens           text[],
-  atualizado_em   timestamptz default now()
 );
 
 -- ---------------------------------------------------------------------------
@@ -175,14 +163,14 @@ create table duvidas (
 -- FUNÇÕES AUXILIARES — usadas pelas regras de acesso (RLS) abaixo
 -- ============================================================================
 create or replace function is_profissional() returns boolean
-language sql stable as $$
+language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from perfis where id = auth.uid() and papel = 'profissional'
   );
 $$;
 
 create or replace function meu_doente_id() returns uuid
-language sql stable as $$
+language sql stable security definer set search_path = public as $$
   select doente_id from perfis where id = auth.uid() and papel = 'doente';
 $$;
 
@@ -200,7 +188,6 @@ alter table proms_respostas    enable row level security;
 alter table metas              enable row level security;
 alter table plano_exercicios   enable row level security;
 alter table plano_registos     enable row level security;
-alter table plano_dieta        enable row level security;
 alter table duvidas            enable row level security;
 
 -- ---------- doentes ----------
@@ -261,12 +248,6 @@ create policy "doente ve os seus registos" on plano_registos
 create policy "profissionais veem todos os registos" on plano_registos
   for select using (is_profissional());
 
--- ---------- plano_dieta (só a Nutrição/equipa edita) ----------
-create policy "profissionais gerem dieta" on plano_dieta
-  for all using (is_profissional()) with check (is_profissional());
-create policy "doente ve a sua dieta" on plano_dieta
-  for select using (doente_id = meu_doente_id());
-
 -- ---------- duvidas ----------
 create policy "doente cria as suas duvidas" on duvidas
   for insert with check (doente_id = meu_doente_id());
@@ -282,3 +263,17 @@ create policy "profissionais respondem a duvidas" on duvidas
 -- Nota: crie também o bucket "fotos-metas" na secção Storage do painel
 -- Supabase (não é possível criar buckets só por SQL). Ver guia.
 -- ============================================================================
+
+-- Depois de criar o bucket "fotos-metas" no painel (Storage → New bucket),
+-- corra também isto — sem isto, o envio de fotos falha com
+-- "new row violates row-level security policy":
+
+update storage.buckets set public = true where id = 'fotos-metas';
+
+create policy "utilizadores autenticados podem enviar fotos de metas"
+on storage.objects for insert
+with check (bucket_id = 'fotos-metas' and auth.role() = 'authenticated');
+
+create policy "utilizadores autenticados podem ver fotos de metas"
+on storage.objects for select
+using (bucket_id = 'fotos-metas' and auth.role() = 'authenticated');

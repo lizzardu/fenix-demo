@@ -80,11 +80,24 @@ sem guardar dados a sério. Para isso, siga a Parte B.
 
 ### B3. Criar o espaço de armazenamento para as fotos das metas
 1. Vá a **Storage** na barra lateral
-2. **New bucket** → nome: `fotos-metas` → pode deixar como bucket privado
+2. **New bucket** → nome: `fotos-metas` → pode deixar como bucket privado (as regras abaixo tratam do acesso)
 3. **Create bucket**
+4. Volte ao **SQL Editor** e corra este bloco adicional (não fica incluído no
+   `schema.sql` principal porque só pode ser corrido depois de o bucket existir):
+   ```sql
+   update storage.buckets set public = true where id = 'fotos-metas';
 
-*(Isto não é feito por SQL de propósito — o Supabase trata o armazenamento de
-ficheiros separadamente das tabelas.)*
+   create policy "utilizadores autenticados podem enviar fotos de metas"
+   on storage.objects for insert
+   with check (bucket_id = 'fotos-metas' and auth.role() = 'authenticated');
+
+   create policy "utilizadores autenticados podem ver fotos de metas"
+   on storage.objects for select
+   using (bucket_id = 'fotos-metas' and auth.role() = 'authenticated');
+   ```
+   Sem este passo, o envio de fotos falha com o erro "new row violates row-level
+   security policy" — as tabelas e o armazenamento de ficheiros têm sistemas de
+   regras separados no Supabase.
 
 ### B4. Obter as credenciais de ligação
 1. Vá a **Project Settings → API**
@@ -177,7 +190,8 @@ infraestrutura própria ou aprovada pela SPMS — exatamente como já tínhamos
 discutido no documento de arquitetura.
 
 **E se eu quiser guardar as fotos das metas com mais privacidade?**
-O bucket `fotos-metas` foi criado como privado. Isso significa que, para as
-fotos serem visíveis no site, é preciso gerar URLs assinadas temporárias em
-vez de URLs públicas — é uma alteração pequena em `marcarMetaConquistada()`
-que faço quando chegarmos a essa parte da ligação.
+O bucket `fotos-metas` está configurado como público para leitura (qualquer
+pessoa com o link exato da foto consegue vê-la, mas não há uma lista pública
+de todas as fotos). Para maior privacidade, seria preciso mudar para URLs
+assinadas temporárias em vez de URLs públicas — uma alteração pequena em
+`marcarMetaConquistada()` que faço quando quiser avançar para essa parte.
