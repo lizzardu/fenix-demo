@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Definições — Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team" id="badge-profissional">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <a href="dashboard.html">📋 Doentes</a>
+    <a href="novo-doente.html">➕ Novo Doente</a>
+    <a href="alertas.html">🔔 Alertas</a>
+    <a href="formulario-alta.html">📝 Formulário de Alta</a>
+    <a href="jornada.html">🎯 Jornada e Metas</a>
+    <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
+    <a href="duvidas.html">💬 Dúvidas</a>
+    <a href="agenda-proms.html">📅 Agenda de PROMs</a>
+    <a href="equipa.html">👥 Equipa</a>
+    <a class="active" href="definicoes.html">⚙️ Definições</a>
+  </aside>
+
+  <div class="main-area">
+
+    <p class="eyebrow">A sua conta</p>
+    <h1 style="font-size:1.8rem;">Definições</h1>
+
+    <div class="card" style="max-width:520px; margin-top:24px;">
+      <p class="eyebrow" style="margin-bottom:14px;">Dados da conta</p>
+      <div class="field">
+        <label>Nome</label>
+        <input type="text" id="conta-nome" disabled>
+      </div>
+      <div class="field">
+        <label>Especialidade</label>
+        <input type="text" id="conta-especialidade" disabled>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Email de acesso</label>
+        <input type="text" id="conta-email" disabled>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:520px; margin-top:20px;">
+      <p class="eyebrow" style="margin-bottom:14px;">Alterar palavra-passe</p>
+      <form onsubmit="alterarPassword(event)">
+        <div class="field">
+          <label for="nova-pass">Nova palavra-passe</label>
+          <input type="password" id="nova-pass" minlength="6" required>
+        </div>
+        <div class="field" style="margin-bottom:14px;">
+          <label for="confirmar-pass">Confirmar nova palavra-passe</label>
+          <input type="password" id="confirmar-pass" minlength="6" required>
+        </div>
+        <div id="erro-pass" class="banner-alert" style="display:none; margin-bottom:14px;"></div>
+        <button class="btn btn-primary" type="submit" id="btn-alterar-pass">Alterar palavra-passe</button>
+      </form>
+      <div id="confirm-pass" class="card" style="margin-top:14px; display:none; border-color:var(--ok); background:var(--ok-mist);">
+        <span class="pill pill-ok">Alterada</span>
+        <p style="color:var(--ink-soft); margin:10px 0 0;">A sua palavra-passe foi atualizada.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../assets/js/vendor/supabase.js"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+  async function alterarPassword(ev){
+    ev.preventDefault();
+    const erroEl = document.getElementById('erro-pass');
+    erroEl.style.display = 'none';
+
+    const nova = document.getElementById('nova-pass').value;
+    const confirmar = document.getElementById('confirmar-pass').value;
+    if (nova !== confirmar) {
+      erroEl.textContent = "⚠️ As duas palavras-passe não coincidem.";
+      erroEl.style.display = 'flex';
+      return;
+    }
+
+    const btn = document.getElementById('btn-alterar-pass');
+    btn.disabled = true; btn.textContent = "A alterar...";
+    try {
+      await fenixApi.alterarPassword(nova);
+      document.getElementById('confirm-pass').style.display = 'block';
+      document.getElementById('nova-pass').value = '';
+      document.getElementById('confirmar-pass').value = '';
+    } catch (e) {
+      erroEl.textContent = "⚠️ " + (e.message || "Não foi possível alterar a palavra-passe.");
+      erroEl.style.display = 'flex';
+    } finally {
+      btn.disabled = false; btn.textContent = "Alterar palavra-passe";
+    }
+  }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "profissional") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+    document.getElementById("conta-nome").value = sessao.perfil.nome;
+    document.getElementById("conta-especialidade").value = sessao.perfil.especialidade || "—";
+    document.getElementById("conta-email").value = sessao.user.email || "—";
+  })();
+</script>
+</body>
+</html>

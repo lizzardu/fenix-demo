@@ -47,6 +47,18 @@ const fenixApi = {
     return { user: data.user, perfil };
   },
 
+  async alterarPassword(novaSenha) {
+    const { data, error } = await sb.auth.updateUser({ password: novaSenha });
+    if (error) throw error;
+    return data;
+  },
+
+  async listarEquipaProfissionais() {
+    const { data, error } = await sb.from("perfis").select("*").eq("papel", "profissional").order("nome");
+    if (error) throw error;
+    return data;
+  },
+
   /* ---------------------------------------------------------------------
      DOENTES
      --------------------------------------------------------------------- */
@@ -221,7 +233,7 @@ const fenixApi = {
      DÚVIDAS
      --------------------------------------------------------------------- */
   async listarDuvidas(doenteId) {
-    let query = sb.from("duvidas").select("*, doentes(nome)").order("criado_em", { ascending: false });
+    let query = sb.from("duvidas").select("*, doentes(nome, processo)").order("criado_em", { ascending: false });
     if (doenteId) query = query.eq("doente_id", doenteId);
     const { data, error } = await query;
     if (error) throw error;

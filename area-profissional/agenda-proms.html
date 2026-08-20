@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda de PROMs — Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team" id="badge-profissional">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <a href="dashboard.html">📋 Doentes</a>
+    <a href="novo-doente.html">➕ Novo Doente</a>
+    <a href="alertas.html">🔔 Alertas</a>
+    <a href="formulario-alta.html">📝 Formulário de Alta</a>
+    <a href="jornada.html">🎯 Jornada e Metas</a>
+    <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
+    <a href="duvidas.html">💬 Dúvidas</a>
+    <a class="active" href="agenda-proms.html">📅 Agenda de PROMs</a>
+    <a href="equipa.html">👥 Equipa</a>
+    <a href="definicoes.html">⚙️ Definições</a>
+  </aside>
+
+  <div class="main-area">
+
+    <p class="eyebrow">Unidade de Queimados</p>
+    <h1 style="font-size:1.8rem;">Agenda de PROMs</h1>
+    <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
+      Checkpoints calculados a partir da data de alta de cada doente (2 semanas,
+      6 semanas, 3, 6 e 12 meses). "Concluído" significa que existe pelo menos
+      uma resposta PROM à volta dessa data — não confirma qual instrumento foi
+      respondido.
+    </p>
+
+    <div class="card card-flush" style="margin-top:24px;">
+      <table>
+        <thead>
+          <tr><th>Doente</th><th>Checkpoint</th><th>Data alvo</th><th>Estado</th><th></th></tr>
+        </thead>
+        <tbody id="linhas-agenda">
+          <tr><td colspan="5" class="hint" style="padding:20px;">A calcular agenda...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="../assets/js/vendor/supabase.js"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+  const CHECKPOINTS = [
+    { label: "2 semanas", dias: 14 },
+    { label: "6 semanas", dias: 42 },
+    { label: "3 meses", dias: 90 },
+    { label: "6 meses", dias: 180 },
+    { label: "12 meses", dias: 365 }
+  ];
+
+  function formatarData(data){
+    return data.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  function somarDias(dataBase, dias){
+    const d = new Date(dataBase);
+    d.setDate(d.getDate() + dias);
+    return d;
+  }
+
+  async function carregarAgenda(){
+    const doentes = await fenixApi.listarDoentes();
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    const linhas = [];
+
+    for (const doente of doentes) {
+      if (!doente.data_alta) continue;
+      const dataAlta = new Date(doente.data_alta + "T00:00:00");
+      const respostas = await fenixApi.listarPromsDoente(doente.id);
+      const datasRespostas = respostas.map(r => new Date(r.data_resposta + "T00:00:00"));
+
+      CHECKPOINTS.forEach(cp => {
+        const alvo = somarDias(dataAlta, cp.dias);
+        const janelaInicio = somarDias(alvo, -7);
+        const janelaFim = somarDias(alvo, 21);
+        const concluido = datasRespostas.some(d => d >= janelaInicio && d <= janelaFim);
+
+        let estado, corPill;
+        if (concluido) { estado = "Concluído"; corPill = "pill-ok"; }
+        else if (alvo < hoje) { estado = "Em atraso"; corPill = "pill-alert"; }
+        else if (alvo <= somarDias(hoje, 14)) { estado = "Esta quinzena"; corPill = "pill-pending"; }
+        else { estado = "Agendado"; corPill = ""; }
+
+        linhas.push({ doente, cp, alvo, estado, corPill });
+      });
+    }
+
+    // ordenar: em atraso primeiro, depois por data
+    linhas.sort((a, b) => {
+      const prioridade = e => e === "Em atraso" ? 0 : e === "Esta quinzena" ? 1 : e === "Agendado" ? 2 : 3;
+      if (prioridade(a.estado) !== prioridade(b.estado)) return prioridade(a.estado) - prioridade(b.estado);
+      return a.alvo - b.alvo;
+    });
+
+    const tbody = document.getElementById('linhas-agenda');
+    if (!linhas.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="hint" style="padding:20px;">Nenhum doente com data de alta definida ainda.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = linhas.map(l => `
+      <tr>
+        <td><strong>${l.doente.nome}</strong><br><span class="mono" style="font-size:.75rem; color:var(--ink-soft);">${l.doente.processo}</span></td>
+        <td>${l.cp.label}</td>
+        <td class="mono">${formatarData(l.alvo)}</td>
+        <td><span class="pill ${l.corPill}" ${!l.corPill ? 'style="background:var(--paper-tint); color:var(--ink-soft);"' : ''}>${l.estado}</span></td>
+        <td><a class="btn btn-ghost btn-sm" href="doente.html?processo=${encodeURIComponent(l.doente.processo)}">Ver ficha</a></td>
+      </tr>`).join('');
+  }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "profissional") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+    carregarAgenda();
+  })();
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dúvidas dos Doentes — Fénix</title>
+<title>Equipa — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
 <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
@@ -30,28 +30,29 @@
 <div class="app-shell">
   <aside class="sidebar">
     <a href="dashboard.html">📋 Doentes</a>
-    <a href="alertas.html">🔔 Alertas</a>
     <a href="novo-doente.html">➕ Novo Doente</a>
+    <a href="alertas.html">🔔 Alertas</a>
     <a href="formulario-alta.html">📝 Formulário de Alta</a>
     <a href="jornada.html">🎯 Jornada e Metas</a>
     <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
-    <a href="duvidas.html" class="active">💬 Dúvidas <span class="pill pill-alert" style="margin-left:6px;" id="contagem-pendentes"></span></a>
+    <a href="duvidas.html">💬 Dúvidas</a>
     <a href="agenda-proms.html">📅 Agenda de PROMs</a>
-    <a href="equipa.html">👥 Equipa</a>
+    <a class="active" href="equipa.html">👥 Equipa</a>
     <a href="definicoes.html">⚙️ Definições</a>
   </aside>
 
   <div class="main-area">
 
-    <p class="eyebrow">Caixa de entrada</p>
-    <h1 style="font-size:1.9rem;">Dúvidas dos doentes</h1>
+    <p class="eyebrow">Unidade de Queimados</p>
+    <h1 style="font-size:1.8rem;">Equipa</h1>
     <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
-      Perguntas e preocupações enviadas pelos doentes em seguimento. As dúvidas por
-      responder aparecem primeiro. Qualquer elemento da equipa pode responder,
-      independentemente de quem prescreveu o tratamento.
+      Profissionais com acesso à plataforma Fénix. Novas contas são criadas
+      diretamente no Supabase (Authentication) pela administração do sistema.
     </p>
 
-    <div id="lista-duvidas-prof" style="max-width:760px; margin-top:24px;"></div>
+    <div class="grid g-3" style="margin-top:24px;" id="lista-equipa">
+      <p class="hint">A carregar equipa...</p>
+    </div>
 
   </div>
 </div>
@@ -61,45 +62,26 @@
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-  function formatarData(dataISO){
-    if (!dataISO) return "";
-    const d = new Date(dataISO + "T00:00:00");
-    return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
-  }
+  const ICONES_ESPECIALIDADE = {
+    "Cirurgia Plástica": "🩺", "Enfermagem": "🩹", "Fisioterapia": "🧑‍⚕️",
+    "Terapia Ocupacional": "🖐️", "Psicologia": "💬", "Nutrição": "🥗"
+  };
 
-  function mapearDuvida(row){
-    return {
-      id: row.id,
-      doente: row.doentes ? row.doentes.nome : "Doente",
-      categoria: row.categoria, pergunta: row.pergunta,
-      data: formatarData(row.data), estado: row.estado, resposta: row.resposta,
-      respondidoPor: row.respondido_por, dataResposta: formatarData(row.data_resposta)
-    };
-  }
-
-  async function carregarDuvidasProf(){
-    const linhas = await fenixApi.listarDuvidas();
-    const mapeadas = linhas.map(mapearDuvida).sort((a, b) => {
-      if (a.estado !== b.estado) return a.estado === "pendente" ? -1 : 1;
-      return 0;
-    });
-    document.getElementById("lista-duvidas-prof").innerHTML = mapeadas.length
-      ? mapeadas.map(duvidaEditorHTML).join("")
-      : `<p class="hint">Ainda não há dúvidas registadas.</p>`;
-
-    const pendentes = mapeadas.filter(d => d.estado === "pendente").length;
-    const contagemEl = document.getElementById("contagem-pendentes");
-    contagemEl.textContent = pendentes > 0 ? pendentes : "";
-  }
-
-  /* substitui a versão de demonstração de main.js: liga a resposta à base de dados real */
-  async function responderDuvida(id){
-    const textoEl = document.getElementById(`resp-texto-${id}`);
-    const texto = textoEl.value;
-    if (!texto || !texto.trim()) { alert("Escreva uma resposta antes de enviar."); return; }
-    const respondidoPor = document.getElementById(`resp-por-${id}`).value;
-    await fenixApi.responderDuvida(id, texto.trim(), respondidoPor);
-    carregarDuvidasProf();
+  async function carregarEquipa(){
+    const equipa = await fenixApi.listarEquipaProfissionais();
+    const el = document.getElementById('lista-equipa');
+    if (!equipa.length) {
+      el.innerHTML = `<p class="hint">Ainda não há profissionais registados.</p>`;
+      return;
+    }
+    el.innerHTML = equipa.map(p => `
+      <div class="card">
+        <div style="width:44px; height:44px; border-radius:50%; background:var(--paper-tint); display:flex; align-items:center; justify-content:center; font-size:1.4rem; margin-bottom:12px;">
+          ${ICONES_ESPECIALIDADE[p.especialidade] || "👤"}
+        </div>
+        <h3 style="font-size:1.05rem; margin-bottom:2px;">${p.nome}</h3>
+        <p class="hint" style="margin:0;">${p.especialidade || "Especialidade não definida"}</p>
+      </div>`).join('');
   }
 
   function terminarSessao(ev){
@@ -114,7 +96,7 @@
       return;
     }
     document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
-    carregarDuvidasProf();
+    carregarEquipa();
   })();
 </script>
 </body>
