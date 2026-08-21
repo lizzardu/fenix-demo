@@ -64,6 +64,12 @@
         <label for="duvida-texto">A sua dúvida ou preocupação</label>
         <textarea id="duvida-texto" rows="3" placeholder="Escreva aqui..." required></textarea>
       </div>
+      <div class="field" style="margin-bottom:20px;">
+        <label class="star-toggle">
+          <input type="checkbox" id="duvida-telefone">
+          <span>📞 Prefiro ser contactado(a) por telefone</span>
+        </label>
+      </div>
       <button class="btn btn-primary" type="submit">Enviar à equipa</button>
     </form>
   </div>
@@ -93,6 +99,7 @@
   function mapearDuvida(row){
     return {
       id: row.id, doente: "", categoria: row.categoria, pergunta: row.pergunta,
+      contactoTelefonico: row.contacto_telefonico,
       data: formatarData(row.data), estado: row.estado, resposta: row.resposta,
       respondidoPor: row.respondido_por, dataResposta: formatarData(row.data_resposta)
     };
@@ -110,9 +117,11 @@
     ev.preventDefault();
     const categoria = document.querySelector('input[name="duvida-cat"]:checked').value;
     const texto = document.getElementById('duvida-texto');
+    const telefone = document.getElementById('duvida-telefone').checked;
     if (!texto.value.trim()) return;
-    await fenixApi.submeterDuvida(DOENTE_ID, categoria, texto.value);
+    await fenixApi.submeterDuvida(DOENTE_ID, categoria, texto.value, telefone);
     texto.value = '';
+    document.getElementById('duvida-telefone').checked = false;
     carregarDuvidas();
   }
 

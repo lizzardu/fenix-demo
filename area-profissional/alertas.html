@@ -102,7 +102,7 @@
       alertasHTML.push(alertaCardHTML(
         d.doentes ? d.doentes.nome : "Doente",
         d.doentes ? d.doentes.processo : "",
-        "Dúvida por responder",
+        d.contacto_telefonico ? "Dúvida — 📞 pediu contacto telefónico" : "Dúvida por responder",
         d.pergunta,
         formatarData(d.data)
       ));
