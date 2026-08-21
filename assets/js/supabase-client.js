@@ -240,8 +240,10 @@ const fenixApi = {
     return data;
   },
 
-  async submeterDuvida(doenteId, categoria, pergunta) {
-    const { data, error } = await sb.from("duvidas").insert({ doente_id: doenteId, categoria, pergunta }).select().single();
+  async submeterDuvida(doenteId, categoria, pergunta, contactoTelefonico) {
+    const { data, error } = await sb.from("duvidas").insert({
+      doente_id: doenteId, categoria, pergunta, contacto_telefonico: !!contactoTelefonico
+    }).select().single();
     if (error) throw error;
     return data;
   },

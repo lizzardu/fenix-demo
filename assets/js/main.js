@@ -307,6 +307,7 @@ function duvidaCardHTML(d, mostrarDoente) {
     ? `<span class="pill pill-ok">Respondida</span>`
     : `<span class="pill pill-alert">Por responder</span>`;
   const quem = mostrarDoente ? `<strong>${d.doente}</strong> · ` : "";
+  const telefone = d.contactoTelefonico ? `<span class="milestone-tag origem-doente">📞 Pediu contacto telefónico</span>` : "";
   const resposta = d.estado === "respondida"
     ? `<div class="duvida-resposta">
         <p class="hint" style="margin-bottom:4px; font-weight:600; color:var(--blue-deep);">Resposta de ${d.respondidoPor} · ${d.dataResposta}</p>
@@ -317,7 +318,7 @@ function duvidaCardHTML(d, mostrarDoente) {
     <div class="card milestone-card" style="margin-bottom:14px;">
       <div class="milestone-head">
         <div>
-          <div class="milestone-meta"><span class="milestone-tag">${d.categoria}</span></div>
+          <div class="milestone-meta"><span class="milestone-tag">${d.categoria}</span>${telefone}</div>
           <p style="margin:0; color:var(--ink);">${quem}${d.pergunta}</p>
           <p class="hint" style="margin:4px 0 0;">${d.data}</p>
         </div>
@@ -352,6 +353,7 @@ function duvidaEditorHTML(d) {
   const estadoPill = d.estado === "respondida"
     ? `<span class="pill pill-ok">Respondida</span>`
     : `<span class="pill pill-alert">Por responder</span>`;
+  const telefone = d.contactoTelefonico ? `<span class="milestone-tag origem-doente">📞 Pediu contacto telefónico</span>` : "";
 
   const corpoResposta = d.estado === "respondida"
     ? `<div class="duvida-resposta">
@@ -376,7 +378,7 @@ function duvidaEditorHTML(d) {
     <div class="card milestone-card ${d.estado === "pendente" ? "is-active" : ""}" style="margin-bottom:14px;" id="duvida-${d.id}">
       <div class="milestone-head">
         <div>
-          <div class="milestone-meta"><span class="milestone-tag">${d.categoria}</span></div>
+          <div class="milestone-meta"><span class="milestone-tag">${d.categoria}</span>${telefone}</div>
           <h3 class="milestone-title" style="font-size:1rem;">${d.doente}</h3>
           <p style="margin:2px 0 0; color:var(--ink);">${d.pergunta}</p>
           <p class="hint" style="margin:4px 0 0;">${d.data}</p>
