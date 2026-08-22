@@ -11,7 +11,9 @@
         <script src="../assets/js/supabase-config.js"></script>
         <script src="../assets/js/supabase-client.js"></script>
    2. Ter criado supabase-config.js a partir do exemplo (ver esse ficheiro).
-   3. Ter corrido database/schema.sql no seu projeto Supabase.
+   3. Ter corrido database/schema.sql no seu projeto Supabase, e depois
+      002_historico_agendamentos.sql (adiciona as tabelas usadas mais abaixo
+      nas secções HISTÓRICO CLÍNICO e AGENDAMENTOS).
 
    Todas as funções devolvem Promises (usar com "await" dentro de uma
    função "async", tal como nos exemplos no fundo deste ficheiro).
@@ -254,6 +256,60 @@ const fenixApi = {
     }).eq("id", duvidaId).select().single();
     if (error) throw error;
     return data;
+  },
+
+  /* ---------------------------------------------------------------------
+     HISTÓRICO CLÍNICO — episódios passados relatados pelo doente
+     (urgência, consulta externa, internamento). Usado em historico.html.
+     Requer a tabela "historico_clinico" — ver 002_historico_agendamentos.sql.
+     --------------------------------------------------------------------- */
+  async listarHistoricoClinico(doenteId) {
+    let query = sb.from("historico_clinico").select("*").order("criado_em", { ascending: false });
+    if (doenteId) query = query.eq("doente_id", doenteId);
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  },
+
+  async adicionarHistoricoClinico(doenteId, evento) {
+    const { data, error } = await sb.from("historico_clinico").insert({ doente_id: doenteId, ...evento }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async removerHistoricoClinico(eventoId) {
+    const { error } = await sb.from("historico_clinico").delete().eq("id", eventoId);
+    if (error) throw error;
+  },
+
+  /* ---------------------------------------------------------------------
+     AGENDAMENTOS — consultas/exames futuros registados pelo doente.
+     Usado em historico.html.
+     Requer a tabela "agendamentos" — ver 002_historico_agendamentos.sql.
+     --------------------------------------------------------------------- */
+  async listarAgendamentos(doenteId) {
+    let query = sb.from("agendamentos").select("*").order("data_hora", { ascending: true });
+    if (doenteId) query = query.eq("doente_id", doenteId);
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  },
+
+  async registarAgendamento(doenteId, agendamento) {
+    const { data, error } = await sb.from("agendamentos").insert({ doente_id: doenteId, ...agendamento }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async atualizarAgendamento(agendamentoId, campos) {
+    const { data, error } = await sb.from("agendamentos").update(campos).eq("id", agendamentoId).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  /** Atalho para marcar um agendamento como cancelado. */
+  async cancelarAgendamento(agendamentoId) {
+    return this.atualizarAgendamento(agendamentoId, { estado: "cancelado" });
   }
 };
 
