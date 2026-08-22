@@ -133,19 +133,81 @@
           </div>
 
           <div class="subfield">
-            <label>Localização anatómica</label>
+            <label>Localização anatómica — Cabeça e Pescoço</label>
             <div class="chip-group">
+              <label class="chip"><input type="checkbox"><span>Couro cabeludo</span></label>
               <label class="chip"><input type="checkbox"><span>Face</span></label>
+              <label class="chip"><input type="checkbox"><span>Orelha esquerda</span></label>
+              <label class="chip"><input type="checkbox"><span>Orelha direita</span></label>
               <label class="chip"><input type="checkbox"><span>Pescoço</span></label>
-              <label class="chip"><input type="checkbox"><span>Mão</span></label>
-              <label class="chip"><input type="checkbox"><span>Axila</span></label>
-              <label class="chip"><input type="checkbox"><span>Cotovelo</span></label>
-              <label class="chip"><input type="checkbox"><span>Punho</span></label>
-              <label class="chip"><input type="checkbox"><span>Anca</span></label>
-              <label class="chip"><input type="checkbox"><span>Joelho</span></label>
-              <label class="chip"><input type="checkbox"><span>Tornozelo</span></label>
-              <label class="chip"><input type="checkbox"><span>Outra</span></label>
             </div>
+          </div>
+
+          <div class="subfield">
+            <label>Localização anatómica — Tronco</label>
+            <div class="chip-group">
+              <label class="chip"><input type="checkbox"><span>Tórax anterior</span></label>
+              <label class="chip"><input type="checkbox"><span>Tórax posterior</span></label>
+              <label class="chip"><input type="checkbox"><span>Abdómen</span></label>
+              <label class="chip"><input type="checkbox"><span>Dorso / lombar</span></label>
+              <label class="chip"><input type="checkbox"><span>Nádegas</span></label>
+              <label class="chip"><input type="checkbox"><span>Genitais / períneo</span></label>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="subfield">
+              <label>Localização anatómica — Membro Superior Esquerdo</label>
+              <div class="chip-group">
+                <label class="chip"><input type="checkbox"><span>Ombro</span></label>
+                <label class="chip"><input type="checkbox"><span>Braço</span></label>
+                <label class="chip"><input type="checkbox"><span>Cotovelo</span></label>
+                <label class="chip"><input type="checkbox"><span>Antebraço</span></label>
+                <label class="chip"><input type="checkbox"><span>Punho</span></label>
+                <label class="chip"><input type="checkbox"><span>Mão</span></label>
+              </div>
+            </div>
+            <div class="subfield">
+              <label>Localização anatómica — Membro Superior Direito</label>
+              <div class="chip-group">
+                <label class="chip"><input type="checkbox"><span>Ombro</span></label>
+                <label class="chip"><input type="checkbox"><span>Braço</span></label>
+                <label class="chip"><input type="checkbox"><span>Cotovelo</span></label>
+                <label class="chip"><input type="checkbox"><span>Antebraço</span></label>
+                <label class="chip"><input type="checkbox"><span>Punho</span></label>
+                <label class="chip"><input type="checkbox"><span>Mão</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="subfield">
+              <label>Localização anatómica — Membro Inferior Esquerdo</label>
+              <div class="chip-group">
+                <label class="chip"><input type="checkbox"><span>Anca</span></label>
+                <label class="chip"><input type="checkbox"><span>Coxa</span></label>
+                <label class="chip"><input type="checkbox"><span>Joelho</span></label>
+                <label class="chip"><input type="checkbox"><span>Perna</span></label>
+                <label class="chip"><input type="checkbox"><span>Tornozelo</span></label>
+                <label class="chip"><input type="checkbox"><span>Pé</span></label>
+              </div>
+            </div>
+            <div class="subfield">
+              <label>Localização anatómica — Membro Inferior Direito</label>
+              <div class="chip-group">
+                <label class="chip"><input type="checkbox"><span>Anca</span></label>
+                <label class="chip"><input type="checkbox"><span>Coxa</span></label>
+                <label class="chip"><input type="checkbox"><span>Joelho</span></label>
+                <label class="chip"><input type="checkbox"><span>Perna</span></label>
+                <label class="chip"><input type="checkbox"><span>Tornozelo</span></label>
+                <label class="chip"><input type="checkbox"><span>Pé</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="subfield">
+            <label for="zona-outra">Outra localização (não listada acima)</label>
+            <input type="text" id="zona-outra" placeholder="Descreva, se aplicável">
           </div>
 
           <div class="form-row">
@@ -655,8 +717,27 @@
       const tbsaTexto = secQueimadura['% Superfície corporal queimada (%SCQ)'] || '';
       const tbsaNum = parseFloat(String(tbsaTexto).replace(',', '.').replace('%', '').trim());
       const profundidade = secQueimadura['Profundidade'] || null;
-      const zonaArr = secQueimadura['Localização anatómica'];
-      const zona = Array.isArray(zonaArr) && zonaArr.length ? zonaArr.join(', ') : null;
+
+      // combinar as 6 sub-regiões + campo livre "Outra localização" num resumo legível
+      const gruposZona = [
+        'Localização anatómica — Cabeça e Pescoço',
+        'Localização anatómica — Tronco',
+        'Localização anatómica — Membro Superior Esquerdo',
+        'Localização anatómica — Membro Superior Direito',
+        'Localização anatómica — Membro Inferior Esquerdo',
+        'Localização anatómica — Membro Inferior Direito'
+      ];
+      const partesZona = [];
+      gruposZona.forEach(grupo => {
+        const itens = secQueimadura[grupo];
+        if (Array.isArray(itens) && itens.length) {
+          const rotuloCurto = grupo.replace('Localização anatómica — ', '');
+          partesZona.push(`${rotuloCurto}: ${itens.join(', ')}`);
+        }
+      });
+      const outraZona = secQueimadura['Outra localização (não listada acima)'];
+      if (outraZona && String(outraZona).trim()) partesZona.push(`Outra: ${outraZona.trim()}`);
+      const zona = partesZona.length ? partesZona.join('; ') : null;
 
       const contexto = {};
       if (!isNaN(tbsaNum)) contexto.tbsa = tbsaNum;
