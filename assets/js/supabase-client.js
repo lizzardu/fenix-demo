@@ -12,8 +12,9 @@
         <script src="../assets/js/supabase-client.js"></script>
    2. Ter criado supabase-config.js a partir do exemplo (ver esse ficheiro).
    3. Ter corrido database/schema.sql no seu projeto Supabase, e depois
-      002_historico_agendamentos.sql (adiciona as tabelas usadas mais abaixo
-      nas secções HISTÓRICO CLÍNICO e AGENDAMENTOS).
+      002_historico_agendamentos.sql e 003_avaliacoes_recursos.sql (adicionam
+      as tabelas usadas mais abaixo nas secções HISTÓRICO CLÍNICO,
+      AGENDAMENTOS e AVALIAÇÃO DE RECURSOS).
 
    Todas as funções devolvem Promises (usar com "await" dentro de uma
    função "async", tal como nos exemplos no fundo deste ficheiro).
@@ -310,6 +311,52 @@ const fenixApi = {
   /** Atalho para marcar um agendamento como cancelado. */
   async cancelarAgendamento(agendamentoId) {
     return this.atualizarAgendamento(agendamentoId, { estado: "cancelado" });
+  },
+
+  /* ---------------------------------------------------------------------
+     AVALIAÇÃO DE RECURSOS — 👍/👎 do doente em cada vídeo, folheto ou FAQ.
+     Usado em recursos.html. Requer a tabela "avaliacoes_recursos" — ver
+     003_avaliacoes_recursos.sql. "recursoId" é o identificador estável do
+     recurso (ex.: "video-hidratar-cicatriz"), definido em data-recurso-id
+     na página; "util" é true (👍) ou false (👎).
+     --------------------------------------------------------------------- */
+  async avaliarRecurso(doenteId, recursoId, recursoTipo, util) {
+    const { data, error } = await sb.from("avaliacoes_recursos")
+      .upsert(
+        { doente_id: doenteId, recurso_id: recursoId, recurso_tipo: recursoTipo, util, atualizado_em: new Date().toISOString() },
+        { onConflict: "doente_id,recurso_id" }
+      )
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async removerAvaliacaoRecurso(doenteId, recursoId) {
+    const { error } = await sb.from("avaliacoes_recursos")
+      .delete()
+      .eq("doente_id", doenteId)
+      .eq("recurso_id", recursoId);
+    if (error) throw error;
+  },
+
+  /** Avaliações de UM doente (para pré-preencher os botões 👍/👎 já escolhidos). */
+  async listarAvaliacoesRecursos(doenteId) {
+    const { data, error } = await sb.from("avaliacoes_recursos").select("*").eq("doente_id", doenteId);
+    if (error) throw error;
+    return data;
+  },
+
+  /** Resumo agregado por recurso (para a área profissional: quantos 👍/👎 cada recurso tem). */
+  async listarResumoAvaliacoesRecursos() {
+    const { data, error } = await sb.from("avaliacoes_recursos").select("recurso_id, recurso_tipo, util");
+    if (error) throw error;
+    const resumo = {};
+    data.forEach(r => {
+      if (!resumo[r.recurso_id]) resumo[r.recurso_id] = { recurso_id: r.recurso_id, recurso_tipo: r.recurso_tipo, gostos: 0, naoGostos: 0 };
+      if (r.util) resumo[r.recurso_id].gostos++; else resumo[r.recurso_id].naoGostos++;
+    });
+    return Object.values(resumo);
   }
 };
 
