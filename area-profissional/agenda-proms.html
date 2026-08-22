@@ -30,35 +30,38 @@
 <div class="app-shell">
   <aside class="sidebar">
     <a href="dashboard.html">📋 Doentes</a>
-    <a href="novo-doente.html">➕ Novo Doente</a>
-    <a href="alertas.html">🔔 Alertas</a>
-    <a href="formulario-alta.html">📝 Formulário de Alta</a>
-    <a href="jornada.html">🎯 Jornada e Metas</a>
-    <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
-    <a href="duvidas.html">💬 Dúvidas</a>
-    <a class="active" href="agenda-proms.html">📅 Agenda de PROMs</a>
-    <a href="equipa.html">👥 Equipa</a>
-    <a href="definicoes.html">⚙️ Definições</a>
+    <div style="margin:14px 28px 10px; padding-top:14px; border-top:1px solid var(--line);">
+      <p class="hint" style="margin:0 0 2px; font-size:.68rem; text-transform:uppercase; letter-spacing:.04em;">Doente selecionado</p>
+      <p style="margin:0; font-weight:600; color:var(--blue-deep); font-size:.88rem;" id="sidebar-nome-doente">A carregar...</p>
+    </div>
+    <a href="doente.html" data-processo-link>🗂️ Resumo</a>
+    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
+    <a href="plano-tratamento.html" data-processo-link>🏋️ Plano de Tratamento</a>
+    <a href="jornada.html" data-processo-link>🎯 Jornada e Metas</a>
+    <a href="agenda-proms.html" data-processo-link class="active">📅 Agenda de PROMs</a>
+    <a href="duvidas.html" data-processo-link>💬 Dúvidas</a>
+    <a href="historico.html" data-processo-link>🗓️ Histórico</a>
   </aside>
 
   <div class="main-area">
 
-    <p class="eyebrow">Unidade de Queimados</p>
-    <h1 style="font-size:1.8rem;">Agenda de PROMs</h1>
+    <a href="doente.html" class="hint" id="link-voltar" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha do doente</a>
+
+    <p class="eyebrow" id="titulo-doente">Agenda de PROMs</p>
+    <h1 style="font-size:1.9rem;">Checkpoints de seguimento</h1>
     <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
-      Checkpoints calculados a partir da data de alta de cada doente (2 semanas,
-      6 semanas, 3, 6 e 12 meses). "Concluído" significa que existe pelo menos
-      uma resposta PROM à volta dessa data — não confirma qual instrumento foi
-      respondido.
+      Checkpoints calculados a partir da data de alta deste doente (2 semanas, 6 semanas,
+      3, 6 e 12 meses). "Concluído" significa que existe pelo menos uma resposta PROM à
+      volta dessa data — não confirma qual instrumento foi respondido.
     </p>
 
-    <div class="card card-flush" style="margin-top:24px;">
+    <div class="card card-flush" style="max-width:640px; margin-top:24px;">
       <table>
         <thead>
-          <tr><th>Doente</th><th>Checkpoint</th><th>Data alvo</th><th>Estado</th><th></th></tr>
+          <tr><th>Checkpoint</th><th>Data alvo</th><th>Estado</th></tr>
         </thead>
         <tbody id="linhas-agenda">
-          <tr><td colspan="5" class="hint" style="padding:20px;">A calcular agenda...</td></tr>
+          <tr><td colspan="3" class="hint" style="padding:20px;">A calcular agenda...</td></tr>
         </tbody>
       </table>
     </div>
@@ -89,53 +92,40 @@
     return d;
   }
 
-  async function carregarAgenda(){
-    const doentes = await fenixApi.listarDoentes();
-    const hoje = new Date();
-    hoje.setHours(0,0,0,0);
-    const linhas = [];
-
-    for (const doente of doentes) {
-      if (!doente.data_alta) continue;
-      const dataAlta = new Date(doente.data_alta + "T00:00:00");
-      const respostas = await fenixApi.listarPromsDoente(doente.id);
-      const datasRespostas = respostas.map(r => new Date(r.data_resposta + "T00:00:00"));
-
-      CHECKPOINTS.forEach(cp => {
-        const alvo = somarDias(dataAlta, cp.dias);
-        const janelaInicio = somarDias(alvo, -7);
-        const janelaFim = somarDias(alvo, 21);
-        const concluido = datasRespostas.some(d => d >= janelaInicio && d <= janelaFim);
-
-        let estado, corPill;
-        if (concluido) { estado = "Concluído"; corPill = "pill-ok"; }
-        else if (alvo < hoje) { estado = "Em atraso"; corPill = "pill-alert"; }
-        else if (alvo <= somarDias(hoje, 14)) { estado = "Esta quinzena"; corPill = "pill-pending"; }
-        else { estado = "Agendado"; corPill = ""; }
-
-        linhas.push({ doente, cp, alvo, estado, corPill });
-      });
-    }
-
-    // ordenar: em atraso primeiro, depois por data
-    linhas.sort((a, b) => {
-      const prioridade = e => e === "Em atraso" ? 0 : e === "Esta quinzena" ? 1 : e === "Agendado" ? 2 : 3;
-      if (prioridade(a.estado) !== prioridade(b.estado)) return prioridade(a.estado) - prioridade(b.estado);
-      return a.alvo - b.alvo;
-    });
-
+  async function carregarAgenda(doente){
     const tbody = document.getElementById('linhas-agenda');
-    if (!linhas.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="hint" style="padding:20px;">Nenhum doente com data de alta definida ainda.</td></tr>`;
+
+    if (!doente.data_alta) {
+      tbody.innerHTML = `<tr><td colspan="3" class="hint" style="padding:20px;">Este doente ainda não tem data de alta definida — a agenda de PROMs só é calculada a partir dessa data (ver Formulário de Alta).</td></tr>`;
       return;
     }
+
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    const dataAlta = new Date(doente.data_alta + "T00:00:00");
+    const respostas = await fenixApi.listarPromsDoente(doente.id);
+    const datasRespostas = respostas.map(r => new Date(r.data_resposta + "T00:00:00"));
+
+    const linhas = CHECKPOINTS.map(cp => {
+      const alvo = somarDias(dataAlta, cp.dias);
+      const janelaInicio = somarDias(alvo, -7);
+      const janelaFim = somarDias(alvo, 21);
+      const concluido = datasRespostas.some(d => d >= janelaInicio && d <= janelaFim);
+
+      let estado, corPill;
+      if (concluido) { estado = "Concluído"; corPill = "pill-ok"; }
+      else if (alvo < hoje) { estado = "Em atraso"; corPill = "pill-alert"; }
+      else if (alvo <= somarDias(hoje, 14)) { estado = "Esta quinzena"; corPill = "pill-pending"; }
+      else { estado = "Agendado"; corPill = ""; }
+
+      return { cp, alvo, estado, corPill };
+    });
+
     tbody.innerHTML = linhas.map(l => `
       <tr>
-        <td><strong>${l.doente.nome}</strong><br><span class="mono" style="font-size:.75rem; color:var(--ink-soft);">${l.doente.processo}</span></td>
         <td>${l.cp.label}</td>
         <td class="mono">${formatarData(l.alvo)}</td>
         <td><span class="pill ${l.corPill}" ${!l.corPill ? 'style="background:var(--paper-tint); color:var(--ink-soft);"' : ''}>${l.estado}</span></td>
-        <td><a class="btn btn-ghost btn-sm" href="doente.html?processo=${encodeURIComponent(l.doente.processo)}">Ver ficha</a></td>
       </tr>`).join('');
   }
 
@@ -151,7 +141,13 @@
       return;
     }
     document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
-    carregarAgenda();
+
+    const doente = await fenixApi.obterDoentePorProcesso(obterProcessoDaURL("PROC-2026-0142"));
+    document.getElementById("titulo-doente").textContent = "Agenda de PROMs — " + doente.nome;
+    document.getElementById("sidebar-nome-doente").textContent = doente.nome;
+    document.getElementById("link-voltar").href = `doente.html?processo=${encodeURIComponent(doente.processo)}`;
+    ligarSidebarAoProcesso(doente.processo);
+    carregarAgenda(doente);
   })();
 </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dúvidas dos Doentes — Fénix</title>
+<title>Dúvidas do Doente — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
 <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
@@ -30,25 +30,29 @@
 <div class="app-shell">
   <aside class="sidebar">
     <a href="dashboard.html">📋 Doentes</a>
-    <a href="alertas.html">🔔 Alertas</a>
-    <a href="novo-doente.html">➕ Novo Doente</a>
-    <a href="formulario-alta.html">📝 Formulário de Alta</a>
-    <a href="jornada.html">🎯 Jornada e Metas</a>
-    <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
-    <a href="duvidas.html" class="active">💬 Dúvidas <span class="pill pill-alert" style="margin-left:6px;" id="contagem-pendentes"></span></a>
-    <a href="agenda-proms.html">📅 Agenda de PROMs</a>
-    <a href="equipa.html">👥 Equipa</a>
-    <a href="definicoes.html">⚙️ Definições</a>
+    <div style="margin:14px 28px 10px; padding-top:14px; border-top:1px solid var(--line);">
+      <p class="hint" style="margin:0 0 2px; font-size:.68rem; text-transform:uppercase; letter-spacing:.04em;">Doente selecionado</p>
+      <p style="margin:0; font-weight:600; color:var(--blue-deep); font-size:.88rem;" id="sidebar-nome-doente">A carregar...</p>
+    </div>
+    <a href="doente.html" data-processo-link>🗂️ Resumo</a>
+    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
+    <a href="plano-tratamento.html" data-processo-link>🏋️ Plano de Tratamento</a>
+    <a href="jornada.html" data-processo-link>🎯 Jornada e Metas</a>
+    <a href="agenda-proms.html" data-processo-link>📅 Agenda de PROMs</a>
+    <a href="duvidas.html" data-processo-link class="active">💬 Dúvidas <span class="pill pill-alert" style="margin-left:6px;" id="contagem-pendentes"></span></a>
+    <a href="historico.html" data-processo-link>🗓️ Histórico</a>
   </aside>
 
   <div class="main-area">
 
-    <p class="eyebrow">Caixa de entrada</p>
-    <h1 style="font-size:1.9rem;">Dúvidas dos doentes</h1>
+    <a href="doente.html" class="hint" id="link-voltar" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha do doente</a>
+
+    <p class="eyebrow" id="titulo-doente">Dúvidas do doente</p>
+    <h1 style="font-size:1.9rem;">Perguntas e preocupações enviadas</h1>
     <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
-      Perguntas e preocupações enviadas pelos doentes em seguimento. As dúvidas por
-      responder aparecem primeiro. Qualquer elemento da equipa pode responder,
-      independentemente de quem prescreveu o tratamento.
+      Dúvidas enviadas por este doente através da sua área. As por responder aparecem
+      primeiro. Qualquer elemento da equipa pode responder, independentemente de quem
+      prescreveu o tratamento.
     </p>
 
     <div id="lista-duvidas-prof" style="max-width:760px; margin-top:24px;"></div>
@@ -61,6 +65,8 @@
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
+  let DOENTE = null;
+
   function formatarData(dataISO){
     if (!dataISO) return "";
     const d = new Date(dataISO + "T00:00:00");
@@ -79,14 +85,14 @@
   }
 
   async function carregarDuvidasProf(){
-    const linhas = await fenixApi.listarDuvidas();
+    const linhas = await fenixApi.listarDuvidas(DOENTE.id);
     const mapeadas = linhas.map(mapearDuvida).sort((a, b) => {
       if (a.estado !== b.estado) return a.estado === "pendente" ? -1 : 1;
       return 0;
     });
     document.getElementById("lista-duvidas-prof").innerHTML = mapeadas.length
       ? mapeadas.map(duvidaEditorHTML).join("")
-      : `<p class="hint">Ainda não há dúvidas registadas.</p>`;
+      : `<p class="hint">Este doente ainda não enviou nenhuma dúvida.</p>`;
 
     const pendentes = mapeadas.filter(d => d.estado === "pendente").length;
     const contagemEl = document.getElementById("contagem-pendentes");
@@ -115,6 +121,13 @@
       return;
     }
     document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+
+    DOENTE = await fenixApi.obterDoentePorProcesso(obterProcessoDaURL("PROC-2026-0142"));
+    document.getElementById("titulo-doente").textContent = "Dúvidas — " + DOENTE.nome;
+    document.getElementById("sidebar-nome-doente").textContent = DOENTE.nome;
+    document.getElementById("link-voltar").href = `doente.html?processo=${encodeURIComponent(DOENTE.processo)}`;
+    ligarSidebarAoProcesso(DOENTE.processo);
+
     carregarDuvidasProf();
   })();
 </script>

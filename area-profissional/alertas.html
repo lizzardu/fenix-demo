@@ -32,11 +32,6 @@
     <a href="dashboard.html">📋 Doentes</a>
     <a href="novo-doente.html">➕ Novo Doente</a>
     <a class="active" href="alertas.html">🔔 Alertas</a>
-    <a href="formulario-alta.html">📝 Formulário de Alta</a>
-    <a href="jornada.html">🎯 Jornada e Metas</a>
-    <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
-    <a href="duvidas.html">💬 Dúvidas</a>
-    <a href="agenda-proms.html">📅 Agenda de PROMs</a>
     <a href="equipa.html">👥 Equipa</a>
     <a href="definicoes.html">⚙️ Definições</a>
   </aside>
@@ -76,7 +71,8 @@
     return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
   }
 
-  function alertaCardHTML(doenteNome, processo, tipo, texto, data){
+  function alertaCardHTML(doenteNome, processo, tipo, texto, data, destino){
+    destino = destino || { href: `doente.html?processo=${encodeURIComponent(processo)}`, label: "Ver ficha" };
     return `
       <div class="card milestone-card is-active" style="margin-bottom:14px;">
         <div class="milestone-head">
@@ -86,7 +82,7 @@
             <p style="margin:2px 0 0; color:var(--ink);">${texto}</p>
             ${data ? `<p class="hint" style="margin:4px 0 0;">${data}</p>` : ""}
           </div>
-          <a class="btn btn-ghost btn-sm" href="doente.html?processo=${encodeURIComponent(processo)}">Ver ficha</a>
+          <a class="btn btn-ghost btn-sm" href="${destino.href}">${destino.label}</a>
         </div>
       </div>`;
   }
@@ -99,12 +95,14 @@
     // 1) dúvidas pendentes
     const duvidas = await fenixApi.listarDuvidas();
     duvidas.filter(d => d.estado === "pendente").forEach(d => {
+      const processo = d.doentes ? d.doentes.processo : "";
       alertasHTML.push(alertaCardHTML(
         d.doentes ? d.doentes.nome : "Doente",
-        d.doentes ? d.doentes.processo : "",
+        processo,
         d.contacto_telefonico ? "Dúvida — 📞 pediu contacto telefónico" : "Dúvida por responder",
         d.pergunta,
-        formatarData(d.data)
+        formatarData(d.data),
+        { href: `duvidas.html?processo=${encodeURIComponent(processo)}`, label: "Ver dúvida" }
       ));
     });
 

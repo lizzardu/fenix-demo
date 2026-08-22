@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Histórico e Agendamentos do Doente — Fénix</title>
+<title>Histórico e Agendamentos — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
 <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
-<body class="page-tint">
+<body>
 <header class="topbar">
   <div class="wrap">
     <div class="brandbar">
@@ -21,94 +21,78 @@
       </a>
     </div>
     <nav>
-      <span class="badge-team" id="badge-utilizador">A carregar...</span>
+      <span class="badge-team" id="badge-profissional">A carregar...</span>
       <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
     </nav>
   </div>
 </header>
 
-<!--
-  NOTA DE INTEGRAÇÃO: esta subnav assume que existem, no mesmo diretório
-  area-profissional/, páginas irmãs para as restantes secções da ficha do
-  doente (dashboard.html = Resumo, jornada.html, plano.html, duvidas.html),
-  todas aceitando o mesmo parâmetro ?processo= usado por obterProcessoDaURL()
-  em main.js. Se os nomes forem outros no projeto real, ajustar os href's
-  abaixo — a estrutura/estilo da subnav em si já replica a das outras páginas.
--->
-<nav class="subnav">
-  <div class="wrap">
-    <a href="dashboard.html" id="tab-resumo">🏠 Resumo</a>
-    <a href="jornada.html" id="tab-jornada">🎯 Jornada e Metas</a>
-    <a href="plano.html" id="tab-plano">🏋️ Plano de Tratamento</a>
-    <a href="historico.html" class="active" id="tab-historico">🗓️ Histórico</a>
-    <a href="duvidas.html" id="tab-duvidas">💬 Dúvidas</a>
-  </div>
-</nav>
-
-<main class="wrap" style="padding:44px 32px 80px;">
-
-  <p class="eyebrow">Ficha do doente</p>
-  <h1 style="font-size:2rem;">Histórico e agendamentos</h1>
-  <p style="color:var(--ink-soft); max-width:64ch;">
-    Tudo o que o doente registou na sua área: episódios de saúde relatados (urgências,
-    consultas externas, internamentos) e consultas futuras que marcou. Esta vista é
-    apenas de leitura — os registos são geridos pelo próprio doente.
-  </p>
-
-  <!-- ======================= IDENTIFICAÇÃO DO DOENTE ======================= -->
-  <div class="card" style="margin-top:24px;">
-    <div id="ficha-doente-cabecalho">
-      <p class="hint">A carregar dados do doente...</p>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a href="dashboard.html">📋 Doentes</a>
+    <div style="margin:14px 28px 10px; padding-top:14px; border-top:1px solid var(--line);">
+      <p class="hint" style="margin:0 0 2px; font-size:.68rem; text-transform:uppercase; letter-spacing:.04em;">Doente selecionado</p>
+      <p style="margin:0; font-weight:600; color:var(--blue-deep); font-size:.88rem;" id="sidebar-nome-doente">A carregar...</p>
     </div>
+    <a href="doente.html" data-processo-link>🗂️ Resumo</a>
+    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
+    <a href="plano-tratamento.html" data-processo-link>🏋️ Plano de Tratamento</a>
+    <a href="jornada.html" data-processo-link>🎯 Jornada e Metas</a>
+    <a href="agenda-proms.html" data-processo-link>📅 Agenda de PROMs</a>
+    <a href="duvidas.html" data-processo-link>💬 Dúvidas</a>
+    <a href="historico.html" data-processo-link class="active">🗓️ Histórico</a>
+  </aside>
+
+  <div class="main-area">
+
+    <a href="doente.html" class="hint" id="link-voltar" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha do doente</a>
+
+    <p class="eyebrow" id="titulo-doente">Histórico e agendamentos</p>
+    <h1 style="font-size:1.9rem;">O que o doente registou na sua área</h1>
+    <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
+      Episódios de saúde relatados (urgências, consultas externas, internamentos) e
+      consultas futuras que o próprio doente marcou. Esta vista é apenas de leitura —
+      os registos são geridos pelo doente na sua área.
+    </p>
+
+    <!-- ======================= HISTÓRICO CLÍNICO ======================= -->
+    <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:28px;">
+      <p class="eyebrow" style="margin:0;">Histórico clínico relatado pelo doente</p>
+      <span class="pill pill-flame" id="contagem-historico">—</span>
+    </div>
+
+    <div class="card card-flush" style="margin-top:14px;">
+      <table>
+        <thead><tr><th>Data</th><th>Tipo de evento</th><th>Detalhe</th><th>Notas</th></tr></thead>
+        <tbody id="linhas-historico-prof">
+          <tr><td colspan="4" class="hint" style="padding:16px;">A carregar histórico...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ======================= AGENDAMENTOS ======================= -->
+    <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:32px;">
+      <p class="eyebrow" style="margin:0;">Agendamentos registados pelo doente</p>
+      <span class="pill pill-pending" id="contagem-agendamentos">—</span>
+    </div>
+
+    <div class="card card-flush" style="margin-top:14px;">
+      <table>
+        <thead><tr><th>Data e hora</th><th>Especialidade</th><th>Local</th><th>Estado</th><th>Notas</th></tr></thead>
+        <tbody id="linhas-agendamentos-prof">
+          <tr><td colspan="5" class="hint" style="padding:16px;">A carregar agendamentos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
-
-  <hr class="divider">
-
-  <!-- ======================= HISTÓRICO CLÍNICO ======================= -->
-  <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-    <p class="eyebrow" style="margin:0;">Histórico clínico relatado pelo doente</p>
-    <span class="pill pill-flame" id="contagem-historico">—</span>
-  </div>
-
-  <div class="card card-flush" style="margin-top:16px;">
-    <table>
-      <thead><tr><th>Data</th><th>Tipo de evento</th><th>Detalhe</th><th>Notas</th></tr></thead>
-      <tbody id="linhas-historico-prof">
-        <tr><td colspan="4" class="hint" style="padding:16px;">A carregar histórico...</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <hr class="divider">
-
-  <!-- ======================= AGENDAMENTOS ======================= -->
-  <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-    <p class="eyebrow" style="margin:0;">Agendamentos registados pelo doente</p>
-    <span class="pill pill-pending" id="contagem-agendamentos">—</span>
-  </div>
-
-  <div class="card card-flush" style="margin-top:16px;">
-    <table>
-      <thead><tr><th>Data e hora</th><th>Especialidade</th><th>Local</th><th>Estado</th><th>Notas</th></tr></thead>
-      <tbody id="linhas-agendamentos-prof">
-        <tr><td colspan="5" class="hint" style="padding:16px;">A carregar agendamentos...</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-</main>
-
-<footer>
-  <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
-</footer>
+</div>
 
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-  let DOENTE = null; // objeto doente completo (id, nome, processo, ...)
-
   const ROTULOS_TIPO_EVENTO = {
     urgencia: "Serviço de Urgência",
     consulta: "Consulta Externa",
@@ -138,30 +122,6 @@
       return `${formatarData(r.data_inicio)} — ${formatarData(r.data_fim)}`;
     }
     return r.especialidade || "—";
-  }
-
-  // acrescenta o processo do doente a cada link da subnav, para manter o
-  // contexto ao mudar de secção dentro da mesma ficha
-  function ligarSubnavAoProcesso(processo){
-    if (!processo) return;
-    ["tab-resumo", "tab-jornada", "tab-plano", "tab-duvidas"].forEach(idTab => {
-      const el = document.getElementById(idTab);
-      if (el) el.href = `${el.getAttribute('href')}?processo=${encodeURIComponent(processo)}`;
-    });
-  }
-
-  function renderCabecalhoDoente(doente){
-    const equipa = (doente.equipa || []).join(" · ") || "Sem equipa atribuída";
-    document.getElementById('ficha-doente-cabecalho').innerHTML = `
-      <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px;">
-        <div>
-          <h3 style="margin:0;">${doente.nome}</h3>
-          <p class="hint" style="margin:4px 0 0;">Processo ${doente.processo}${doente.data_alta ? ` · Alta em ${formatarData(doente.data_alta)}` : ""}</p>
-        </div>
-        <div style="text-align:right;">
-          <p class="hint" style="margin:0;">${equipa}</p>
-        </div>
-      </div>`;
   }
 
   async function carregarHistoricoProfissional(doenteId){
@@ -228,32 +188,16 @@
       window.location.href = "../index.html#acesso";
       return;
     }
-    document.getElementById("badge-utilizador").textContent = "Olá, " + sessao.perfil.nome.split(" ")[0];
+    document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
 
-    // O doente a consultar vem do processo clínico na URL, tal como já é
-    // usado noutras páginas profissionais (ver obterProcessoDaURL em main.js):
-    //   area-profissional/historico.html?processo=PROC-2026-0142
-    const processo = obterProcessoDaURL(null);
-    if (!processo) {
-      document.getElementById('ficha-doente-cabecalho').innerHTML =
-        `<p class="hint">Nenhum doente selecionado. Aceda a esta página a partir da ficha de um doente (ex.: dashboard.html na área profissional).</p>`;
-      document.getElementById('linhas-historico-prof').innerHTML =
-        `<tr><td colspan="4" class="hint" style="padding:16px;">—</td></tr>`;
-      document.getElementById('linhas-agendamentos-prof').innerHTML =
-        `<tr><td colspan="5" class="hint" style="padding:16px;">—</td></tr>`;
-      return;
-    }
+    const doente = await fenixApi.obterDoentePorProcesso(obterProcessoDaURL("PROC-2026-0142"));
+    document.getElementById("titulo-doente").textContent = "Histórico e agendamentos — " + doente.nome;
+    document.getElementById("sidebar-nome-doente").textContent = doente.nome;
+    document.getElementById("link-voltar").href = `doente.html?processo=${encodeURIComponent(doente.processo)}`;
+    ligarSidebarAoProcesso(doente.processo);
 
-    try {
-      DOENTE = await fenixApi.obterDoentePorProcesso(processo);
-      renderCabecalhoDoente(DOENTE);
-      ligarSubnavAoProcesso(processo);
-      carregarHistoricoProfissional(DOENTE.id);
-      carregarAgendamentosProfissional(DOENTE.id);
-    } catch (e) {
-      document.getElementById('ficha-doente-cabecalho').innerHTML =
-        `<p class="hint">Não foi possível encontrar o doente com o processo "${processo}".</p>`;
-    }
+    carregarHistoricoProfissional(doente.id);
+    carregarAgendamentosProfissional(doente.id);
   })();
 </script>
 </body>

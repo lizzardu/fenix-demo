@@ -30,15 +30,17 @@
 <div class="app-shell">
   <aside class="sidebar">
     <a href="dashboard.html">📋 Doentes</a>
-    <a href="alertas.html">🔔 Alertas</a>
-    <a href="novo-doente.html">➕ Novo Doente</a>
-    <a href="formulario-alta.html">📝 Formulário de Alta</a>
-    <a href="jornada.html">🎯 Jornada e Metas</a>
-    <a href="plano-tratamento.html" class="active">🏋️ Plano de Tratamento</a>
-    <a href="duvidas.html">💬 Dúvidas</a>
-    <a href="agenda-proms.html">📅 Agenda de PROMs</a>
-    <a href="equipa.html">👥 Equipa</a>
-    <a href="definicoes.html">⚙️ Definições</a>
+    <div style="margin:14px 28px 10px; padding-top:14px; border-top:1px solid var(--line);">
+      <p class="hint" style="margin:0 0 2px; font-size:.68rem; text-transform:uppercase; letter-spacing:.04em;">Doente selecionado</p>
+      <p style="margin:0; font-weight:600; color:var(--blue-deep); font-size:.88rem;" id="sidebar-nome-doente">A carregar...</p>
+    </div>
+    <a href="doente.html" data-processo-link>🗂️ Resumo</a>
+    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
+    <a href="plano-tratamento.html" data-processo-link class="active">🏋️ Plano de Tratamento</a>
+    <a href="jornada.html" data-processo-link>🎯 Jornada e Metas</a>
+    <a href="agenda-proms.html" data-processo-link>📅 Agenda de PROMs</a>
+    <a href="duvidas.html" data-processo-link>💬 Dúvidas</a>
+    <a href="historico.html" data-processo-link>🗓️ Histórico</a>
   </aside>
 
   <div class="main-area">
@@ -133,6 +135,8 @@
     const doente = await fenixApi.obterDoentePorProcesso(obterProcessoDaURL("PROC-2026-0142"));
     DOENTE_ID = doente.id;
     document.getElementById("titulo-doente").textContent = "Plano de tratamento — " + doente.nome;
+    document.getElementById("sidebar-nome-doente").textContent = doente.nome;
+    ligarSidebarAoProcesso(doente.processo);
     document.getElementById("link-voltar").href = `doente.html?processo=${encodeURIComponent(doente.processo)}`;
     carregarPlanoEditor();
   })();

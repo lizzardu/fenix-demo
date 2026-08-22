@@ -32,11 +32,6 @@
     <a class="active" href="dashboard.html">📋 Doentes</a>
     <a href="novo-doente.html">➕ Novo Doente</a>
     <a href="alertas.html">🔔 Alertas</a>
-    <a href="formulario-alta.html">📝 Formulário de Alta</a>
-    <a href="jornada.html">🎯 Jornada e Metas</a>
-    <a href="plano-tratamento.html">🏋️ Plano de Tratamento</a>
-    <a href="duvidas.html">💬 Dúvidas</a>
-    <a href="agenda-proms.html">📅 Agenda de PROMs</a>
     <a href="equipa.html">👥 Equipa</a>
     <a href="definicoes.html">⚙️ Definições</a>
   </aside>
@@ -61,11 +56,11 @@
       <table>
         <thead>
           <tr>
-            <th>Doente</th><th>%TBSA</th><th>Profundidade</th><th>Equipa</th><th></th>
+            <th>Doente</th><th>%TBSA</th><th>Profundidade</th><th>Equipa</th><th>Acessos</th><th></th>
           </tr>
         </thead>
         <tbody id="linhas-doentes">
-          <tr><td colspan="5" class="hint" style="padding:20px;">A carregar doentes...</td></tr>
+          <tr><td colspan="6" class="hint" style="padding:20px;">A carregar doentes...</td></tr>
         </tbody>
       </table>
     </div>
@@ -84,7 +79,7 @@
 
     const tbody = document.getElementById('linhas-doentes');
     if (!doentes.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="hint" style="padding:20px;">Ainda não há doentes registados. <a href="novo-doente.html">Registar o primeiro</a>.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="hint" style="padding:20px;">Ainda não há doentes registados. <a href="novo-doente.html">Registar o primeiro</a>.</td></tr>`;
       return;
     }
     tbody.innerHTML = doentes.map(d => `
@@ -93,6 +88,7 @@
         <td>${d.tbsa != null ? d.tbsa + '%' : '—'}</td>
         <td>${d.profundidade || '—'}</td>
         <td style="font-size:.82rem; color:var(--ink-soft);">${(d.equipa || []).join(', ') || '—'}</td>
+        <td class="mono" style="text-align:center;" title="Número de vezes que o doente/familiar entrou na sua área">🔑 ${d.contagem_acessos ?? 0}</td>
         <td><a class="btn btn-ghost btn-sm" href="doente.html?processo=${encodeURIComponent(d.processo)}">Ver ficha</a></td>
       </tr>`).join('');
   }
