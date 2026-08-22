@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histórico e Agendamentos do Doente — Fénix</title>
+<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body class="page-tint">
+<header class="topbar">
+  <div class="wrap">
+    <div class="brandbar">
+      <a class="uls-logo" href="https://www.ulssjose.min-saude.pt/" target="_blank" rel="noopener" aria-label="Website da ULS São José (abre em nova janela)">
+        <img src="../assets/img/uls-sao-jose-logo-negativo.png" alt="Unidade Local de Saúde São José">
+      </a>
+      <span class="brand-divider"></span>
+      <a class="brand" href="../index.html">
+        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
+        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+      </a>
+    </div>
+    <nav>
+      <span class="badge-team" id="badge-utilizador">A carregar...</span>
+      <a class="btn btn-ghost-light btn-sm" href="#" onclick="terminarSessao(event)">Sair</a>
+    </nav>
+  </div>
+</header>
+
+<!--
+  NOTA DE INTEGRAÇÃO: esta subnav assume que existem, no mesmo diretório
+  area-profissional/, páginas irmãs para as restantes secções da ficha do
+  doente (dashboard.html = Resumo, jornada.html, plano.html, duvidas.html),
+  todas aceitando o mesmo parâmetro ?processo= usado por obterProcessoDaURL()
+  em main.js. Se os nomes forem outros no projeto real, ajustar os href's
+  abaixo — a estrutura/estilo da subnav em si já replica a das outras páginas.
+-->
+<nav class="subnav">
+  <div class="wrap">
+    <a href="dashboard.html" id="tab-resumo">🏠 Resumo</a>
+    <a href="jornada.html" id="tab-jornada">🎯 Jornada e Metas</a>
+    <a href="plano.html" id="tab-plano">🏋️ Plano de Tratamento</a>
+    <a href="historico.html" class="active" id="tab-historico">🗓️ Histórico</a>
+    <a href="duvidas.html" id="tab-duvidas">💬 Dúvidas</a>
+  </div>
+</nav>
+
+<main class="wrap" style="padding:44px 32px 80px;">
+
+  <p class="eyebrow">Ficha do doente</p>
+  <h1 style="font-size:2rem;">Histórico e agendamentos</h1>
+  <p style="color:var(--ink-soft); max-width:64ch;">
+    Tudo o que o doente registou na sua área: episódios de saúde relatados (urgências,
+    consultas externas, internamentos) e consultas futuras que marcou. Esta vista é
+    apenas de leitura — os registos são geridos pelo próprio doente.
+  </p>
+
+  <!-- ======================= IDENTIFICAÇÃO DO DOENTE ======================= -->
+  <div class="card" style="margin-top:24px;">
+    <div id="ficha-doente-cabecalho">
+      <p class="hint">A carregar dados do doente...</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ======================= HISTÓRICO CLÍNICO ======================= -->
+  <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+    <p class="eyebrow" style="margin:0;">Histórico clínico relatado pelo doente</p>
+    <span class="pill pill-flame" id="contagem-historico">—</span>
+  </div>
+
+  <div class="card card-flush" style="margin-top:16px;">
+    <table>
+      <thead><tr><th>Data</th><th>Tipo de evento</th><th>Detalhe</th><th>Notas</th></tr></thead>
+      <tbody id="linhas-historico-prof">
+        <tr><td colspan="4" class="hint" style="padding:16px;">A carregar histórico...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ======================= AGENDAMENTOS ======================= -->
+  <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+    <p class="eyebrow" style="margin:0;">Agendamentos registados pelo doente</p>
+    <span class="pill pill-pending" id="contagem-agendamentos">—</span>
+  </div>
+
+  <div class="card card-flush" style="margin-top:16px;">
+    <table>
+      <thead><tr><th>Data e hora</th><th>Especialidade</th><th>Local</th><th>Estado</th><th>Notas</th></tr></thead>
+      <tbody id="linhas-agendamentos-prof">
+        <tr><td colspan="5" class="hint" style="padding:16px;">A carregar agendamentos...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios.</span></div>
+</footer>
+
+<script src="../assets/js/vendor/supabase.js"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+  let DOENTE = null; // objeto doente completo (id, nome, processo, ...)
+
+  const ROTULOS_TIPO_EVENTO = {
+    urgencia: "Serviço de Urgência",
+    consulta: "Consulta Externa",
+    internamento: "Internamento"
+  };
+
+  function formatarData(dataISO){
+    if (!dataISO) return "";
+    const d = new Date(dataISO.slice(0, 10) + "T00:00:00");
+    return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  function formatarDataHora(dataISO){
+    if (!dataISO) return "";
+    const d = new Date(dataISO);
+    return d.toLocaleString("pt-PT", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  function pillEstadoAgendamento(estado){
+    if (estado === 'cancelado') return `<span class="pill pill-alert">Cancelado</span>`;
+    if (estado === 'concluido') return `<span class="pill pill-ok">Concluído</span>`;
+    return `<span class="pill pill-pending">Agendado</span>`;
+  }
+
+  function descreverEventoHistorico(r){
+    if (r.tipo_evento === 'internamento') {
+      return `${formatarData(r.data_inicio)} — ${formatarData(r.data_fim)}`;
+    }
+    return r.especialidade || "—";
+  }
+
+  // acrescenta o processo do doente a cada link da subnav, para manter o
+  // contexto ao mudar de secção dentro da mesma ficha
+  function ligarSubnavAoProcesso(processo){
+    if (!processo) return;
+    ["tab-resumo", "tab-jornada", "tab-plano", "tab-duvidas"].forEach(idTab => {
+      const el = document.getElementById(idTab);
+      if (el) el.href = `${el.getAttribute('href')}?processo=${encodeURIComponent(processo)}`;
+    });
+  }
+
+  function renderCabecalhoDoente(doente){
+    const equipa = (doente.equipa || []).join(" · ") || "Sem equipa atribuída";
+    document.getElementById('ficha-doente-cabecalho').innerHTML = `
+      <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+        <div>
+          <h3 style="margin:0;">${doente.nome}</h3>
+          <p class="hint" style="margin:4px 0 0;">Processo ${doente.processo}${doente.data_alta ? ` · Alta em ${formatarData(doente.data_alta)}` : ""}</p>
+        </div>
+        <div style="text-align:right;">
+          <p class="hint" style="margin:0;">${equipa}</p>
+        </div>
+      </div>`;
+  }
+
+  async function carregarHistoricoProfissional(doenteId){
+    const tbody = document.getElementById('linhas-historico-prof');
+    try {
+      const linhas = await fenixApi.listarHistoricoClinico(doenteId);
+      document.getElementById('contagem-historico').textContent =
+        linhas.length === 1 ? "1 episódio registado" : `${linhas.length} episódios registados`;
+
+      if (!linhas.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="hint" style="padding:16px;">O doente ainda não registou nenhum episódio.</td></tr>`;
+        return;
+      }
+      const ordenadas = linhas.slice().sort((a, b) => {
+        const dataA = a.data_inicio || a.data_evento || "";
+        const dataB = b.data_inicio || b.data_evento || "";
+        return dataB.localeCompare(dataA);
+      });
+      tbody.innerHTML = ordenadas.map(r => `
+        <tr>
+          <td class="mono">${r.tipo_evento === 'internamento' ? formatarData(r.data_inicio) : formatarData(r.data_evento)}</td>
+          <td><span class="pill pill-flame">${ROTULOS_TIPO_EVENTO[r.tipo_evento] || r.tipo_evento}</span></td>
+          <td>${descreverEventoHistorico(r)}</td>
+          <td>${r.notas || "—"}</td>
+        </tr>`).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="4" class="hint" style="padding:16px;">Não foi possível carregar o histórico.</td></tr>`;
+    }
+  }
+
+  async function carregarAgendamentosProfissional(doenteId){
+    const tbody = document.getElementById('linhas-agendamentos-prof');
+    try {
+      const linhas = await fenixApi.listarAgendamentos(doenteId);
+      document.getElementById('contagem-agendamentos').textContent =
+        linhas.length === 1 ? "1 agendamento" : `${linhas.length} agendamentos`;
+
+      if (!linhas.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="hint" style="padding:16px;">O doente ainda não registou nenhum agendamento.</td></tr>`;
+        return;
+      }
+      const ordenadas = linhas.slice().sort((a, b) => a.data_hora.localeCompare(b.data_hora));
+      tbody.innerHTML = ordenadas.map(r => `
+        <tr>
+          <td class="mono">${formatarDataHora(r.data_hora)}</td>
+          <td>${r.especialidade}</td>
+          <td>${r.local}</td>
+          <td>${pillEstadoAgendamento(r.estado)}</td>
+          <td>${r.notas || "—"}</td>
+        </tr>`).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="5" class="hint" style="padding:16px;">Não foi possível carregar os agendamentos.</td></tr>`;
+    }
+  }
+
+  function terminarSessao(ev){
+    ev.preventDefault();
+    fenixApi.logout().then(() => { window.location.href = "../index.html#acesso"; });
+  }
+
+  (async function iniciar(){
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "profissional") {
+      window.location.href = "../index.html#acesso";
+      return;
+    }
+    document.getElementById("badge-utilizador").textContent = "Olá, " + sessao.perfil.nome.split(" ")[0];
+
+    // O doente a consultar vem do processo clínico na URL, tal como já é
+    // usado noutras páginas profissionais (ver obterProcessoDaURL em main.js):
+    //   area-profissional/historico.html?processo=PROC-2026-0142
+    const processo = obterProcessoDaURL(null);
+    if (!processo) {
+      document.getElementById('ficha-doente-cabecalho').innerHTML =
+        `<p class="hint">Nenhum doente selecionado. Aceda a esta página a partir da ficha de um doente (ex.: dashboard.html na área profissional).</p>`;
+      document.getElementById('linhas-historico-prof').innerHTML =
+        `<tr><td colspan="4" class="hint" style="padding:16px;">—</td></tr>`;
+      document.getElementById('linhas-agendamentos-prof').innerHTML =
+        `<tr><td colspan="5" class="hint" style="padding:16px;">—</td></tr>`;
+      return;
+    }
+
+    try {
+      DOENTE = await fenixApi.obterDoentePorProcesso(processo);
+      renderCabecalhoDoente(DOENTE);
+      ligarSubnavAoProcesso(processo);
+      carregarHistoricoProfissional(DOENTE.id);
+      carregarAgendamentosProfissional(DOENTE.id);
+    } catch (e) {
+      document.getElementById('ficha-doente-cabecalho').innerHTML =
+        `<p class="hint">Não foi possível encontrar o doente com o processo "${processo}".</p>`;
+    }
+  })();
+</script>
+</body>
+</html>
