@@ -419,6 +419,17 @@ function obterProcessoDaURL(padrao) {
   return params.get("processo") || padrao;
 }
 
+/** Acrescenta "?processo=..." a todos os links da sidebar marcados com
+ *  data-processo-link, para manter o doente selecionado ao mudar de secção
+ *  (Formulário de Alta, Plano, Jornada, Agenda de PROMs, Histórico...). */
+function ligarSidebarAoProcesso(processo) {
+  if (!processo) return;
+  document.querySelectorAll('.sidebar a[data-processo-link]').forEach(a => {
+    const base = a.getAttribute('href').split('?')[0];
+    a.href = `${base}?processo=${encodeURIComponent(processo)}`;
+  });
+}
+
 /* ---------- toggle simples de menu mobile / tabs, se necessário ---------- */
 function ativarTabs(grupoSelector) {
   document.querySelectorAll(grupoSelector).forEach(grupo => {

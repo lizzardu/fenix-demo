@@ -33,6 +33,11 @@ const fenixApi = {
   async login(email, password) {
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    // Regista +1 acesso se for uma conta de doente/familiar (a função
+    // registar_acesso_doente() não faz nada para contas profissionais —
+    // ver 004_contador_acessos.sql). Nunca deve impedir o login.
+    try { await sb.rpc("registar_acesso_doente"); }
+    catch (e) { console.error("Não foi possível registar o acesso:", e); }
     return data;
   },
 
