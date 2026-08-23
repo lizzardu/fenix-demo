@@ -73,7 +73,7 @@
         <a href="#prurido"><span class="n">4</span> Prurido</a>
         <a href="#amplitude"><span class="n">5</span> Amplitude articular</a>
         <a href="#funcionalidade"><span class="n">6</span> Funcionalidade</a>
-        <a href="#autocuidado"><span class="n">7</span> Autocuidado</a>
+        <a href="#autocuidado"><span class="n">7</span> Plano de Capacitação</a>
         <a href="#outcomes"><span class="n">8</span> Outcomes</a>
         <a href="#mapa"><span class="n">9</span> Mapa da recuperação</a>
       </nav>
@@ -95,6 +95,27 @@
                 <label class="chip"><input type="radio" name="contacto-tipo"><span>Familiar</span></label>
               </div>
             </div>
+          </div>
+          <div class="form-row" style="margin-top:16px;">
+            <div>
+              <label for="doente-email">Email</label>
+              <input type="email" id="doente-email" placeholder="nome@exemplo.pt">
+            </div>
+            <div>
+              <label>Género</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="genero"><span>Feminino</span></label>
+                <label class="chip"><input type="radio" name="genero"><span>Masculino</span></label>
+                <label class="chip"><input type="radio" name="genero"><span>Outro</span></label>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <label for="gestor-caso">Gestor de caso</label>
+            <select id="gestor-caso">
+              <option value="">A carregar profissionais...</option>
+            </select>
+            <p class="hint" style="margin:6px 0 0;">Profissional responsável por acompanhar este doente ao longo do seguimento.</p>
           </div>
         </div>
 
@@ -131,6 +152,30 @@
               <label class="chip"><input type="radio" name="profundidade"><span>2.º grau superficial</span></label>
               <label class="chip"><input type="radio" name="profundidade"><span>2.º grau profundo</span></label>
               <label class="chip"><input type="radio" name="profundidade"><span>3.º grau</span></label>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="subfield">
+              <label>Configuração</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="configuracao"><span>Circular</span></label>
+                <label class="chip"><input type="radio" name="configuracao"><span>Não circular</span></label>
+              </div>
+            </div>
+            <div class="subfield">
+              <label>Necessidade de escarotomia</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="escarotomia"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="escarotomia" checked><span>Não</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="subfield" style="max-width:260px;">
+            <label>Necessidade de fasciotomia</label>
+            <div class="chip-group">
+              <label class="chip"><input type="radio" name="fasciotomia"><span>Sim</span></label>
+              <label class="chip"><input type="radio" name="fasciotomia" checked><span>Não</span></label>
             </div>
           </div>
 
@@ -289,7 +334,7 @@
             </div>
             <div class="subfield" style="max-width:180px;">
               <label for="vss-total">VSS total (/13)</label>
-              <input type="text" id="vss-total" placeholder="___ /13">
+              <input type="text" id="vss-total" placeholder="calculado automaticamente" readonly>
             </div>
           </div>
 
@@ -319,6 +364,10 @@
             <div class="subfield"><label>Opinião global (1–10)</label><div class="scale mini-scale">
               <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasobs-global"><span>${i}</span></label>`);}</script>
             </div></div>
+            <div class="subfield" style="max-width:180px; margin-bottom:0;">
+              <label for="posasobs-total">Total dos 6 itens (/60)</label>
+              <input type="text" id="posasobs-total" placeholder="calculado automaticamente" readonly>
+            </div>
           </div>
 
           <!-- POSAS Doente -->
@@ -347,6 +396,29 @@
             <div class="subfield"><label>Opinião global (1–10)</label><div class="scale mini-scale">
               <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasdo-global"><span>${i}</span></label>`);}</script>
             </div></div>
+            <div class="subfield" style="max-width:180px; margin-bottom:0;">
+              <label for="posasdo-total">Total dos 6 itens (/60)</label>
+              <input type="text" id="posasdo-total" placeholder="calculado automaticamente" readonly>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top:22px;">
+            <div class="subfield">
+              <label>Sequelas previsíveis</label>
+              <div class="chip-group" style="margin-bottom:10px;">
+                <label class="chip"><input type="radio" name="sequelas"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="sequelas" checked><span>Não</span></label>
+              </div>
+              <input type="text" placeholder="Localização">
+            </div>
+            <div class="subfield">
+              <label>Bridas</label>
+              <div class="chip-group" style="margin-bottom:10px;">
+                <label class="chip"><input type="radio" name="bridas"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="bridas" checked><span>Não</span></label>
+              </div>
+              <input type="text" placeholder="Localização">
+            </div>
           </div>
         </section>
 
@@ -484,13 +556,13 @@
           </div>
           <div class="subfield" style="max-width:180px; margin-bottom:0;">
             <label for="psfs-media">Média PSFS (/10)</label>
-            <input type="text" id="psfs-media" placeholder="___ /10">
+            <input type="text" id="psfs-media" placeholder="calculado automaticamente" readonly>
           </div>
         </section>
 
-        <!-- ======================= 7. AUTOCUIDADO E ADESÃO ======================= -->
+        <!-- ======================= 7. PLANO DE CAPACITAÇÃO ======================= -->
         <section id="autocuidado" class="form-section card">
-          <div class="section-head"><span class="section-num">7</span><h2>Autocuidado e adesão</h2></div>
+          <div class="section-head"><span class="section-num">7</span><h2>Plano de Capacitação</h2></div>
 
           <table class="adesao-table">
             <thead><tr><th>Cuidado</th><th>Sim / Não</th><th>Adesão</th></tr></thead>
@@ -633,6 +705,62 @@
   }
   construirTabelaAutocuidado();
 
+  /* --- somatório automático das escalas: cada escala tem vários itens de
+     escolha (radio), cujo texto começa sempre pelo valor numérico do item
+     (ex.: "2 Hiperpigmentação", ou simplesmente "7"). Em vez de o
+     profissional somar/calcular a média à mão, isto faz-se sozinho sempre
+     que uma opção muda. --- */
+  function pontuarRadioGroup(nome){
+    const marcado = document.querySelector(`input[name="${nome}"]:checked`);
+    if (!marcado) return null;
+    const texto = marcado.nextElementSibling.textContent.trim();
+    const match = texto.match(/^-?\d+/);
+    return match ? parseInt(match[0], 10) : null;
+  }
+
+  function recalcularSoma(nomes, totalId, maximo){
+    let soma = 0, completos = 0;
+    nomes.forEach(nome => {
+      const v = pontuarRadioGroup(nome);
+      if (v != null) { soma += v; completos++; }
+    });
+    const el = document.getElementById(totalId);
+    if (el) el.value = completos ? `${soma} /${maximo}` : '';
+  }
+
+  function recalcularVSS(){
+    recalcularSoma(['vss-pig', 'vss-vasc', 'vss-flex', 'vss-alt'], 'vss-total', 13);
+  }
+  function recalcularPosasObs(){
+    recalcularSoma(['posasobs-vasc', 'posasobs-pig', 'posasobs-esp', 'posasobs-rel', 'posasobs-flex', 'posasobs-area'], 'posasobs-total', 60);
+  }
+  function recalcularPosasDoente(){
+    recalcularSoma(['posasdo-dor', 'posasdo-prur', 'posasdo-cor', 'posasdo-rig', 'posasdo-esp', 'posasdo-irr'], 'posasdo-total', 60);
+  }
+  function recalcularPSFS(){
+    const nomes = ['psfs1', 'psfs2', 'psfs3'];
+    let soma = 0, completos = 0;
+    nomes.forEach(nome => {
+      const v = pontuarRadioGroup(nome);
+      if (v != null) { soma += v; completos++; }
+    });
+    const el = document.getElementById('psfs-media');
+    if (el) el.value = completos ? (soma / completos).toFixed(1) + ' /10' : '';
+  }
+
+  // um único listener por secção (delegação de eventos) em vez de repetir
+  // onchange="..." em cada rádio individual — dispara para todos os itens
+  // gerados estaticamente (VSS) e dinamicamente (POSAS, PSFS)
+  document.getElementById('cicatriz').addEventListener('change', (ev) => {
+    const nome = ev.target.name || '';
+    if (nome.startsWith('vss-')) recalcularVSS();
+    else if (nome.startsWith('posasobs-')) recalcularPosasObs();
+    else if (nome.startsWith('posasdo-')) recalcularPosasDoente();
+  });
+  document.getElementById('funcionalidade').addEventListener('change', (ev) => {
+    if (/^psfs\d$/.test(ev.target.name || '')) recalcularPSFS();
+  });
+
   function paraISO(dataBR){
     if (!dataBR) return null;
     const m = dataBR.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -650,13 +778,22 @@
       return Array.from(checkboxes).filter(c => c.checked).map(c => c.nextElementSibling.textContent.trim());
     }
     const radios = campo.querySelectorAll('.chip-group input[type="radio"], .scale input[type="radio"]');
+    const inputs = campo.querySelectorAll('input[type="text"], input[type="email"], textarea');
+
+    // caso misto: radio Sim/Não + campo(s) de texto associados (ex.: "Sequelas
+    // previsíveis" -> Sim/Não + Localização; também cobre Enxertos/Zona dadora)
+    if (radios.length && inputs.length) {
+      const marcado = Array.from(radios).find(r => r.checked);
+      const resposta = marcado ? marcado.nextElementSibling.textContent.trim() : null;
+      const detalhe = inputs.length === 1 ? inputs[0].value : Array.from(inputs).map(i => i.value);
+      return { resposta, detalhe };
+    }
     if (radios.length) {
       const marcado = Array.from(radios).find(r => r.checked);
       return marcado ? marcado.nextElementSibling.textContent.trim() : null;
     }
     const select = campo.querySelector('select');
     if (select) return select.value;
-    const inputs = campo.querySelectorAll('input[type="text"], textarea');
     if (inputs.length === 1) return inputs[0].value;
     if (inputs.length > 1) return Array.from(inputs).map(i => i.value);
     return null;
@@ -746,6 +883,14 @@
       if (profundidade) contexto.profundidade = profundidade;
       if (zona) contexto.zona_anatomica = zona;
       if (dataAlta) contexto.data_alta = dataAlta;
+
+      const email = document.getElementById('doente-email').value.trim();
+      const generoEl = document.querySelector('input[name="genero"]:checked');
+      const gestorCaso = document.getElementById('gestor-caso').value;
+      if (email) contexto.email = email;
+      if (generoEl) contexto.genero = generoEl.nextElementSibling.textContent.trim();
+      if (gestorCaso) contexto.gestor_caso_id = gestorCaso;
+
       if (Object.keys(contexto).length) {
         await fenixApi.atualizarDoenteContexto(DOENTE_ID, contexto);
       }
@@ -778,13 +923,20 @@
       return;
     }
     const radios = campo.querySelectorAll('.chip-group input[type="radio"], .scale input[type="radio"]');
+    const inputs = campo.querySelectorAll('input[type="text"], input[type="email"], textarea');
+
+    if (radios.length && inputs.length && valor && typeof valor === "object" && "resposta" in valor) {
+      radios.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === valor.resposta); });
+      if (inputs.length === 1) { inputs[0].value = valor.detalhe || ""; }
+      else if (Array.isArray(valor.detalhe)) { inputs.forEach((input, i) => { if (valor.detalhe[i] != null) input.value = valor.detalhe[i]; }); }
+      return;
+    }
     if (radios.length) {
       radios.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === valor); });
       return;
     }
     const select = campo.querySelector('select');
     if (select) { select.value = valor; return; }
-    const inputs = campo.querySelectorAll('input[type="text"], textarea');
     if (inputs.length === 1) { inputs[0].value = valor; return; }
     if (inputs.length > 1 && Array.isArray(valor)) {
       inputs.forEach((input, i) => { if (valor[i] != null) input.value = valor[i]; });
@@ -848,6 +1000,13 @@
     repovoarRomTable(dados.amplitude_tabela);
     repovoarAdesaoTable(dados.autocuidado_tabela);
 
+    // os totais também ficam guardados como texto simples, mas recalcula-se
+    // sempre a partir dos itens repovoados, para garantir que nunca desalinha
+    recalcularVSS();
+    recalcularPosasObs();
+    recalcularPosasDoente();
+    recalcularPSFS();
+
     // revelar o painel de escala (VSS/POSAS) correspondente à escolha guardada
     const escalaEscolhida = document.querySelector('#cicatriz input[name="escala-cicatriz"]:checked');
     if (escalaEscolhida) {
@@ -878,6 +1037,26 @@
     document.getElementById("titulo-formulario").textContent = "Formulário de Alta — " + doente.nome;
     document.getElementById("sidebar-nome-doente").textContent = doente.nome;
     ligarSidebarAoProcesso(doente.processo);
+
+    if (doente.email) document.getElementById('doente-email').value = doente.email;
+    if (doente.genero) {
+      document.querySelectorAll('input[name="genero"]').forEach(r => {
+        r.checked = (r.nextElementSibling.textContent.trim() === doente.genero);
+      });
+    }
+
+    // preencher o dropdown de gestor de caso com a equipa profissional real,
+    // e pré-selecionar o gestor já atribuído a este doente (se houver)
+    try {
+      const equipa = await fenixApi.listarEquipaProfissionais();
+      const select = document.getElementById('gestor-caso');
+      select.innerHTML = `<option value="">Por atribuir</option>` + equipa.map(p =>
+        `<option value="${p.id}">${p.nome}${p.especialidade ? " — " + p.especialidade : ""}</option>`
+      ).join('');
+      if (doente.gestor_caso_id) select.value = doente.gestor_caso_id;
+    } catch (e) {
+      console.error("Não foi possível carregar a lista de profissionais:", e);
+    }
     document.getElementById("link-voltar").href = `doente.html?processo=${encodeURIComponent(doente.processo)}`;
     document.getElementById("link-voltar").textContent = "← Voltar à ficha do doente";
     await carregarUltimoFormulario();

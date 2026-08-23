@@ -99,6 +99,24 @@
               </div>
             </div>
           </div>
+          <div class="form-row" style="margin-top:16px;">
+            <div>
+              <label for="doente-email">Email</label>
+              <input type="email" id="doente-email" placeholder="nome@exemplo.pt">
+            </div>
+            <div>
+              <label>Género</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="genero"><span>Feminino</span></label>
+                <label class="chip"><input type="radio" name="genero"><span>Masculino</span></label>
+                <label class="chip"><input type="radio" name="genero"><span>Outro</span></label>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <label for="gestor-caso">Gestor de caso</label>
+            <input type="text" id="gestor-caso-nome" placeholder="Por atribuir" disabled>
+          </div>
         </div>
 
         <!-- ======================= 1. QUEIMADURA ======================= -->
@@ -134,6 +152,30 @@
               <label class="chip"><input type="radio" name="profundidade"><span>2.º grau superficial</span></label>
               <label class="chip"><input type="radio" name="profundidade"><span>2.º grau profundo</span></label>
               <label class="chip"><input type="radio" name="profundidade"><span>3.º grau</span></label>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="subfield">
+              <label>Configuração</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="configuracao"><span>Circular</span></label>
+                <label class="chip"><input type="radio" name="configuracao"><span>Não circular</span></label>
+              </div>
+            </div>
+            <div class="subfield">
+              <label>Necessidade de escarotomia</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="escarotomia"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="escarotomia" checked><span>Não</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="subfield" style="max-width:260px;">
+            <label>Necessidade de fasciotomia</label>
+            <div class="chip-group">
+              <label class="chip"><input type="radio" name="fasciotomia"><span>Sim</span></label>
+              <label class="chip"><input type="radio" name="fasciotomia" checked><span>Não</span></label>
             </div>
           </div>
 
@@ -292,7 +334,7 @@
             </div>
             <div class="subfield" style="max-width:180px;">
               <label for="vss-total">VSS total (/13)</label>
-              <input type="text" id="vss-total" placeholder="___ /13">
+              <input type="text" id="vss-total" placeholder="calculado automaticamente" readonly>
             </div>
           </div>
 
@@ -322,6 +364,10 @@
             <div class="subfield"><label>Opinião global (1–10)</label><div class="scale mini-scale">
               <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasobs-global"><span>${i}</span></label>`);}</script>
             </div></div>
+            <div class="subfield" style="max-width:180px; margin-bottom:0;">
+              <label for="posasobs-total">Total dos 6 itens (/60)</label>
+              <input type="text" id="posasobs-total" placeholder="calculado automaticamente" readonly>
+            </div>
           </div>
 
           <!-- POSAS Doente -->
@@ -350,6 +396,29 @@
             <div class="subfield"><label>Opinião global (1–10)</label><div class="scale mini-scale">
               <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasdo-global"><span>${i}</span></label>`);}</script>
             </div></div>
+            <div class="subfield" style="max-width:180px; margin-bottom:0;">
+              <label for="posasdo-total">Total dos 6 itens (/60)</label>
+              <input type="text" id="posasdo-total" placeholder="calculado automaticamente" readonly>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top:22px;">
+            <div class="subfield">
+              <label>Sequelas previsíveis</label>
+              <div class="chip-group" style="margin-bottom:10px;">
+                <label class="chip"><input type="radio" name="sequelas"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="sequelas" checked><span>Não</span></label>
+              </div>
+              <input type="text" placeholder="Localização">
+            </div>
+            <div class="subfield">
+              <label>Bridas</label>
+              <div class="chip-group" style="margin-bottom:10px;">
+                <label class="chip"><input type="radio" name="bridas"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="bridas" checked><span>Não</span></label>
+              </div>
+              <input type="text" placeholder="Localização">
+            </div>
           </div>
         </section>
 
@@ -487,13 +556,13 @@
           </div>
           <div class="subfield" style="max-width:180px; margin-bottom:0;">
             <label for="psfs-media">Média PSFS (/10)</label>
-            <input type="text" id="psfs-media" placeholder="___ /10">
+            <input type="text" id="psfs-media" placeholder="calculado automaticamente" readonly>
           </div>
         </section>
 
-        <!-- ======================= 7. AUTOCUIDADO E ADESÃO ======================= -->
+        <!-- ======================= 7. PLANO DE CAPACITAÇÃO ======================= -->
         <section id="autocuidado" class="form-section card">
-          <div class="section-head"><span class="section-num">7</span><h2>Autocuidado e adesão</h2></div>
+          <div class="section-head"><span class="section-num">7</span><h2>Plano de Capacitação</h2></div>
 
           <table class="adesao-table">
             <thead><tr><th>Cuidado</th><th>Sim / Não</th><th>Adesão</th></tr></thead>
@@ -592,6 +661,7 @@
             <textarea id="alivia-dor" rows="2"></textarea>
           </div>
         </section>
+
       </form>
     </div>
 
@@ -643,13 +713,20 @@
       return;
     }
     const radios = campo.querySelectorAll('.chip-group input[type="radio"], .scale input[type="radio"]');
+    const inputs = campo.querySelectorAll('input[type="text"], input[type="email"], textarea');
+
+    if (radios.length && inputs.length && valor && typeof valor === "object" && "resposta" in valor) {
+      radios.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === valor.resposta); });
+      if (inputs.length === 1) { inputs[0].value = valor.detalhe || ""; }
+      else if (Array.isArray(valor.detalhe)) { inputs.forEach((input, i) => { if (valor.detalhe[i] != null) input.value = valor.detalhe[i]; }); }
+      return;
+    }
     if (radios.length) {
       radios.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === valor); });
       return;
     }
     const select = campo.querySelector('select');
     if (select) { select.value = valor; return; }
-    const inputs = campo.querySelectorAll('input[type="text"], textarea');
     if (inputs.length === 1) { inputs[0].value = valor; return; }
     if (inputs.length > 1 && Array.isArray(valor)) {
       inputs.forEach((input, i) => { if (valor[i] != null) input.value = valor[i]; });
@@ -704,6 +781,23 @@
   }
 
   async function carregarFormulario(){
+    const doente = await fenixApi.obterDoente(DOENTE_ID);
+    if (doente.email) document.getElementById('doente-email').value = doente.email;
+    if (doente.genero) {
+      document.querySelectorAll('input[name="genero"]').forEach(r => {
+        r.checked = (r.nextElementSibling.textContent.trim() === doente.genero);
+      });
+    }
+    if (doente.gestor_caso_id) {
+      try {
+        const equipa = await fenixApi.listarEquipaProfissionais();
+        const gestor = equipa.find(p => p.id === doente.gestor_caso_id);
+        if (gestor) document.getElementById('gestor-caso-nome').value = gestor.nome + (gestor.especialidade ? " — " + gestor.especialidade : "");
+      } catch (e) {
+        console.error("Não foi possível identificar o gestor de caso:", e);
+      }
+    }
+
     const ultimo = await fenixApi.obterUltimoFormularioAlta(DOENTE_ID);
     if (!ultimo) {
       document.getElementById('sem-formulario').style.display = 'flex';
