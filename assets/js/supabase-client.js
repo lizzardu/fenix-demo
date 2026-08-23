@@ -362,6 +362,23 @@ const fenixApi = {
       if (r.util) resumo[r.recurso_id].gostos++; else resumo[r.recurso_id].naoGostos++;
     });
     return Object.values(resumo);
+  },
+
+  /* ---------------------------------------------------------------------
+     CHECK-IN RÁPIDO DE HUMOR — pop-up de 3 caras ("triste"/"ok"/"feliz")
+     mostrado ao doente logo depois de submeter uma avaliação PROM.
+     Requer a tabela "checkins_humor" — ver 005_checkins_humor.sql.
+     --------------------------------------------------------------------- */
+  async registarCheckinHumor(doenteId, valor) {
+    const { data, error } = await sb.from("checkins_humor").insert({ doente_id: doenteId, valor }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async listarCheckinsHumor(doenteId) {
+    const { data, error } = await sb.from("checkins_humor").select("*").eq("doente_id", doenteId).order("criado_em");
+    if (error) throw error;
+    return data;
   }
 };
 

@@ -6,6 +6,30 @@
 <title>Avaliação — 3 meses · Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
 <link rel="stylesheet" href="../assets/css/styles.css">
+<style>
+  /* Pop-up "Como se sente hoje?" — 3 caras, mostrado após submeter uma avaliação. */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(16,35,59,.55); backdrop-filter:blur(2px);
+    display:none; align-items:center; justify-content:center; z-index:1000; padding:20px;
+  }
+  .modal-box{
+    background:#fff; border-radius:var(--radius-lg); padding:32px; max-width:420px; width:100%;
+    text-align:center; box-shadow:0 20px 60px rgba(16,35,59,.35);
+  }
+  .mood-faces{ display:flex; justify-content:center; gap:14px; margin-top:8px; }
+  .mood-face{
+    display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 18px;
+    border:2px solid var(--line); border-radius:var(--radius-lg); background:#fff; cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease; min-width:84px;
+  }
+  .mood-face:hover:not(:disabled){ transform:translateY(-2px); }
+  .mood-face .face{ font-size:2.1rem; line-height:1; }
+  .mood-face .lbl{ font-size:.8rem; color:var(--ink-soft); font-weight:600; }
+  .mood-face[data-valor="triste"]:hover:not(:disabled), .mood-face[data-valor="triste"].is-picked{ border-color:var(--alert); background:var(--alert-mist); }
+  .mood-face[data-valor="ok"]:hover:not(:disabled), .mood-face[data-valor="ok"].is-picked{ border-color:#D89A1F; background:#FFF6DA; }
+  .mood-face[data-valor="feliz"]:hover:not(:disabled), .mood-face[data-valor="feliz"].is-picked{ border-color:var(--ok); background:var(--ok-mist); }
+  .mood-face:disabled{ opacity:.7; cursor:default; transform:none; }
+</style>
 </head>
 <body class="page-tint">
 <header class="topbar">
@@ -110,6 +134,27 @@
     <a class="btn btn-ghost" href="dashboard.html">Voltar à minha jornada</a>
   </div>
 
+  <!-- ======================= POP-UP: como se sente hoje? ======================= -->
+  <div id="modal-humor" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-humor-titulo">
+    <div class="modal-box">
+      <p class="eyebrow" style="margin-bottom:4px; justify-content:center;">Antes de continuar</p>
+      <h3 id="modal-humor-titulo" style="margin:0 0 6px;">Como se sente hoje?</h3>
+      <p class="hint" style="margin:0 0 20px;">Uma resposta rápida — é só para nós percebermos o seu dia.</p>
+      <div class="mood-faces">
+        <button type="button" class="mood-face" data-valor="triste" onclick="responderHumor(this)">
+          <span class="face">😞</span><span class="lbl">Triste</span>
+        </button>
+        <button type="button" class="mood-face" data-valor="ok" onclick="responderHumor(this)">
+          <span class="face">😐</span><span class="lbl">Ok</span>
+        </button>
+        <button type="button" class="mood-face" data-valor="feliz" onclick="responderHumor(this)">
+          <span class="face">😄</span><span class="lbl">Alegre</span>
+        </button>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" style="margin-top:18px;" onclick="fecharModalHumor()">Agora não</button>
+    </div>
+  </div>
+
 </main>
 
 <footer>
@@ -168,10 +213,32 @@
       document.getElementById('confirm').style.display = 'block';
       document.getElementById('form-prom').style.display = 'none';
       window.scrollTo(0, 0);
+      abrirModalHumor();
     } catch (e) {
       alert("Não foi possível enviar as respostas: " + (e.message || e));
       btn.disabled = false; btn.textContent = "Submeter respostas";
     }
+  }
+
+  function abrirModalHumor(){
+    document.getElementById('modal-humor').style.display = 'flex';
+  }
+
+  function fecharModalHumor(){
+    document.getElementById('modal-humor').style.display = 'none';
+  }
+
+  /* regista o check-in e fecha o pop-up pouco depois, para o doente ver
+     a sua escolha destacada antes de o pop-up desaparecer */
+  async function responderHumor(botao){
+    document.querySelectorAll('.mood-face').forEach(b => b.disabled = true);
+    botao.classList.add('is-picked');
+    try {
+      await fenixApi.registarCheckinHumor(DOENTE_ID, botao.dataset.valor);
+    } catch (e) {
+      console.error("Não foi possível registar o check-in de humor:", e);
+    }
+    setTimeout(fecharModalHumor, 500);
   }
 
   function terminarSessao(ev){
