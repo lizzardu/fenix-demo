@@ -579,6 +579,11 @@ function editorRowHTML(m, idx) {
         </select>
       </div>
     </div>
+    ${m.foto ? `
+    <div style="margin-bottom:12px;">
+      <p class="hint" style="margin:0 0 6px; font-weight:600; color:var(--blue-deep);">📷 Foto enviada pelo doente</p>
+      <div class="milestone-photo" style="margin-top:0;"><img src="${m.foto}" alt="Foto submetida pelo doente para a meta ${m.label.replace(/"/g, '&quot;')}"></div>
+    </div>` : ""}
     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <label class="star-toggle">
@@ -609,7 +614,20 @@ function guardarMeta(id) {
 function renderMilestonesEditor(containerId) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  el.innerHTML = DEMO_PATIENT.milestones.map(editorRowHTML).join("");
+  const abertas = DEMO_PATIENT.milestones.filter(m => m.estado !== "done");
+  const concluidas = DEMO_PATIENT.milestones.filter(m => m.estado === "done");
+
+  el.innerHTML = `
+    <div class="grid g-2" style="align-items:start; gap:24px;">
+      <div>
+        <p class="eyebrow" style="margin-bottom:14px;">Em aberto (${abertas.length})</p>
+        ${abertas.length ? abertas.map(editorRowHTML).join("") : `<p class="hint">Sem metas em aberto de momento.</p>`}
+      </div>
+      <div>
+        <p class="eyebrow" style="margin-bottom:14px;">Concluídas (${concluidas.length})</p>
+        ${concluidas.length ? concluidas.map(editorRowHTML).join("") : `<p class="hint">Ainda sem metas concluídas.</p>`}
+      </div>
+    </div>`;
 }
 
 function removerMeta(id) {
