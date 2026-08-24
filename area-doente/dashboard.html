@@ -176,9 +176,23 @@
   async function carregarDashboard(){
     const doente = await fenixApi.obterDoente(DOENTE_ID);
 
-    document.getElementById('lista-equipa').innerHTML = (doente.equipa || []).map(e =>
+    let itensEquipa = (doente.equipa || []).map(e =>
       `<li>${ICONES_EQUIPA[e] || "•"} ${e}</li>`
-    ).join('') || `<li class="hint">Sem equipa atribuída ainda.</li>`;
+    ).join('');
+
+    if (doente.gestor_caso_id) {
+      try {
+        const equipa = await fenixApi.listarEquipaProfissionais();
+        const gestor = equipa.find(p => p.id === doente.gestor_caso_id);
+        if (gestor) {
+          itensEquipa = `<li style="font-weight:600; color:var(--blue-deep);">⭐ Gestor de caso — ${gestor.nome}${gestor.especialidade ? ` <span style="font-weight:400; color:var(--ink-soft);">(${gestor.especialidade})</span>` : ""}</li>` + itensEquipa;
+        }
+      } catch (e) {
+        console.error("Não foi possível identificar o gestor de caso:", e);
+      }
+    }
+
+    document.getElementById('lista-equipa').innerHTML = itensEquipa || `<li class="hint">Sem equipa atribuída ainda.</li>`;
 
     const metas = await fenixApi.listarMetas(DOENTE_ID);
     DEMO_PATIENT.milestones = metas.map(r => ({
