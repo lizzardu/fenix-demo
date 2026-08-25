@@ -9,10 +9,18 @@
 <style>
   /* Vista só de leitura: os campos ficam desativados, mas devem continuar a
      parecer legíveis (não cinzentos-desmaiados como um formulário por preencher). */
-  #form-alta input:disabled,
+  #form-alta input[type="text"]:disabled,
+  #form-alta input[type="email"]:disabled,
   #form-alta select:disabled,
   #form-alta textarea:disabled{
     opacity:1; color:var(--ink); -webkit-text-fill-color:var(--ink); cursor:default;
+  }
+  /* os radios/checkboxes dos "chips" e das mini-escalas têm de continuar
+     invisíveis (opacity:0) — é o :checked + span que os desenha como pílula;
+     sem isto, o círculo nativo do input volta a aparecer por cima do chip. */
+  #form-alta .chip input:disabled,
+  #form-alta .scale-opt input:disabled{
+    opacity:0 !important;
   }
   #form-alta .chip:has(input:disabled){ cursor:default; }
 </style>
