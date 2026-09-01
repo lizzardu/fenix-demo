@@ -379,6 +379,46 @@ const fenixApi = {
     const { data, error } = await sb.from("checkins_humor").select("*").eq("doente_id", doenteId).order("criado_em");
     if (error) throw error;
     return data;
+  },
+
+  /* ---------------------------------------------------------------------
+     COMUNICAÇÃO DA EQUIPA — notas internas sobre um doente, trocadas entre
+     profissionais. Usadas na ficha do doente (area-profissional/doente.html).
+     Requer a tabela "comunicacoes_equipa" — ver 006_comunicacao_equipa.sql.
+
+     Esta informação NÃO é visível para o doente nem para o familiar: as
+     políticas RLS dessa tabela só permitem ler e escrever a contas com
+     papel = 'profissional'. O histórico é imutável — não há aqui função
+     para editar ou apagar, e a base de dados também não o permite.
+     --------------------------------------------------------------------- */
+  async listarComunicacoesEquipa(doenteId) {
+    const { data, error } = await sb
+      .from("comunicacoes_equipa").select("*")
+      .eq("doente_id", doenteId)
+      .order("criado_em", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  /** Regista uma nova entrada no mural da equipa. O autor é sempre o
+   *  profissional com sessão iniciada; o nome e a especialidade ficam
+   *  gravados na linha para o histórico continuar legível mesmo que o
+   *  perfil venha a mudar. */
+  async registarComunicacaoEquipa(doenteId, mensagem, categoria) {
+    const sessao = await this.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "profissional") {
+      throw new Error("Só profissionais com sessão iniciada podem registar comunicação da equipa.");
+    }
+    const { data, error } = await sb.from("comunicacoes_equipa").insert({
+      doente_id: doenteId,
+      autor_id: sessao.user.id,
+      autor_nome: sessao.perfil.nome,
+      autor_especialidade: sessao.perfil.especialidade,
+      categoria,
+      mensagem
+    }).select().single();
+    if (error) throw error;
+    return data;
   }
 };
 

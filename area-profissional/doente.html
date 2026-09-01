@@ -72,6 +72,47 @@
       <div style="display:flex; gap:10px; flex-wrap:wrap;" id="equipa-doente"></div>
     </div>
 
+    <!-- ---------- comunicação da equipa (interno, nunca visível ao doente) ---------- -->
+    <div class="card" style="margin-bottom:32px; border-left:3px solid var(--flame-deep);">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:10px;">
+        <p class="eyebrow" style="margin-bottom:6px;">Comunicação da equipa</p>
+        <span class="pill pill-flame">🔒 Só profissionais</span>
+      </div>
+      <p style="color:var(--ink-soft); max-width:70ch; margin:0 0 20px; font-size:.9rem;">
+        Espaço reservado à equipa para partilhar informação sobre este doente.
+        Fica registada a data, a hora e o autor de cada entrada. O doente e a
+        família <strong>não têm acesso</strong> a esta secção.
+      </p>
+
+      <div style="max-width:680px;">
+        <div class="field" style="margin-bottom:12px;">
+          <label for="com-categoria">Área que regista</label>
+          <select id="com-categoria">
+            <option value="Geral">Geral</option>
+            <option value="Cirurgia Plástica">Cirurgia Plástica</option>
+            <option value="Enfermagem">Enfermagem</option>
+            <option value="Fisioterapia">Fisioterapia</option>
+            <option value="Terapia Ocupacional">Terapia Ocupacional</option>
+            <option value="Psicologia">Psicologia</option>
+            <option value="Nutrição">Nutrição</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:12px;">
+          <label for="com-mensagem">Nova informação</label>
+          <textarea id="com-mensagem" rows="3" placeholder="Ex.: Doente refere agravamento do prurido noturno; combinado reavaliar penso na próxima consulta."></textarea>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-flame btn-sm" id="com-btn" onclick="registarComunicacao()">Adicionar ao histórico</button>
+          <span class="hint" style="margin:0;" id="com-estado"></span>
+        </div>
+      </div>
+
+      <hr class="divider" style="margin:26px 0 20px;">
+
+      <p class="eyebrow" style="margin-bottom:14px;">Histórico de interações</p>
+      <div id="com-historico"><p class="hint" style="margin:0;">A carregar...</p></div>
+    </div>
+
     <!-- ---------- jornada ---------- -->
     <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">
       <p class="eyebrow" style="margin:0;">Jornada de recuperação, em resumo</p>
@@ -153,6 +194,10 @@
     }));
     renderJornadaResumo("jornada-resumo", { linkHref: `jornada.html?processo=${encodeURIComponent(DOENTE.processo)}` });
 
+    // comunicação interna da equipa
+    carregarComunicacoesEquipa();
+
+
     // PROMs — gráficos de evolução
     const mapaInstrumentos = [
       { instrumento: "NRS-dor",  canvas: "chart-dor",     cor: () => corAlert(), min: 0, max: 10 },
@@ -183,6 +228,83 @@
     } else if (totalRespostas === 0) {
       document.getElementById("proms-vazio").style.display = "flex";
       document.getElementById("grid-charts").style.display = "none";
+    }
+  }
+
+  /* ---------------------------------------------------------------------
+     Comunicação da equipa — mural interno da ficha deste doente.
+     Só é lido/escrito por profissionais: as políticas RLS da tabela
+     "comunicacoes_equipa" (006_comunicacao_equipa.sql) impedem qualquer
+     conta de doente ou familiar de aceder a estes registos.
+     --------------------------------------------------------------------- */
+  function escaparHtml(texto){
+    return String(texto == null ? "" : texto)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function formatarDataHora(iso){
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" })
+         + " · " + d.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function comunicacaoHTML(c){
+    const autor = escaparHtml(c.autor_nome || "Profissional");
+    const especialidade = c.autor_especialidade ? " · " + escaparHtml(c.autor_especialidade) : "";
+    const categoria = c.categoria ? `<span class="badge-team">${escaparHtml(c.categoria)}</span>` : "";
+    const texto = escaparHtml(c.mensagem).replace(/\n/g, "<br>");
+    return `
+      <div style="border-left:2px solid var(--line); padding:0 0 18px 16px; margin-bottom:2px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
+          <strong style="color:var(--blue-deep); font-size:.9rem;">${autor}${especialidade}</strong>
+          ${categoria}
+          <span class="hint mono" style="margin:0; font-size:.75rem;">${formatarDataHora(c.criado_em)}</span>
+        </div>
+        <p style="margin:0; color:var(--ink); font-size:.92rem;">${texto}</p>
+      </div>`;
+  }
+
+  async function carregarComunicacoesEquipa(){
+    const el = document.getElementById("com-historico");
+    try {
+      const registos = await fenixApi.listarComunicacoesEquipa(DOENTE.id);
+      el.innerHTML = registos.length
+        ? registos.map(comunicacaoHTML).join("")
+        : `<p class="hint" style="margin:0;">Ainda não há informação registada pela equipa sobre este doente.</p>`;
+    } catch (e) {
+      console.error("Erro ao carregar a comunicação da equipa:", e);
+      el.innerHTML = `<div class="banner-alert">⚠️ Não foi possível carregar o histórico: ${escaparHtml(e.message || e)}</div>`;
+    }
+  }
+
+  async function registarComunicacao(){
+    const campoMensagem = document.getElementById("com-mensagem");
+    const estadoEl = document.getElementById("com-estado");
+    const botao = document.getElementById("com-btn");
+    const mensagem = campoMensagem.value.trim();
+
+    if (!mensagem) {
+      estadoEl.textContent = "Escreva a informação antes de adicionar.";
+      campoMensagem.focus();
+      return;
+    }
+
+    botao.disabled = true;
+    estadoEl.textContent = "A guardar...";
+    try {
+      await fenixApi.registarComunicacaoEquipa(
+        DOENTE.id, mensagem, document.getElementById("com-categoria").value
+      );
+      campoMensagem.value = "";
+      estadoEl.textContent = "Informação registada.";
+      await carregarComunicacoesEquipa();
+    } catch (e) {
+      console.error("Erro ao registar a comunicação da equipa:", e);
+      estadoEl.textContent = "Não foi possível guardar: " + (e.message || e);
+    } finally {
+      botao.disabled = false;
     }
   }
 
