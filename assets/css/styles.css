@@ -371,6 +371,19 @@ tr.row-link:hover{ background:var(--paper-tint); }
 .milestone-photo{ margin-top:12px; }
 .milestone-photo img{ max-width:220px; border-radius:8px; border:1px solid var(--line); }
 
+/* --- fio de atualizações de cada meta (doente <-> equipa) --- */
+.meta-updates{ margin-top:16px; padding-top:14px; border-top:1px dashed var(--line); }
+.meta-updates .updates-titulo{ font-family:var(--f-mono); font-size:.7rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 10px; }
+.update-item{ display:flex; gap:10px; margin-bottom:12px; }
+.update-item .avatar{ flex:none; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; background:var(--paper-tint); border:1px solid var(--line); }
+.update-item.do-doente .avatar{ background:var(--flame-mist); border-color:var(--flame); }
+.update-item .corpo{ flex:1; min-width:0; }
+.update-item .quem{ font-size:.82rem; font-weight:600; color:var(--blue-deep); }
+.update-item .quando{ font-family:var(--f-mono); font-size:.72rem; color:var(--ink-soft); margin-left:6px; font-weight:400; }
+.update-item .texto{ margin:2px 0 0; font-size:.88rem; color:var(--ink); overflow-wrap:anywhere; }
+.update-form{ display:flex; gap:8px; align-items:flex-start; margin-top:10px; }
+.update-form textarea{ flex:1; font-size:.88rem; padding:9px 12px; }
+
 .photo-upload{
   margin-top:12px; border:1.5px dashed var(--line); border-radius:var(--radius);
   padding:16px; text-align:center; background:var(--paper-tint); cursor:pointer;

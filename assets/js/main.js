@@ -490,6 +490,7 @@ function milestoneCardHTML(m) {
         ${estadoPill}
       </div>
       ${actionHTML}
+      <div class="meta-updates" id="meta-updates-${m.id}"></div>
     </div>`;
 }
 
@@ -549,6 +550,13 @@ function adicionarMetaPessoal(titulo, importante) {
 /* ========================================================================
    JORNADA DE RECUPERAÇÃO — editor (área profissional)
    ======================================================================== */
+/** Um valor de meta pode vir vazio da base de dados (data_alvo é opcional).
+ *  Sem esta guarda, um único m.data a null rebentava o editor inteiro e as
+ *  metas deixavam de aparecer ao profissional. */
+function textoAtributo(valor) {
+  return String(valor == null ? "" : valor).replace(/"/g, "&quot;");
+}
+
 function editorRowHTML(m, idx) {
   const catOptions = Object.keys(BADGES).map(k =>
     `<option value="${k}" ${m.categoria === k ? "selected" : ""}>${BADGES[k].nome}</option>`
@@ -558,11 +566,11 @@ function editorRowHTML(m, idx) {
     <div class="form-row">
       <div class="field" style="margin-bottom:12px;">
         <label>Título da meta</label>
-        <input type="text" id="meta-label-${m.id}" value="${m.label.replace(/"/g, '&quot;')}">
+        <input type="text" id="meta-label-${m.id}" value="${textoAtributo(m.label)}">
       </div>
       <div class="field" style="margin-bottom:12px;">
         <label>Data alvo</label>
-        <input type="text" id="meta-data-${m.id}" value="${m.data.replace(/"/g, '&quot;')}">
+        <input type="text" id="meta-data-${m.id}" value="${textoAtributo(m.data)}">
       </div>
     </div>
     <div class="form-row">
@@ -582,7 +590,7 @@ function editorRowHTML(m, idx) {
     ${m.foto ? `
     <div style="margin-bottom:12px;">
       <p class="hint" style="margin:0 0 6px; font-weight:600; color:var(--blue-deep);">📷 Foto enviada pelo doente</p>
-      <div class="milestone-photo" style="margin-top:0;"><img src="${m.foto}" alt="Foto submetida pelo doente para a meta ${m.label.replace(/"/g, '&quot;')}"></div>
+      <div class="milestone-photo" style="margin-top:0;"><img src="${m.foto}" alt="Foto submetida pelo doente para a meta ${textoAtributo(m.label)}"></div>
     </div>` : ""}
     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -597,6 +605,7 @@ function editorRowHTML(m, idx) {
         <button type="button" class="btn btn-ghost btn-sm" onclick="removerMeta('${m.id}')">Remover</button>
       </div>
     </div>
+    <div class="meta-updates" id="meta-updates-${m.id}"></div>
   </div>`;
 }
 
@@ -778,4 +787,82 @@ function adicionarExercicio() {
     descricao: "", prescricao: "", registos: []
   });
   renderPlanoEditor("plano-editor");
+}
+
+/* ========================================================================
+   ATUALIZAÇÕES DE CADA META — o fio onde o doente descreve como está a
+   correr ("já consigo vestir-me sozinha, mas ainda com dificuldade") e a
+   equipa responde. Usado nos dois lados: area-doente/jornada.html e
+   area-profissional/jornada.html preenchem o <div class="meta-updates">
+   que os cartões de meta deixam reservado.
+
+   Ao contrário da comunicação da equipa (ficha do doente), este fio é
+   PARTILHADO — o doente lê tudo o que aqui é escrito.
+   ======================================================================== */
+function escaparTexto(valor) {
+  return String(valor == null ? "" : valor)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function formatarDataHoraCurta(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short" })
+       + " · " + d.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
+}
+
+function atualizacaoItemHTML(a) {
+  const doDoente = a.autor_papel === "doente";
+  return `
+    <div class="update-item ${doDoente ? "do-doente" : ""}">
+      <div class="avatar">${doDoente ? "🙋" : "🩺"}</div>
+      <div class="corpo">
+        <div class="quem">${escaparTexto(a.autor_nome)}<span class="quando">${formatarDataHoraCurta(a.criado_em)}</span></div>
+        <p class="texto">${escaparTexto(a.texto).replace(/\n/g, "<br>")}</p>
+      </div>
+    </div>`;
+}
+
+/**
+ * Desenha o fio de atualizações dentro do cartão de uma meta.
+ *  metaId   — id da meta (o container é #meta-updates-<metaId>)
+ *  lista    — atualizações dessa meta, da mais antiga para a mais recente
+ *  opts.titulo      — cabeçalho do bloco
+ *  opts.vazio       — texto a mostrar quando ainda não há nada
+ *  opts.placeholder — placeholder da caixa de escrita
+ *  opts.botao       — texto do botão
+ *  opts.aoEnviar    — nome da função global a chamar, que recebe o metaId
+ *                     (omitir para mostrar o fio só de leitura)
+ */
+function renderAtualizacoesMeta(metaId, lista, opts) {
+  const el = document.getElementById(`meta-updates-${metaId}`);
+  if (!el) return;
+  const o = opts || {};
+  const itens = (lista && lista.length)
+    ? lista.map(atualizacaoItemHTML).join("")
+    : `<p class="hint" style="margin:0 0 6px;">${escaparTexto(o.vazio || "Ainda sem atualizações.")}</p>`;
+
+  const formulario = o.aoEnviar ? `
+    <div class="update-form">
+      <textarea id="update-texto-${metaId}" rows="2" placeholder="${escaparTexto(o.placeholder || "Escrever uma atualização...")}"></textarea>
+      <button type="button" class="btn btn-ghost btn-sm" id="update-btn-${metaId}"
+              onclick="${o.aoEnviar}('${metaId}')">${escaparTexto(o.botao || "Enviar")}</button>
+    </div>
+    <p class="hint" style="margin:6px 0 0;" id="update-estado-${metaId}"></p>` : "";
+
+  el.innerHTML = `
+    <p class="updates-titulo">${escaparTexto(o.titulo || "Atualizações")}</p>
+    ${itens}
+    ${formulario}`;
+}
+
+/** Agrupa por meta_id a lista devolvida por fenixApi.listarAtualizacoesMetas. */
+function agruparAtualizacoesPorMeta(linhas) {
+  const porMeta = {};
+  (linhas || []).forEach(a => {
+    if (!porMeta[a.meta_id]) porMeta[a.meta_id] = [];
+    porMeta[a.meta_id].push(a);
+  });
+  return porMeta;
 }

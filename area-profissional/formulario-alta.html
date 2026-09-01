@@ -588,7 +588,7 @@
             <label style="margin:0;">Objetivos do doente</label>
             <button type="button" class="btn btn-ghost btn-sm" onclick="adicionarObjetivoDoente()">+ Adicionar objetivo</button>
           </div>
-          <p class="scale-note">Cada objetivo introduzido aqui é acrescentado automaticamente à jornada de metas do doente ao guardar.</p>
+          <p class="scale-note">Ao guardar, cada objetivo escrito aqui passa a ser uma meta na jornada do doente, marcada como <strong>definida pela equipa</strong>. O doente vê-a na sua área e pode ir escrevendo atualizações sobre como está a correr — que a equipa lê e responde em Jornada e Metas.</p>
           <div id="lista-objetivos-gas"></div>
         </section>
 
@@ -600,7 +600,8 @@
         <div id="confirm-alta" class="card" style="margin-top:20px; display:none;">
           <span class="pill pill-ok">Guardado</span>
           <h3 style="margin-top:14px;">Avaliação registada</h3>
-          <p style="color:var(--ink-soft); margin:0;">O contexto clínico foi atualizado, os objetivos foram acrescentados à jornada de metas do doente, e o plano de seguimento (CarePlan) com os checkpoints de PROMs foi agendado automaticamente.</p>
+          <p style="color:var(--ink-soft); margin:0 0 12px;">O contexto clínico foi atualizado e o plano de seguimento (CarePlan) com os checkpoints de PROMs foi agendado automaticamente.</p>
+          <div id="resumo-metas"></div>
         </div>
 
       </form>
@@ -676,29 +677,48 @@
   }
   repovoarObjetivosDoente(); // estado inicial: 3 linhas em branco
 
-  /** Cria uma meta (jornada do doente) por cada objetivo escrito neste
-   *  formulário que ainda não exista como meta (comparação simples pelo
-   *  texto, para não duplicar em sucessivas gravações do formulário). */
+  /** Cria uma meta na jornada do doente por cada objetivo escrito na secção 8
+   *  que ainda não exista como meta (comparação pelo texto, para não duplicar
+   *  em sucessivas gravações do formulário).
+   *
+   *  As metas ficam com origem "clinica" — aparecem ao doente como
+   *  "Definida pela equipa" — e o doente pode acrescentar atualizações em
+   *  cada uma na sua área.
+   *
+   *  Devolve o resumo do que aconteceu. Antes esta função engolia os erros
+   *  em console.error e o formulário dizia na mesma que os objetivos tinham
+   *  passado a metas, mesmo quando nenhuma tinha sido criada. */
   async function criarMetasApartirDosObjetivos(doenteId, objetivos){
-    if (!objetivos.length) return;
-    let metasExistentes = [];
+    const resumo = { criadas: 0, jaExistiam: 0, erros: [] };
+    if (!objetivos.length) return resumo;
+
+    let metasExistentes;
     try {
       metasExistentes = await fenixApi.listarMetas(doenteId);
     } catch (e) {
+      // sem esta lista não é possível saber o que já existe: criar às cegas
+      // duplicaria metas, por isso pára aqui e reporta
       console.error("Não foi possível verificar as metas existentes:", e);
+      resumo.erros.push("não foi possível ler as metas já existentes: " + (e.message || e));
+      return resumo;
     }
+
     const labelsExistentes = metasExistentes.map(m => (m.label || '').trim().toLowerCase());
     for (const texto of objetivos) {
-      if (labelsExistentes.includes(texto.trim().toLowerCase())) continue;
+      if (labelsExistentes.includes(texto.trim().toLowerCase())) { resumo.jaExistiam++; continue; }
       try {
         await fenixApi.adicionarMeta(doenteId, {
           label: texto, tipo: "Funcional", categoria: "funcional",
           origem: "clinica", importante: false, estado: "pending", data_alvo: "a definir"
         });
+        resumo.criadas++;
+        labelsExistentes.push(texto.trim().toLowerCase());
       } catch (e) {
         console.error(`Não foi possível criar a meta a partir do objetivo "${texto}":`, e);
+        resumo.erros.push(`"${texto}": ${e.message || e}`);
       }
     }
+    return resumo;
   }
 
   /* --- somatório automático das escalas: cada escala tem vários itens de
@@ -767,7 +787,15 @@
   function valorDoCampo(campo){
     const checkboxes = campo.querySelectorAll('.chip-group input[type="checkbox"]');
     if (checkboxes.length) {
-      return Array.from(checkboxes).filter(c => c.checked).map(c => c.nextElementSibling.textContent.trim());
+      const selecionados = Array.from(checkboxes).filter(c => c.checked).map(c => c.nextElementSibling.textContent.trim());
+      // vários destes campos têm, a seguir aos chips, uma caixa "Outras" de
+      // texto livre (ex.: secção 8). Antes só se guardavam os chips e o que
+      // o profissional escrevesse nessa caixa perdia-se ao gravar.
+      const caixaOutras = campo.querySelector('input[type="text"], textarea');
+      const outras = caixaOutras ? caixaOutras.value.trim() : "";
+      // sem texto livre mantém-se a forma antiga (lista simples), para os
+      // formulários já gravados continuarem a ser lidos na mesma
+      return outras ? { selecionados, outras } : selecionados;
     }
     const radios = campo.querySelectorAll('.chip-group input[type="radio"], .scale input[type="radio"]');
     const inputs = campo.querySelectorAll('input[type="text"], input[type="email"], textarea');
@@ -821,6 +849,36 @@
     return linhas;
   }
 
+  /** Diz ao profissional o que aconteceu de facto à migração dos objetivos
+   *  da secção 8 para a jornada. Se alguma meta não pôde ser criada, isso
+   *  aparece aqui em vez de ficar só na consola. */
+  function mostrarResumoMetas(resumo, totalObjetivos){
+    const el = document.getElementById('resumo-metas');
+    if (!totalObjetivos) {
+      el.innerHTML = `<p class="hint" style="margin:0;">Não foi escrito nenhum objetivo na secção 8, por isso não foi criada nenhuma meta na jornada.</p>`;
+      return;
+    }
+    const partes = [];
+    if (resumo.criadas)    partes.push(`${resumo.criadas} ${resumo.criadas === 1 ? 'nova meta criada' : 'novas metas criadas'} na jornada`);
+    if (resumo.jaExistiam) partes.push(`${resumo.jaExistiam} já ${resumo.jaExistiam === 1 ? 'existia' : 'existiam'}`);
+
+    const erros = resumo.erros.length
+      ? `<div class="banner-alert" style="margin-top:10px;">
+           <div>⚠️ ${resumo.erros.length} ${resumo.erros.length === 1 ? 'objetivo não passou' : 'objetivos não passaram'} a meta:
+             <ul style="margin:6px 0 0; padding-left:18px;">${resumo.erros.map(t => `<li>${escaparTexto(t)}</li>`).join("")}</ul>
+             <p style="margin:8px 0 0;">O formulário ficou guardado. Corrija e volte a gravar, ou crie a meta à mão em Jornada e Metas.</p>
+           </div>
+         </div>`
+      : "";
+
+    el.innerHTML = `
+      <p style="margin:0; color:var(--ink-soft);">
+        <strong>Objetivos do doente → jornada:</strong> ${partes.length ? escaparTexto(partes.join(' · ')) : 'nada a acrescentar'}.
+        As metas ficam visíveis ao doente como "Definida pela equipa", e ele pode escrever atualizações em cada uma.
+      </p>
+      ${erros}`;
+  }
+
   async function submeterFormulario(ev){
     ev.preventDefault();
     const btn = document.getElementById('btn-submeter-alta');
@@ -840,7 +898,7 @@
       dados.objetivos_gas = objetivosDoente;
 
       await fenixApi.guardarFormularioAlta(DOENTE_ID, dados, dataAlta, contactoTipo);
-      await criarMetasApartirDosObjetivos(DOENTE_ID, objetivosDoente);
+      const resumoMetas = await criarMetasApartirDosObjetivos(DOENTE_ID, objetivosDoente);
 
       // a secção 1 (queimadura) atualiza automaticamente o contexto clínico do doente
       const secQueimadura = dados.queimadura || {};
@@ -886,6 +944,7 @@
         await fenixApi.atualizarDoenteContexto(DOENTE_ID, contexto);
       }
 
+      mostrarResumoMetas(resumoMetas, objetivosDoente.length);
       document.getElementById('confirm-alta').style.display = 'block';
       document.getElementById('confirm-alta').scrollIntoView({behavior:'smooth'});
       btn.textContent = "Guardado ✓";
@@ -906,11 +965,18 @@
 
     const checkboxes = campo.querySelectorAll('.chip-group input[type="checkbox"]');
     if (checkboxes.length) {
-      const selecionados = Array.isArray(valor) ? valor : [valor];
+      // aceita as duas formas gravadas: lista simples (antiga) ou
+      // { selecionados, outras } quando há texto na caixa "Outras"
+      const temOutras = valor && !Array.isArray(valor) && typeof valor === "object";
+      const selecionados = temOutras
+        ? (valor.selecionados || [])
+        : (Array.isArray(valor) ? valor : [valor]);
       checkboxes.forEach(c => {
         const texto = c.nextElementSibling.textContent.trim();
         c.checked = selecionados.includes(texto);
       });
+      const caixaOutras = campo.querySelector('input[type="text"], textarea');
+      if (caixaOutras) caixaOutras.value = temOutras ? (valor.outras || "") : "";
       return;
     }
     const radios = campo.querySelectorAll('.chip-group input[type="radio"], .scale input[type="radio"]');

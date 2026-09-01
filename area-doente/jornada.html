@@ -52,6 +52,8 @@
     ℹ️ Sempre que atinge uma meta, ganha um crachá (badge) na secção "As minhas conquistas", mais abaixo. As metas assinaladas com ★ foram marcadas como importantes para si.
   </div>
 
+  <div class="banner-info" style="margin:0 0 8px; display:none;" id="aviso-atualizacoes"></div>
+
   <!-- ======================= LISTA DE METAS ======================= -->
   <div id="lista-metas" style="margin-top:28px; max-width:720px;"></div>
 
@@ -105,6 +107,52 @@
     }));
     renderMilestonesDoente('lista-metas');
     renderBadgeShelf('badge-shelf');
+    await carregarAtualizacoes();
+  }
+
+  /** Desenha, dentro de cada cartão de meta, o fio de atualizações e a
+   *  caixa para o doente escrever como está a correr. */
+  async function carregarAtualizacoes(){
+    const aviso = document.getElementById('aviso-atualizacoes');
+    let porMeta;
+    try {
+      porMeta = agruparAtualizacoesPorMeta(await fenixApi.listarAtualizacoesMetas(DOENTE_ID));
+      aviso.style.display = 'none';
+    } catch (e) {
+      console.error("Erro ao carregar as atualizações das metas:", e);
+      aviso.textContent = "⚠️ Não foi possível carregar as atualizações das metas: " + (e.message || e);
+      aviso.style.display = 'flex';
+      return;
+    }
+    DEMO_PATIENT.milestones.forEach(m => {
+      renderAtualizacoesMeta(m.id, porMeta[m.id], {
+        titulo: "Como está a correr",
+        vazio: "Ainda não escreveu nada sobre esta meta. Conte-nos como vai — a equipa vê o que escrever aqui.",
+        placeholder: "ex.: Esta semana já consegui vestir-me sozinha, mas ainda custa levantar o braço.",
+        botao: "Publicar",
+        aoEnviar: "enviarAtualizacaoDoente"
+      });
+    });
+  }
+
+  /** Grava a atualização escrita pelo doente numa meta e recarrega o fio. */
+  async function enviarAtualizacaoDoente(metaId){
+    const campo = document.getElementById(`update-texto-${metaId}`);
+    const estado = document.getElementById(`update-estado-${metaId}`);
+    const botao = document.getElementById(`update-btn-${metaId}`);
+    const texto = campo.value.trim();
+    if (!texto) { estado.textContent = "Escreva alguma coisa antes de publicar."; campo.focus(); return; }
+
+    botao.disabled = true;
+    estado.textContent = "A publicar...";
+    try {
+      await fenixApi.registarAtualizacaoMeta(metaId, DOENTE_ID, texto);
+      await carregarAtualizacoes();
+    } catch (e) {
+      console.error("Erro ao publicar a atualização:", e);
+      estado.textContent = "Não foi possível publicar: " + (e.message || e);
+      botao.disabled = false;
+    }
   }
 
   /* substitui a versão de demonstração (main.js): guarda o ficheiro real

@@ -190,6 +190,38 @@ const fenixApi = {
     if (error) throw error;
   },
 
+  /* --- Atualizações de cada meta: o fio onde o doente descreve como está
+     a correr e a equipa responde. Partilhado entre os dois lados (ao
+     contrário da comunicação da equipa, que é interna).
+     Requer a tabela "metas_atualizacoes" — ver 007_atualizacoes_metas.sql. --- */
+
+  /** Todas as atualizações de um doente, de uma só vez (uma consulta em vez
+   *  de uma por meta). A página agrupa depois por meta_id. */
+  async listarAtualizacoesMetas(doenteId) {
+    const { data, error } = await sb
+      .from("metas_atualizacoes").select("*")
+      .eq("doente_id", doenteId)
+      .order("criado_em", { ascending: true });
+    if (error) throw error;
+    return data;
+  },
+
+  /** O autor (doente ou profissional) vem sempre da sessão iniciada — nunca
+   *  de um parâmetro — para não ser possível escrever em nome de outrem. */
+  async registarAtualizacaoMeta(metaId, doenteId, texto) {
+    const sessao = await this.utilizadorAtual();
+    if (!sessao || !sessao.perfil) throw new Error("Sessão não iniciada.");
+    const { data, error } = await sb.from("metas_atualizacoes").insert({
+      meta_id: metaId,
+      doente_id: doenteId,
+      autor_papel: sessao.perfil.papel,
+      autor_nome: sessao.perfil.nome,
+      texto
+    }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
   /** Marca a meta como concluída e, se houver foto, faz upload para o Storage. */
   async marcarMetaConquistada(metaId, ficheiroFoto) {
     let fotoUrl = null;
