@@ -9,20 +9,15 @@
 <style>
   /* Vista só de leitura: os campos ficam desativados, mas devem continuar a
      parecer legíveis (não cinzentos-desmaiados como um formulário por preencher). */
-  #form-alta input[type="text"]:disabled,
-  #form-alta input[type="email"]:disabled,
+  #form-alta input:disabled,
   #form-alta select:disabled,
   #form-alta textarea:disabled{
     opacity:1; color:var(--ink); -webkit-text-fill-color:var(--ink); cursor:default;
   }
-  /* os radios/checkboxes dos "chips" e das mini-escalas têm de continuar
-     invisíveis (opacity:0) — é o :checked + span que os desenha como pílula;
-     sem isto, o círculo nativo do input volta a aparecer por cima do chip. */
-  #form-alta .chip input:disabled,
-  #form-alta .scale-opt input:disabled{
-    opacity:0 !important;
-  }
   #form-alta .chip:has(input:disabled){ cursor:default; }
+  /* vista só de leitura: sem botões de adicionar/remover objetivos */
+  #bloco-formulario button,
+  #bloco-formulario .objetivo-gas-row a{ display:none; }
 </style>
 </head>
 <body class="page-tint">
@@ -84,9 +79,8 @@
         <a href="#prurido"><span class="n">4</span> Prurido</a>
         <a href="#amplitude"><span class="n">5</span> Amplitude articular</a>
         <a href="#funcionalidade"><span class="n">6</span> Funcionalidade</a>
-        <a href="#autocuidado"><span class="n">7</span> Autocuidado</a>
-        <a href="#outcomes"><span class="n">8</span> Outcomes</a>
-        <a href="#mapa"><span class="n">9</span> Mapa da recuperação</a>
+        <a href="#autocuidado"><span class="n">7</span> Informação para Autocuidado</a>
+        <a href="#mapa"><span class="n">8</span> Outcomes Centrados no Doente</a>
       </nav>
 
       <!-- ---------- formulário (só de leitura) ---------- -->
@@ -289,65 +283,11 @@
         <!-- ======================= 2. CICATRIZ ======================= -->
         <section id="cicatriz" class="form-section card">
           <div class="section-head"><span class="section-num">2</span><h2>Características da Cicatriz</h2></div>
-
-          <div class="subfield">
-            <label>Escala escolhida</label>
-            <div class="chip-group">
-              <label class="chip"><input type="radio" name="escala-cicatriz" onclick="mostrarEscala('vss')"><span>VSS</span></label>
-              <label class="chip"><input type="radio" name="escala-cicatriz" onclick="mostrarEscala('posas-obs')"><span>POSAS Observador</span></label>
-              <label class="chip"><input type="radio" name="escala-cicatriz" onclick="mostrarEscala('posas-doente')"><span>POSAS Doente</span></label>
-            </div>
-          </div>
-
-          <!-- VSS -->
-          <div id="escala-vss" class="escala-painel">
-            <p class="scale-note">VSS — pontuar 4 itens. Score total 0–13. Quanto maior o valor, pior a cicatriz.</p>
-
-            <div class="subfield">
-              <label>Pigmentação (0–2)</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="vss-pig"><span>0 Normal</span></label>
-                <label class="chip"><input type="radio" name="vss-pig"><span>1 Hipopigmentação</span></label>
-                <label class="chip"><input type="radio" name="vss-pig"><span>2 Hiperpigmentação</span></label>
-              </div>
-            </div>
-            <div class="subfield">
-              <label>Vascularização (0–3)</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="vss-vasc"><span>0 Normal</span></label>
-                <label class="chip"><input type="radio" name="vss-vasc"><span>1 Rosa</span></label>
-                <label class="chip"><input type="radio" name="vss-vasc"><span>2 Vermelho</span></label>
-                <label class="chip"><input type="radio" name="vss-vasc"><span>3 Roxo</span></label>
-              </div>
-            </div>
-            <div class="subfield">
-              <label>Flexibilidade (0–5)</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="vss-flex"><span>0 Normal</span></label>
-                <label class="chip"><input type="radio" name="vss-flex"><span>1 Maleável</span></label>
-                <label class="chip"><input type="radio" name="vss-flex"><span>2 Cedência</span></label>
-                <label class="chip"><input type="radio" name="vss-flex"><span>3 Firme</span></label>
-                <label class="chip"><input type="radio" name="vss-flex"><span>4 Bandas</span></label>
-                <label class="chip"><input type="radio" name="vss-flex"><span>5 Contratura</span></label>
-              </div>
-            </div>
-            <div class="subfield">
-              <label>Altura (0–3)</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="vss-alt"><span>0 Plana</span></label>
-                <label class="chip"><input type="radio" name="vss-alt"><span>1 &lt;2mm</span></label>
-                <label class="chip"><input type="radio" name="vss-alt"><span>2 2–5mm</span></label>
-                <label class="chip"><input type="radio" name="vss-alt"><span>3 &gt;5mm</span></label>
-              </div>
-            </div>
-            <div class="subfield" style="max-width:180px;">
-              <label for="vss-total">VSS total (/13)</label>
-              <input type="text" id="vss-total" placeholder="calculado automaticamente" readonly>
-            </div>
-          </div>
+          <p class="scale-note">Escala POSAS (Patient and Observer Scar Assessment Scale) — preenchida nas duas partes: pela equipa (Observador) e pelo doente.</p>
 
           <!-- POSAS Observador -->
-          <div id="escala-posas-obs" class="escala-painel" style="display:none;">
+          <div id="escala-posas-obs" class="escala-painel">
+            <p class="hint" style="font-weight:600; color:var(--blue-deep); margin:18px 0 6px;">POSAS — Observador</p>
             <p class="scale-note">Cada item pontuado de 1 (pele normal) a 10 (pior cicatriz imaginável). Total dos 6 itens: 6–60; a opinião global não entra na soma.</p>
             <div class="form-row">
               <div class="subfield"><label>Vascularidade (1–10)</label><div class="scale mini-scale">
@@ -379,7 +319,8 @@
           </div>
 
           <!-- POSAS Doente -->
-          <div id="escala-posas-doente" class="escala-painel" style="display:none;">
+          <div id="escala-posas-doente" class="escala-painel" style="margin-top:26px; padding-top:22px; border-top:1px solid var(--line);">
+            <p class="hint" style="font-weight:600; color:var(--blue-deep); margin:0 0 6px;">POSAS — Doente</p>
             <p class="scale-note">Cada item pontuado de 1 (igual à pele normal / sem sintoma) a 10 (muito diferente / sintoma extremo).</p>
             <div class="form-row">
               <div class="subfield"><label>Dor (1–10)</label><div class="scale mini-scale">
@@ -533,11 +474,26 @@
               </div>
             </div>
             <div class="subfield">
-              <label>Necessidade de ortótese</label>
+              <label>Necessidade de Produtos de Apoio</label>
               <div class="chip-group">
-                <label class="chip"><input type="radio" name="ortotese"><span>Sim</span></label>
-                <label class="chip"><input type="radio" name="ortotese" checked><span>Não</span></label>
+                <label class="chip"><input type="radio" name="produtos-apoio" onclick="alternarProdutosApoio()"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="produtos-apoio" checked onclick="alternarProdutosApoio()"><span>Não</span></label>
               </div>
+            </div>
+          </div>
+          <div id="campo-produtos-apoio" style="display:none;">
+            <div class="subfield">
+              <label>Produtos de apoio necessários</label>
+              <div class="chip-group">
+                <label class="chip"><input type="checkbox"><span>Ortótese</span></label>
+                <label class="chip"><input type="checkbox"><span>Tala</span></label>
+                <label class="chip"><input type="checkbox"><span>Silicone</span></label>
+                <label class="chip"><input type="checkbox"><span>Outros</span></label>
+              </div>
+            </div>
+            <div class="subfield" style="margin-bottom:0;">
+              <label>Outros — especificar</label>
+              <input type="text" placeholder="ex.: talas noturnas, luvas de compressão...">
             </div>
           </div>
         </section>
@@ -568,12 +524,12 @@
           </div>
         </section>
 
-        <!-- ======================= 7. PLANO DE CAPACITAÇÃO ======================= -->
+        <!-- ======================= 7. INFORMAÇÃO PARA AUTOCUIDADO ======================= -->
         <section id="autocuidado" class="form-section card">
-          <div class="section-head"><span class="section-num">7</span><h2>Plano de Capacitação</h2></div>
+          <div class="section-head"><span class="section-num">7</span><h2>Informação para Autocuidado</h2></div>
 
           <table class="adesao-table">
-            <thead><tr><th>Cuidado</th><th>Sim / Não</th><th>Adesão</th></tr></thead>
+            <thead><tr><th>Cuidado</th><th>Resposta</th></tr></thead>
             <tbody id="tbody-autocuidado"></tbody>
           </table>
 
@@ -583,49 +539,9 @@
           </div>
         </section>
 
-        <!-- ======================= 8. OUTCOMES ======================= -->
-        <section id="outcomes" class="form-section card">
-          <div class="section-head"><span class="section-num">8</span><h2>Outcomes centrados no doente</h2></div>
-          <p class="scale-note">GAS · -2 muito abaixo do esperado · -1 abaixo do esperado · 0 objetivo atingido · +1 melhor que o esperado · +2 muito melhor que o esperado.</p>
-
-          <div class="subfield">
-            <label for="gas-1">Objetivo 1</label>
-            <input type="text" id="gas-1" placeholder="Descreva o objetivo" style="margin-bottom:10px;">
-            <div class="chip-group">
-              <label class="chip"><input type="radio" name="gas1"><span>-2</span></label>
-              <label class="chip"><input type="radio" name="gas1"><span>-1</span></label>
-              <label class="chip"><input type="radio" name="gas1"><span>0</span></label>
-              <label class="chip"><input type="radio" name="gas1"><span>+1</span></label>
-              <label class="chip"><input type="radio" name="gas1"><span>+2</span></label>
-            </div>
-          </div>
-          <div class="subfield">
-            <label for="gas-2">Objetivo 2</label>
-            <input type="text" id="gas-2" placeholder="Descreva o objetivo" style="margin-bottom:10px;">
-            <div class="chip-group">
-              <label class="chip"><input type="radio" name="gas2"><span>-2</span></label>
-              <label class="chip"><input type="radio" name="gas2"><span>-1</span></label>
-              <label class="chip"><input type="radio" name="gas2"><span>0</span></label>
-              <label class="chip"><input type="radio" name="gas2"><span>+1</span></label>
-              <label class="chip"><input type="radio" name="gas2"><span>+2</span></label>
-            </div>
-          </div>
-          <div class="subfield" style="margin-bottom:0;">
-            <label for="gas-3">Objetivo 3</label>
-            <input type="text" id="gas-3" placeholder="Descreva o objetivo" style="margin-bottom:10px;">
-            <div class="chip-group">
-              <label class="chip"><input type="radio" name="gas3"><span>-2</span></label>
-              <label class="chip"><input type="radio" name="gas3"><span>-1</span></label>
-              <label class="chip"><input type="radio" name="gas3"><span>0</span></label>
-              <label class="chip"><input type="radio" name="gas3"><span>+1</span></label>
-              <label class="chip"><input type="radio" name="gas3"><span>+2</span></label>
-            </div>
-          </div>
-        </section>
-
-        <!-- ======================= 9. MAPA DA RECUPERAÇÃO ======================= -->
+        <!-- ======================= 8. OUTCOMES CENTRADOS NO DOENTE ======================= -->
         <section id="mapa" class="form-section card">
-          <div class="section-head"><span class="section-num">9</span><h2>Mapa da Recuperação</h2></div>
+          <div class="section-head"><span class="section-num">8</span><h2>Outcomes Centrados no Doente</h2></div>
 
           <div class="subfield">
             <label>O que o doente mais receia não conseguir fazer sozinho</label>
@@ -664,10 +580,19 @@
             </div>
           </div>
 
-          <div class="subfield" style="margin-bottom:0;">
+          <div class="subfield">
             <label for="alivia-dor">O que alivia a sua dor</label>
             <textarea id="alivia-dor" rows="2"></textarea>
           </div>
+
+          <hr class="divider" style="margin:22px 0;">
+
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px;">
+            <label style="margin:0;">Objetivos do doente</label>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="adicionarObjetivoDoente()">+ Adicionar objetivo</button>
+          </div>
+          <p class="scale-note">Cada objetivo introduzido aqui é acrescentado automaticamente à jornada de metas do doente ao guardar.</p>
+          <div id="lista-objetivos-gas"></div>
         </section>
 
       </form>
@@ -688,23 +613,46 @@
 <script>
   let DOENTE_ID = null;
 
-  function mostrarEscala(nome){
-    document.querySelectorAll('.escala-painel').forEach(p => p.style.display = 'none');
-    const alvo = document.getElementById('escala-' + nome);
-    if (alvo) alvo.style.display = 'block';
-  }
-
   function construirTabelaAutocuidado(){
-    const cuidados = ["Compressão","Silicone","Exercícios","Massagem / mobilização cicatricial","Hidratação","Proteção solar"];
+    const cuidados = ["Fato de Compressão","Silicone","Exercícios","Massagem / mobilização cicatricial","Hidratação","Proteção solar","Produtos de Apoio"];
     const tbody = document.getElementById('tbody-autocuidado');
     tbody.innerHTML = cuidados.map((label, idx) => `
       <tr>
         <td>${label}</td>
-        <td><div class="chip-group"><label class="chip"><input type="radio" name="auto-${idx}-sn"><span>Sim</span></label><label class="chip"><input type="radio" name="auto-${idx}-sn"><span>Não</span></label></div></td>
-        <td><div class="chip-group"><label class="chip"><input type="radio" name="auto-${idx}-ad"><span>Boa</span></label><label class="chip"><input type="radio" name="auto-${idx}-ad"><span>Parcial</span></label><label class="chip"><input type="radio" name="auto-${idx}-ad"><span>Fraca</span></label></div></td>
+        <td><div class="chip-group">
+          <label class="chip"><input type="radio" name="auto-${idx}"><span>Sim</span></label>
+          <label class="chip"><input type="radio" name="auto-${idx}"><span>Não</span></label>
+          <label class="chip"><input type="radio" name="auto-${idx}"><span>Não Aplicável</span></label>
+        </div></td>
       </tr>`).join('');
   }
   construirTabelaAutocuidado();
+
+  /* --- Objetivos do doente: mesma lista da área profissional, aqui só
+     para leitura (o botão "+ Adicionar" e os links "remover" ficam
+     escondidos por CSS — ver <style> no topo da página). --- */
+  let contadorObjetivosDoente = 0;
+
+  function adicionarObjetivoDoente(descricaoInicial){
+    const div = document.createElement('div');
+    div.className = 'objetivo-gas-row';
+    div.style.marginBottom = '10px';
+    div.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px;">
+        <input type="text" class="objetivo-gas-desc" placeholder="Descreva o objetivo do doente" style="flex:1;" value="${(descricaoInicial || '').replace(/"/g, '&quot;')}">
+        <a href="#" class="hint" onclick="event.preventDefault();">remover</a>
+      </div>`;
+    document.getElementById('lista-objetivos-gas').appendChild(div);
+  }
+
+  function repovoarObjetivosDoente(lista){
+    document.getElementById('lista-objetivos-gas').innerHTML = '';
+    contadorObjetivosDoente = 0;
+    (lista || []).forEach(texto => adicionarObjetivoDoente(typeof texto === 'string' ? texto : texto.descricao));
+    if (!lista || !lista.length) {
+      document.getElementById('lista-objetivos-gas').innerHTML = `<p class="hint">Sem objetivos registados.</p>`;
+    }
+  }
 
   /* --- repovoamento: idêntico ao usado no editor da área profissional
      (formulario-alta.html), para ler exatamente o mesmo formato de "dados" --- */
@@ -766,12 +714,16 @@
     if (!linhas) return;
     document.querySelectorAll('#autocuidado .adesao-table tbody tr').forEach(tr => {
       const label = tr.children[0].textContent.trim();
-      if (!linhas[label]) return;
-      const simNaoInputs = tr.children[1].querySelectorAll('input[type="radio"]');
-      simNaoInputs.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === linhas[label].realiza); });
-      const adesaoInputs = tr.children[2].querySelectorAll('input[type="radio"]');
-      adesaoInputs.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === linhas[label].adesao); });
+      if (linhas[label] == null) return;
+      const inputs = tr.children[1].querySelectorAll('input[type="radio"]');
+      inputs.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === linhas[label]); });
     });
+  }
+
+  function alternarProdutosApoio(){
+    const marcado = document.querySelector('input[name="produtos-apoio"]:checked');
+    const sim = marcado && marcado.nextElementSibling.textContent.trim() === 'Sim';
+    document.getElementById('campo-produtos-apoio').style.display = sim ? 'block' : 'none';
   }
 
   function paraBR(dataISO){
@@ -827,14 +779,8 @@
     });
     repovoarRomTable(dados.amplitude_tabela);
     repovoarAdesaoTable(dados.autocuidado_tabela);
-
-    // revelar o painel de escala (VSS/POSAS) correspondente à escolha guardada
-    const escalaEscolhida = document.querySelector('#cicatriz input[name="escala-cicatriz"]:checked');
-    if (escalaEscolhida) {
-      const nomePainel = escalaEscolhida.nextElementSibling.textContent.trim() === 'VSS' ? 'vss'
-        : escalaEscolhida.nextElementSibling.textContent.trim().includes('Observador') ? 'posas-obs' : 'posas-doente';
-      mostrarEscala(nomePainel);
-    }
+    repovoarObjetivosDoente(dados.objetivos_gas);
+    alternarProdutosApoio();
 
     const dataUltimo = new Date(ultimo.criado_em).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
     const aviso = document.createElement('div');
