@@ -277,7 +277,7 @@
           </div>
 
           <div class="subfield">
-            <label>Necessidade de Amputação</label>
+            <label>Amputação</label>
             <div class="chip-group">
               <label class="chip"><input type="radio" name="amputacao" onclick="alternarAmputacao()"><span>Sim</span></label>
               <label class="chip"><input type="radio" name="amputacao" checked onclick="alternarAmputacao()"><span>Não</span></label>
@@ -1070,21 +1070,6 @@
     }
 
     const dados = ultimo.dados || {};
-
-    // "Necessidade de fato de compressão" e "Necessidade de Produtos de Apoio"
-    // estavam na secção 5 (amplitude) e passaram para a secção 2 (cicatriz).
-    // Nos formulários gravados antes dessa mudança os valores ainda estão em
-    // dados.amplitude — sem isto, deixavam de ser repovoados ao reabrir.
-    const camposMovidos = ["Necessidade de fato de compressão", "Necessidade de Produtos de Apoio",
-                           "Produtos de apoio necessários", "Outros — especificar"];
-    if (dados.amplitude) {
-      dados.cicatriz = dados.cicatriz || {};
-      camposMovidos.forEach(chave => {
-        if (chave in dados.amplitude && !(chave in dados.cicatriz)) {
-          dados.cicatriz[chave] = dados.amplitude[chave];
-        }
-      });
-    }
     document.querySelectorAll('.form-section').forEach(section => {
       repovoarSeccao(section, dados[section.id]);
     });
