@@ -275,6 +275,20 @@
               <input type="text" placeholder="Localização">
             </div>
           </div>
+
+          <div class="subfield">
+            <label>Necessidade de Amputação</label>
+            <div class="chip-group">
+              <label class="chip"><input type="radio" name="amputacao" onclick="alternarAmputacao()"><span>Sim</span></label>
+              <label class="chip"><input type="radio" name="amputacao" checked onclick="alternarAmputacao()"><span>Não</span></label>
+            </div>
+          </div>
+          <div id="campo-amputacao" style="display:none;">
+            <div class="subfield" style="margin-bottom:0;">
+              <label for="amputacao-detalhe">Amputação — nível, localização e data</label>
+              <textarea id="amputacao-detalhe" rows="2" placeholder="ex.: amputação transmetacárpica do 3.º dedo da mão direita, a 12/07/2026"></textarea>
+            </div>
+          </div>
         </section>
 
         <!-- ======================= 2. CICATRIZ ======================= -->
@@ -364,6 +378,38 @@
                 <label class="chip"><input type="radio" name="bridas" checked><span>Não</span></label>
               </div>
               <input type="text" placeholder="Localização">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="subfield">
+              <label>Necessidade de fato de compressão</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="fato-compressao"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="fato-compressao" checked><span>Não</span></label>
+              </div>
+            </div>
+            <div class="subfield">
+              <label>Necessidade de Produtos de Apoio</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="produtos-apoio" onclick="alternarProdutosApoio()"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="produtos-apoio" checked onclick="alternarProdutosApoio()"><span>Não</span></label>
+              </div>
+            </div>
+          </div>
+          <div id="campo-produtos-apoio" style="display:none;">
+            <div class="subfield">
+              <label>Produtos de apoio necessários</label>
+              <div class="chip-group">
+                <label class="chip"><input type="checkbox"><span>Ortótese</span></label>
+                <label class="chip"><input type="checkbox"><span>Tala</span></label>
+                <label class="chip"><input type="checkbox"><span>Silicone</span></label>
+                <label class="chip"><input type="checkbox"><span>Outros</span></label>
+              </div>
+            </div>
+            <div class="subfield" style="margin-bottom:0;">
+              <label>Outros — especificar</label>
+              <input type="text" placeholder="ex.: talas noturnas, luvas de compressão...">
             </div>
           </div>
         </section>
@@ -460,37 +506,6 @@
               <label class="chip"><input type="radio" name="rom-global"><span>1 Ligeira</span></label>
               <label class="chip"><input type="radio" name="rom-global"><span>2 Moderada</span></label>
               <label class="chip"><input type="radio" name="rom-global"><span>3 Grave</span></label>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="subfield">
-              <label>Necessidade de fato de compressão</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="fato-compressao"><span>Sim</span></label>
-                <label class="chip"><input type="radio" name="fato-compressao" checked><span>Não</span></label>
-              </div>
-            </div>
-            <div class="subfield">
-              <label>Necessidade de Produtos de Apoio</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="produtos-apoio" onclick="alternarProdutosApoio()"><span>Sim</span></label>
-                <label class="chip"><input type="radio" name="produtos-apoio" checked onclick="alternarProdutosApoio()"><span>Não</span></label>
-              </div>
-            </div>
-          </div>
-          <div id="campo-produtos-apoio" style="display:none;">
-            <div class="subfield">
-              <label>Produtos de apoio necessários</label>
-              <div class="chip-group">
-                <label class="chip"><input type="checkbox"><span>Ortótese</span></label>
-                <label class="chip"><input type="checkbox"><span>Tala</span></label>
-                <label class="chip"><input type="checkbox"><span>Silicone</span></label>
-                <label class="chip"><input type="checkbox"><span>Outros</span></label>
-              </div>
-            </div>
-            <div class="subfield" style="margin-bottom:0;">
-              <label>Outros — especificar</label>
-              <input type="text" placeholder="ex.: talas noturnas, luvas de compressão...">
             </div>
           </div>
         </section>
@@ -622,6 +637,12 @@
     const marcado = document.querySelector('input[name="produtos-apoio"]:checked');
     const sim = marcado && marcado.nextElementSibling.textContent.trim() === 'Sim';
     document.getElementById('campo-produtos-apoio').style.display = sim ? 'block' : 'none';
+  }
+
+  function alternarAmputacao(){
+    const marcado = document.querySelector('input[name="amputacao"]:checked');
+    const sim = marcado && marcado.nextElementSibling.textContent.trim() === 'Sim';
+    document.getElementById('campo-amputacao').style.display = sim ? 'block' : 'none';
   }
 
   function construirTabelaAutocuidado(){
@@ -1049,6 +1070,21 @@
     }
 
     const dados = ultimo.dados || {};
+
+    // "Necessidade de fato de compressão" e "Necessidade de Produtos de Apoio"
+    // estavam na secção 5 (amplitude) e passaram para a secção 2 (cicatriz).
+    // Nos formulários gravados antes dessa mudança os valores ainda estão em
+    // dados.amplitude — sem isto, deixavam de ser repovoados ao reabrir.
+    const camposMovidos = ["Necessidade de fato de compressão", "Necessidade de Produtos de Apoio",
+                           "Produtos de apoio necessários", "Outros — especificar"];
+    if (dados.amplitude) {
+      dados.cicatriz = dados.cicatriz || {};
+      camposMovidos.forEach(chave => {
+        if (chave in dados.amplitude && !(chave in dados.cicatriz)) {
+          dados.cicatriz[chave] = dados.amplitude[chave];
+        }
+      });
+    }
     document.querySelectorAll('.form-section').forEach(section => {
       repovoarSeccao(section, dados[section.id]);
     });
@@ -1056,6 +1092,7 @@
     repovoarAdesaoTable(dados.autocuidado_tabela);
     repovoarObjetivosDoente(dados.objetivos_gas);
     alternarProdutosApoio();
+    alternarAmputacao();
 
     // os totais também ficam guardados como texto simples, mas recalcula-se
     // sempre a partir dos itens repovoados, para garantir que nunca desalinha
