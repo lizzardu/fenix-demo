@@ -163,6 +163,20 @@ const fenixApi = {
     return data;
   },
 
+  /** Respostas PROM de TODOS os doentes, numa única consulta. Usado no cálculo
+   *  dos alertas: com listarPromsDoente era preciso uma consulta por doente e
+   *  por instrumento, o que tornava impraticável mostrar o contador em todas
+   *  as páginas. "instrumentos" é opcional e filtra a lista. */
+  async listarPromsTodos(instrumentos) {
+    let query = sb.from("proms_respostas")
+      .select("doente_id, instrumento, data_resposta, scores")
+      .order("data_resposta");
+    if (instrumentos && instrumentos.length) query = query.in("instrumento", instrumentos);
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  },
+
   /* ---------------------------------------------------------------------
      JORNADA / METAS
      --------------------------------------------------------------------- */
@@ -397,9 +411,12 @@ const fenixApi = {
   },
 
   /* ---------------------------------------------------------------------
-     CHECK-IN RÁPIDO DE HUMOR — pop-up de 3 caras ("triste"/"ok"/"feliz")
-     mostrado ao doente logo depois de submeter uma avaliação PROM.
-     Requer a tabela "checkins_humor" — ver 005_checkins_humor.sql.
+     CHECK-IN RÁPIDO DE HUMOR — pop-up mostrado ao doente logo depois de
+     submeter uma avaliação PROM. Escala de 6 níveis, do melhor para o pior:
+     "muito-bem" | "bem" | "razoavel" | "podia-estar-melhor" |
+     "muito-em-baixo" | "preciso-de-ajuda".
+     Requer a tabela "checkins_humor" — ver 005_checkins_humor.sql — e, para
+     aceitar estes 6 valores, a migração 008_checkins_humor_escala.sql.
      --------------------------------------------------------------------- */
   async registarCheckinHumor(doenteId, valor) {
     const { data, error } = await sb.from("checkins_humor").insert({ doente_id: doenteId, valor }).select().single();

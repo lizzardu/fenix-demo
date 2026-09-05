@@ -31,7 +31,7 @@
   <aside class="sidebar">
     <a href="dashboard.html">📋 Doentes</a>
     <a href="novo-doente.html">➕ Novo Doente</a>
-    <a class="active" href="alertas.html">🔔 Alertas</a>
+    <a class="active" href="alertas.html">🔔 Alertas <span class="pill pill-alert" style="margin-left:6px;" id="badge-alertas"></span></a>
     <a href="equipa.html">👥 Equipa</a>
     <a href="definicoes.html">⚙️ Definições</a>
   </aside>
@@ -58,12 +58,9 @@
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-  const LIMIARES = {
-    "NRS-dor": { min: 7, texto: v => `Dor elevada reportada (${v}/10)` },
-    "5D-itch": { min: 7, texto: v => `Prurido elevado reportado (${v}/10)` },
-    "PHQ-9":   { min: 18, texto: v => `Rastreio de humor a merecer atenção (${v}/27)` },
-    "BSHS-B":  { max: 25, texto: v => `Qualidade de vida (BSHS-B) baixa (${v}/100)` }
-  };
+  /* Os limiares e a recolha vivem em main.js (LIMIARES_ALERTA e
+     recolherAlertas), partilhados com o contador da barra lateral, para a
+     página e o contador não poderem mostrar números diferentes. */
 
   function formatarData(dataISO){
     if (!dataISO) return "";
@@ -89,14 +86,21 @@
 
   async function carregarAlertas(){
     const el = document.getElementById('lista-alertas');
-    const doentes = await fenixApi.listarDoentes();
-    const alertasHTML = [];
+    let alertas;
+    try {
+      alertas = await recolherAlertas();
+    } catch (e) {
+      console.error("Erro ao carregar os alertas:", e);
+      el.innerHTML = `<div class="banner-alert">⚠️ Não foi possível carregar os alertas: ${e.message || e}</div>`;
+      return;
+    }
 
-    // 1) dúvidas pendentes
-    const duvidas = await fenixApi.listarDuvidas();
-    duvidas.filter(d => d.estado === "pendente").forEach(d => {
+    const cartoes = [];
+
+    // 1) dúvidas por responder
+    alertas.duvidas.forEach(d => {
       const processo = d.doentes ? d.doentes.processo : "";
-      alertasHTML.push(alertaCardHTML(
+      cartoes.push(alertaCardHTML(
         d.doentes ? d.doentes.nome : "Doente",
         processo,
         d.contacto_telefonico ? "Dúvida — 📞 pediu contacto telefónico" : "Dúvida por responder",
@@ -106,27 +110,17 @@
       ));
     });
 
-    // 2) PROMs acima do limiar, por doente
-    for (const doente of doentes) {
-      for (const instrumento of Object.keys(LIMIARES)) {
-        const respostas = await fenixApi.listarPromsDoente(doente.id, instrumento);
-        if (!respostas.length) continue;
-        const ultima = respostas[respostas.length - 1];
-        const valor = ultima.scores && ultima.scores.total != null ? ultima.scores.total : null;
-        if (valor == null) continue;
+    // 2) últimas respostas PROM fora dos limiares
+    alertas.proms.forEach(a => {
+      cartoes.push(alertaCardHTML(
+        a.doente.nome, a.doente.processo, a.instrumento,
+        LIMIARES_ALERTA[a.instrumento].texto(a.valor),
+        formatarData(a.resposta.data_resposta)
+      ));
+    });
 
-        const limite = LIMIARES[instrumento];
-        const disparou = (limite.min != null && valor >= limite.min) || (limite.max != null && valor <= limite.max);
-        if (disparou) {
-          alertasHTML.push(alertaCardHTML(
-            doente.nome, doente.processo, instrumento, limite.texto(valor), formatarData(ultima.data_resposta)
-          ));
-        }
-      }
-    }
-
-    el.innerHTML = alertasHTML.length
-      ? alertasHTML.join('')
+    el.innerHTML = cartoes.length
+      ? cartoes.join('')
       : `<div class="banner-info">✅ Sem alertas ativos neste momento.</div>`;
   }
 
@@ -142,6 +136,7 @@
       return;
     }
     document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+    atualizarBadgeAlertas();
     carregarAlertas();
   })();
 </script>

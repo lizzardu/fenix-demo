@@ -31,7 +31,7 @@
   <aside class="sidebar">
     <a href="dashboard.html">📋 Doentes</a>
     <a href="novo-doente.html">➕ Novo Doente</a>
-    <a href="alertas.html">🔔 Alertas</a>
+    <a href="alertas.html">🔔 Alertas <span class="pill pill-alert" style="margin-left:6px;" id="badge-alertas"></span></a>
     <a href="equipa.html">👥 Equipa</a>
     <a class="active" href="definicoes.html">⚙️ Definições</a>
   </aside>
@@ -125,6 +125,7 @@
       return;
     }
     document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+    atualizarBadgeAlertas();
     document.getElementById("conta-nome").value = sessao.perfil.nome;
     document.getElementById("conta-especialidade").value = sessao.perfil.especialidade || "—";
     document.getElementById("conta-email").value = sessao.user.email || "—";

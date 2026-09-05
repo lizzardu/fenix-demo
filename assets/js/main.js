@@ -866,3 +866,76 @@ function agruparAtualizacoesPorMeta(linhas) {
   });
   return porMeta;
 }
+
+/* ========================================================================
+   ALERTAS DA UNIDADE — contador mostrado junto a "🔔 Alertas" na barra
+   lateral da área profissional, e base da página alertas.html.
+
+   Conta duas coisas: dúvidas de doentes ainda por responder, e a última
+   resposta PROM de cada doente que esteja fora dos limiares definidos
+   pela equipa. Os limiares vivem aqui, e não em alertas.html, para a
+   página e o contador nunca poderem divergir.
+   ======================================================================== */
+const LIMIARES_ALERTA = {
+  "NRS-dor": { min: 7,  texto: v => `Dor elevada reportada (${v}/10)` },
+  "5D-itch": { min: 7,  texto: v => `Prurido elevado reportado (${v}/10)` },
+  "PHQ-9":   { min: 18, texto: v => `Rastreio de humor a merecer atenção (${v}/27)` },
+  "BSHS-B":  { max: 25, texto: v => `Qualidade de vida (BSHS-B) baixa (${v}/100)` }
+};
+
+/** Recolhe tudo o que conta como alerta. Devolve
+ *  { duvidas: [...], proms: [...], total: n } — as listas trazem já o que a
+ *  página precisa para desenhar cada cartão. */
+async function recolherAlertas() {
+  const [duvidas, doentes, respostas] = await Promise.all([
+    fenixApi.listarDuvidas(),
+    fenixApi.listarDoentes(),
+    fenixApi.listarPromsTodos(Object.keys(LIMIARES_ALERTA))
+  ]);
+
+  const duvidasPendentes = duvidas.filter(d => d.estado === "pendente");
+
+  // a lista vem ordenada por data, por isso a última que se vê de cada
+  // par doente+instrumento é a mais recente
+  const ultimas = {};
+  respostas.forEach(r => { ultimas[r.doente_id + "|" + r.instrumento] = r; });
+
+  const porId = {};
+  doentes.forEach(d => { porId[d.id] = d; });
+
+  const promsEmAlerta = [];
+  Object.keys(ultimas).forEach(chave => {
+    const r = ultimas[chave];
+    const doente = porId[r.doente_id];
+    if (!doente) return;                       // doente removido entretanto
+    const valor = (r.scores && r.scores.total != null) ? r.scores.total : null;
+    if (valor == null) return;
+    const limite = LIMIARES_ALERTA[r.instrumento];
+    if (!limite) return;
+    const disparou = (limite.min != null && valor >= limite.min) ||
+                     (limite.max != null && valor <= limite.max);
+    if (disparou) promsEmAlerta.push({ doente, instrumento: r.instrumento, valor, resposta: r });
+  });
+
+  return {
+    duvidas: duvidasPendentes,
+    proms: promsEmAlerta,
+    total: duvidasPendentes.length + promsEmAlerta.length
+  };
+}
+
+/** Preenche o contador na barra lateral. Silencioso em caso de erro: um
+ *  contador que não carrega nunca deve impedir a página de funcionar. */
+async function atualizarBadgeAlertas() {
+  const el = document.getElementById("badge-alertas");
+  if (!el) return;
+  try {
+    const { total } = await recolherAlertas();
+    el.textContent = total > 0 ? total : "";
+    el.title = total === 1 ? "1 alerta por tratar"
+             : total > 1   ? `${total} alertas por tratar` : "";
+  } catch (e) {
+    console.error("Não foi possível calcular os alertas:", e);
+    el.textContent = "";
+  }
+}

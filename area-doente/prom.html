@@ -16,19 +16,23 @@
     background:#fff; border-radius:var(--radius-lg); padding:32px; max-width:420px; width:100%;
     text-align:center; box-shadow:0 20px 60px rgba(16,35,59,.35);
   }
-  .mood-faces{ display:flex; justify-content:center; gap:14px; margin-top:8px; }
+  /* seis opções, em duas linhas de três — escala do melhor para o pior */
+  .mood-faces{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:8px; }
   .mood-face{
-    display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 18px;
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 8px;
     border:2px solid var(--line); border-radius:var(--radius-lg); background:#fff; cursor:pointer;
-    transition:transform .15s ease, border-color .15s ease, background .15s ease; min-width:84px;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
   }
   .mood-face:hover:not(:disabled){ transform:translateY(-2px); }
-  .mood-face .face{ font-size:2.1rem; line-height:1; }
-  .mood-face .lbl{ font-size:.8rem; color:var(--ink-soft); font-weight:600; }
-  .mood-face[data-valor="triste"]:hover:not(:disabled), .mood-face[data-valor="triste"].is-picked{ border-color:var(--alert); background:var(--alert-mist); }
-  .mood-face[data-valor="ok"]:hover:not(:disabled), .mood-face[data-valor="ok"].is-picked{ border-color:#D89A1F; background:#FFF6DA; }
-  .mood-face[data-valor="feliz"]:hover:not(:disabled), .mood-face[data-valor="feliz"].is-picked{ border-color:var(--ok); background:var(--ok-mist); }
+  .mood-face .face{ font-size:1.9rem; line-height:1; }
+  .mood-face .lbl{ font-size:.76rem; color:var(--ink-soft); font-weight:600; line-height:1.25; text-align:center; }
+  /* a cor acompanha a escala: verde no topo, âmbar no meio, vermelho em baixo */
+  .mood-face[data-tom="bom"]:hover:not(:disabled),   .mood-face[data-tom="bom"].is-picked{ border-color:var(--ok); background:var(--ok-mist); }
+  .mood-face[data-tom="medio"]:hover:not(:disabled), .mood-face[data-tom="medio"].is-picked{ border-color:#D89A1F; background:#FFF6DA; }
+  .mood-face[data-tom="baixo"]:hover:not(:disabled), .mood-face[data-tom="baixo"].is-picked{ border-color:var(--alert); background:var(--alert-mist); }
   .mood-face:disabled{ opacity:.7; cursor:default; transform:none; }
+  .modal-box{ max-width:460px; }
+  @media (max-width:420px){ .mood-faces{ grid-template-columns:repeat(2,1fr); } }
 </style>
 </head>
 <body class="page-tint">
@@ -141,14 +145,23 @@
       <h3 id="modal-humor-titulo" style="margin:0 0 6px;">Como se sente hoje?</h3>
       <p class="hint" style="margin:0 0 20px;">Uma resposta rápida — é só para nós percebermos o seu dia.</p>
       <div class="mood-faces">
-        <button type="button" class="mood-face" data-valor="triste" onclick="responderHumor(this)">
-          <span class="face">😞</span><span class="lbl">Triste</span>
+        <button type="button" class="mood-face" data-tom="bom" data-valor="muito-bem" onclick="responderHumor(this)">
+          <span class="face">🤩</span><span class="lbl">Muito bem</span>
         </button>
-        <button type="button" class="mood-face" data-valor="ok" onclick="responderHumor(this)">
-          <span class="face">😐</span><span class="lbl">Ok</span>
+        <button type="button" class="mood-face" data-tom="bom" data-valor="bem" onclick="responderHumor(this)">
+          <span class="face">😉</span><span class="lbl">Bem</span>
         </button>
-        <button type="button" class="mood-face" data-valor="feliz" onclick="responderHumor(this)">
-          <span class="face">😄</span><span class="lbl">Alegre</span>
+        <button type="button" class="mood-face" data-tom="medio" data-valor="razoavel" onclick="responderHumor(this)">
+          <span class="face">🙂</span><span class="lbl">Razoável</span>
+        </button>
+        <button type="button" class="mood-face" data-tom="medio" data-valor="podia-estar-melhor" onclick="responderHumor(this)">
+          <span class="face">🙃</span><span class="lbl">Podia estar melhor</span>
+        </button>
+        <button type="button" class="mood-face" data-tom="baixo" data-valor="muito-em-baixo" onclick="responderHumor(this)">
+          <span class="face">😔</span><span class="lbl">Muito em baixo</span>
+        </button>
+        <button type="button" class="mood-face" data-tom="baixo" data-valor="preciso-de-ajuda" onclick="responderHumor(this)">
+          <span class="face">🥲</span><span class="lbl">Preciso de ajuda</span>
         </button>
       </div>
       <button type="button" class="btn btn-ghost btn-sm" style="margin-top:18px;" onclick="fecharModalHumor()">Agora não</button>

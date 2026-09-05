@@ -195,7 +195,15 @@ tr.row-link:hover{ background:var(--paper-tint); }
 .bar span{ display:block; height:100%; background:var(--flame); }
 
 .app-shell{ display:grid; grid-template-columns:230px 1fr; min-height:calc(100vh - 78px); background:var(--paper-tint); }
-.sidebar{ background:var(--paper); border-right:1px solid var(--line); padding:28px 0; }
+/* A barra lateral acompanha o scroll: fica colada por baixo da topbar (78px)
+   e ocupa exatamente a altura restante do ecra, com scroll proprio se o menu
+   for mais alto. Sem o align-self:start o item da grelha era esticado e o
+   position:sticky nao tinha efeito. */
+.sidebar{
+  background:var(--paper); border-right:1px solid var(--line); padding:28px 0;
+  position:sticky; top:78px; align-self:start;
+  height:calc(100vh - 78px); overflow-y:auto; overscroll-behavior:contain;
+}
 .sidebar a{ display:flex; align-items:center; gap:10px; padding:11px 28px; color:var(--ink-soft); text-decoration:none; font-size:.88rem; font-weight:500; border-left:3px solid transparent; }
 .sidebar a.active{ color:var(--blue-deep); border-left-color:var(--flame-deep); background:var(--paper-tint); font-weight:600; }
 .sidebar a:hover:not(.active){ background:var(--paper-tint); }
