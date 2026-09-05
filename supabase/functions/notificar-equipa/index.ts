@@ -24,8 +24,20 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const REMETENTE = Deno.env.get("EMAIL_REMETENTE") ?? "Fénix <onboarding@resend.dev>";
+// Os segredos das Edge Functions são partilhados por TODO o projeto, não por
+// função. Como já existe um RESEND_API_KEY para os emails ao doente, esta
+// função procura primeiro um nome só seu e só depois cai no partilhado.
+// Assim: sem fazer nada, reutiliza a chave existente; definindo
+// RESEND_API_KEY_EQUIPA, passa a usar uma chave separada, que pode ser
+// revogada sem afetar os emails ao doente.
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY_EQUIPA")
+  ?? Deno.env.get("RESEND_API_KEY")!;
+
+// O mesmo para o remetente: o dos avisos à equipa não deve ser o mesmo que o
+// doente vê, e sem um nome próprio herdaria o do outro circuito.
+const REMETENTE = Deno.env.get("EMAIL_REMETENTE_EQUIPA")
+  ?? Deno.env.get("EMAIL_REMETENTE")
+  ?? "Fénix <onboarding@resend.dev>";
 const URL_PLATAFORMA = Deno.env.get("URL_PLATAFORMA") ?? "https://lizzardu.github.io/fenix-demo";
 // Segredo partilhado com o gatilho da base de dados. Impede que alguém que
 // descubra o endereço desta função a use para disparar emails.

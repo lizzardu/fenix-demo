@@ -253,10 +253,27 @@ dados de saúde não devem viajar assim.
 4. **Definir as variáveis da função**, no painel do Supabase em
    Edge Functions → notificar-equipa → Secrets:
 
-   - `RESEND_API_KEY` — a chave do passo 1
    - `SEGREDO_WEBHOOK` — uma frase longa à sua escolha, inventada por si
-   - `EMAIL_REMETENTE` — ex. `Fénix <avisos@ulssjose.min-saude.pt>`
    - `URL_PLATAFORMA` — ex. `https://lizzardu.github.io/fenix-demo`
+
+   E, para a chave e o remetente, **depende de já existirem no projeto**:
+
+   | Situação | O que definir |
+   |---|---|
+   | Ainda não há nenhum email a sair do projeto | `RESEND_API_KEY` e `EMAIL_REMETENTE` |
+   | Já existem, usados pelos emails ao doente | `RESEND_API_KEY_EQUIPA` e `EMAIL_REMETENTE_EQUIPA` |
+
+   **Porquê dois nomes.** Os segredos das Edge Functions são partilhados por
+   todo o projeto, e não por função: o que estiver em `RESEND_API_KEY` é visto
+   por todas as funções. Se os emails ao doente já usam esse nome, esta função
+   apanharia a mesma chave e — pior — o mesmo remetente, e a equipa passaria a
+   receber avisos com o endereço que o doente vê.
+
+   Por isso a função procura primeiro `RESEND_API_KEY_EQUIPA` e
+   `EMAIL_REMETENTE_EQUIPA`, e só cai nos nomes partilhados se esses não
+   existirem. Sem fazer nada, reutiliza o que já lá está; definindo os nomes
+   com `_EQUIPA`, os dois circuitos ficam independentes e cada chave pode ser
+   revogada sem afetar o outro.
 
    (`SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` são preenchidas
    automaticamente pelo Supabase.)
