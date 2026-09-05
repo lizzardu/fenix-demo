@@ -154,5 +154,23 @@ Deno.serve(async (req) => {
     return new Response("Falha no envio", { status: 502 });
   }
 
-  return Response.json({ enviado: true, destinatarios: para.length });
+  // O Resend responder 200 significa que ACEITOU o email, não que o entregou.
+  // O que acontece a seguir — entregue, devolvido, marcado como spam — só se vê
+  // do lado dele. Devolver o id que ele atribui permite ir buscar essa linha
+  // exata em Resend → Emails, em vez de andar às apalpadelas.
+  // O remetente e os destinatários também ficam aqui: são endereços da equipa,
+  // nunca dados do doente.
+  const dados = await resposta.json().catch(() => ({} as Record<string, unknown>));
+  const idResend = (dados as { id?: string }).id ?? null;
+  console.log(
+    `Email aceite pelo Resend. id=${idResend} de="${REMETENTE}" para="${para.join(", ")}"`,
+  );
+
+  return Response.json({
+    enviado: true,
+    destinatarios: para.length,
+    resend_id: idResend,
+    remetente: REMETENTE,
+    para,
+  });
 });
