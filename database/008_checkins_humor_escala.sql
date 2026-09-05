@@ -9,16 +9,16 @@
 -- A coluna "valor" tem uma restrição CHECK com os três valores antigos. Sem
 -- esta migração, qualquer resposta nova é recusada pela base de dados com
 -- "violates check constraint".
+--
+-- A ORDEM DOS PASSOS IMPORTA: a restrição antiga tem de ser removida antes
+-- de os registos serem convertidos, porque enquanto estiver ativa recusa os
+-- valores novos; e a restrição nova só pode ser criada depois da conversão,
+-- porque é validada contra as linhas que já existem.
+--
+-- Pode ser corrida mais do que uma vez sem problema.
 -- ============================================================================
 
--- 1. Converter os registos existentes para a escala nova. Tem de ser feito
---    ANTES de criar a restrição, senão o PostgreSQL recusa-a por haver linhas
---    que não a cumprem.
-update checkins_humor set valor = 'muito-em-baixo' where valor = 'triste';
-update checkins_humor set valor = 'razoavel'       where valor = 'ok';
-update checkins_humor set valor = 'muito-bem'      where valor = 'feliz';
-
--- 2. Remover a restrição antiga. O nome foi atribuído automaticamente quando a
+-- 1. Remover a restrição antiga. O nome foi atribuído automaticamente quando a
 --    tabela foi criada e varia conforme o projeto, por isso é procurado em vez
 --    de escrito à mão. Só são removidas restrições CHECK que mencionem a
 --    coluna "valor" — as outras, se existirem, ficam intactas.
@@ -35,6 +35,12 @@ begin
     execute format('alter table checkins_humor drop constraint %I', r.conname);
   end loop;
 end $$;
+
+-- 2. Converter os registos existentes para a escala nova. Já sem restrição
+--    a impedir a escrita.
+update checkins_humor set valor = 'muito-em-baixo' where valor = 'triste';
+update checkins_humor set valor = 'razoavel'       where valor = 'ok';
+update checkins_humor set valor = 'muito-bem'      where valor = 'feliz';
 
 -- 3. Criar a restrição nova, agora com nome fixo para futuras migrações não
 --    terem de o procurar. A ordem é do melhor para o pior estado.
