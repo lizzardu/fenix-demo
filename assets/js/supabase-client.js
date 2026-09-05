@@ -435,8 +435,39 @@ const fenixApi = {
    *  ver a política em 009_alertas_humor.sql. */
   async listarCheckinsHumorTodos() {
     const { data, error } = await sb
-      .from("checkins_humor").select("doente_id, valor, criado_em")
+      .from("checkins_humor").select("id, doente_id, valor, criado_em")
       .order("criado_em");
+    if (error) throw error;
+    return data;
+  },
+
+  /* --- Alertas dados como tratados pela equipa.
+     Requer a tabela "alertas_tratados" — ver 010_alertas_tratados.sql. --- */
+
+  async listarAlertasTratados() {
+    const { data, error } = await sb
+      .from("alertas_tratados").select("*")
+      .order("criado_em", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  /** Marca um alerta como tratado. "referencia" é o id do registo que lhe deu
+   *  origem — no caso do humor, o id do check-in. Quem trata vem sempre da
+   *  sessão iniciada. */
+  async marcarAlertaTratado(doenteId, tipo, referencia, nota) {
+    const sessao = await this.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "profissional") {
+      throw new Error("Só profissionais com sessão iniciada podem tratar alertas.");
+    }
+    const { data, error } = await sb.from("alertas_tratados").insert({
+      doente_id: doenteId,
+      tipo,
+      referencia,
+      tratado_por_id: sessao.user.id,
+      tratado_por_nome: sessao.perfil.nome,
+      nota: nota || null
+    }).select().single();
     if (error) throw error;
     return data;
   },

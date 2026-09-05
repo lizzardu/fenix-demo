@@ -224,7 +224,17 @@ function desenharGraficoLinha(canvasId, labels, dataset, opts = {}) {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        y: { min: (opts.min !== undefined ? opts.min : 0), max: (opts.max !== undefined ? opts.max : 10), grid: { color: "#E3E8E4" }, ticks: { font: { family: "IBM Plex Mono", size: 10 } } },
+        y: {
+          min: (opts.min !== undefined ? opts.min : 0),
+          max: (opts.max !== undefined ? opts.max : 10),
+          grid: { color: "#E3E8E4" },
+          ticks: Object.assign(
+            { font: { family: "IBM Plex Mono", size: 10 } },
+            // opts.rotulosY troca os números do eixo por texto (usado no
+            // gráfico de humor, em que 1–6 são estados e não uma medida)
+            opts.rotulosY ? { stepSize: 1, callback: v => opts.rotulosY[v] || "" } : {}
+          )
+        },
         x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono", size: 10 } } }
       }
     }
@@ -883,6 +893,18 @@ const LIMIARES_ALERTA = {
   "BSHS-B":  { max: 25, texto: v => `Qualidade de vida (BSHS-B) baixa (${v}/100)` }
 };
 
+/* A escala completa do check-in de humor, do pior para o melhor. O número
+   serve para desenhar a evolução num gráfico — os estados não são uma
+   medida, mas ordenados assim a tendência lê-se de relance. */
+const ESCALA_HUMOR = {
+  "preciso-de-ajuda":   { n: 1, emoji: "🥲", rotulo: "Preciso de ajuda" },
+  "muito-em-baixo":     { n: 2, emoji: "😔", rotulo: "Muito em baixo" },
+  "podia-estar-melhor": { n: 3, emoji: "🙃", rotulo: "Podia estar melhor" },
+  "razoavel":           { n: 4, emoji: "🙂", rotulo: "Razoável" },
+  "bem":                { n: 5, emoji: "😉", rotulo: "Bem" },
+  "muito-bem":          { n: 6, emoji: "🤩", rotulo: "Muito bem" }
+};
+
 /* Estados do check-in rápido de humor que geram alerta. A ordem importa: o
    pedido de ajuda aparece primeiro na lista, por ser o sinal mais direto. */
 const HUMOR_ALERTA = {
@@ -896,18 +918,24 @@ const HUMOR_ALERTA = {
  *  { humor: [...], duvidas: [...], proms: [...], total: n } — as listas trazem
  *  já o que a página precisa para desenhar cada cartão. */
 async function recolherAlertas() {
-  // o check-in de humor é opcional: se a tabela ou a política de leitura
-  // ainda não existirem, os restantes alertas continuam a funcionar
+  // o check-in de humor e o registo de alertas tratados são opcionais: se a
+  // tabela ou a política de leitura ainda não existirem, os restantes
+  // alertas continuam a funcionar
   const checkinsPromise = fenixApi.listarCheckinsHumorTodos().catch(e => {
     console.error("Não foi possível ler os check-ins de humor:", e);
     return [];
   });
+  const tratadosPromise = fenixApi.listarAlertasTratados().catch(e => {
+    console.error("Não foi possível ler os alertas tratados:", e);
+    return [];
+  });
 
-  const [duvidas, doentes, respostas, checkins] = await Promise.all([
+  const [duvidas, doentes, respostas, checkins, tratados] = await Promise.all([
     fenixApi.listarDuvidas(),
     fenixApi.listarDoentes(),
     fenixApi.listarPromsTodos(Object.keys(LIMIARES_ALERTA)),
-    checkinsPromise
+    checkinsPromise,
+    tratadosPromise
   ]);
 
   const duvidasPendentes = duvidas.filter(d => d.estado === "pendente");
@@ -939,12 +967,17 @@ async function recolherAlertas() {
   const ultimoCheckin = {};
   checkins.forEach(c => { ultimoCheckin[c.doente_id] = c; });
 
+  // alertas que a equipa já deu como tratados, pelo id do registo de origem
+  const jaTratados = {};
+  tratados.forEach(t => { jaTratados[t.tipo + "|" + t.referencia] = t; });
+
   const humorEmAlerta = [];
   Object.keys(ultimoCheckin).forEach(doenteId => {
     const c = ultimoCheckin[doenteId];
     const nivel = HUMOR_ALERTA[c.valor];
     const doente = porId[doenteId];
     if (!nivel || !doente) return;
+    if (jaTratados["humor|" + c.id]) return;   // já tratado por alguém
     humorEmAlerta.push({ doente, valor: c.valor, checkin: c, ...nivel });
   });
   humorEmAlerta.sort((a, b) => a.urgencia - b.urgencia);

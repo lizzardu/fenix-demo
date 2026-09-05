@@ -69,7 +69,7 @@
     return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
   }
 
-  function alertaCardHTML(doenteNome, processo, tipo, texto, data, destino){
+  function alertaCardHTML(doenteNome, processo, tipo, texto, data, destino, rodape){
     destino = destino || { href: `doente.html?processo=${encodeURIComponent(processo)}`, label: "Ver ficha" };
     return `
       <div class="card milestone-card is-active" style="margin-bottom:14px;">
@@ -82,7 +82,28 @@
           </div>
           <a class="btn btn-ghost btn-sm" href="${destino.href}">${destino.label}</a>
         </div>
+        ${rodape || ""}
       </div>`;
+  }
+
+  /** Regista que a equipa já agiu sobre este alerta. O cartão desaparece da
+   *  lista, mas o registo — quem, quando e o que fez — fica guardado. Se o
+   *  doente fizer um novo check-in em baixo, surge um alerta novo. */
+  async function marcarTratado(checkinId, doenteId){
+    const botao = document.getElementById(`btn-tratar-${checkinId}`);
+    const estado = document.getElementById(`estado-${checkinId}`);
+    const nota = document.getElementById(`nota-${checkinId}`).value.trim();
+    botao.disabled = true;
+    estado.textContent = "A guardar...";
+    try {
+      await fenixApi.marcarAlertaTratado(doenteId, "humor", checkinId, nota);
+      await carregarAlertas();
+      atualizarBadgeAlertas();
+    } catch (e) {
+      console.error("Não foi possível marcar o alerta como tratado:", e);
+      estado.textContent = "Não foi possível guardar: " + (e.message || e);
+      botao.disabled = false;
+    }
   }
 
   async function carregarAlertas(){
@@ -99,11 +120,20 @@
     const cartoes = [];
 
     // 1) check-in de humor — primeiro, por ser o sinal mais direto de que
-    //    o doente não está bem
+    //    o doente não está bem. Só estes têm botão de "tratado": o alerta
+    //    de uma dúvida resolve-se ao responder, e o de um PROM ao doente
+    //    responder de novo.
     alertas.humor.forEach(h => {
       cartoes.push(alertaCardHTML(
         h.doente.nome, h.doente.processo, h.rotulo, h.texto,
-        formatarDataHoraCurta(h.checkin.criado_em)
+        formatarDataHoraCurta(h.checkin.criado_em),
+        null,
+        `<div class="tratar-bloco" id="tratar-${h.checkin.id}">
+           <input type="text" id="nota-${h.checkin.id}" placeholder="O que foi feito? (opcional)">
+           <button type="button" class="btn btn-flame btn-sm" id="btn-tratar-${h.checkin.id}"
+                   onclick="marcarTratado('${h.checkin.id}', '${h.doente.id}')">Marcar como tratado</button>
+           <span class="hint" id="estado-${h.checkin.id}"></span>
+         </div>`
       ));
     });
 

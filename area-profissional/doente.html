@@ -146,6 +146,21 @@
       </div>
     </div>
 
+    <!-- ---------- check-in rápido de humor ---------- -->
+    <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:8px;">
+      <p class="eyebrow" style="margin:0;">Como o doente se tem sentido</p>
+      <span class="hint" style="margin:0;" id="humor-ultimo"></span>
+    </div>
+    <div class="card" style="margin-bottom:28px;">
+      <p style="color:var(--ink-soft); font-size:.88rem; margin:0 0 14px; max-width:70ch;">
+        Resposta rápida que o doente dá depois de cada avaliação. Não é um instrumento
+        clínico — serve para ver a tendência e não para classificar. As respostas
+        <strong>Muito em baixo</strong> e <strong>Preciso de ajuda</strong> geram alerta.
+      </p>
+      <div id="humor-vazio" class="hint" style="display:none;">Este doente ainda não fez nenhum check-in de humor.</div>
+      <div class="chart-box" id="humor-grafico"><canvas id="chart-humor"></canvas></div>
+    </div>
+
   </div>
 </div>
 
@@ -196,6 +211,9 @@
 
     // comunicação interna da equipa
     carregarComunicacoesEquipa();
+
+    // evolução do check-in rápido de humor
+    carregarHumor();
 
 
     // PROMs — gráficos de evolução
@@ -306,6 +324,58 @@
     } finally {
       botao.disabled = false;
     }
+  }
+
+  /* ---------------------------------------------------------------------
+     Evolução do check-in rápido de humor. Os estados são convertidos numa
+     escala de 1 a 6 (ESCALA_HUMOR, em main.js) só para poderem ser
+     desenhados; o eixo mostra os nomes, não os números, para ninguém ler
+     isto como uma pontuação clínica.
+     --------------------------------------------------------------------- */
+  async function carregarHumor(){
+    const vazio = document.getElementById("humor-vazio");
+    const grafico = document.getElementById("humor-grafico");
+    const ultimo = document.getElementById("humor-ultimo");
+
+    let registos;
+    try {
+      registos = await fenixApi.listarCheckinsHumor(DOENTE.id);
+    } catch (e) {
+      console.error("Erro ao carregar os check-ins de humor:", e);
+      vazio.innerHTML = `⚠️ Não foi possível carregar os check-ins: ${escaparHtml(e.message || e)}`;
+      vazio.style.display = "block";
+      grafico.style.display = "none";
+      return;
+    }
+
+    if (!registos.length) {
+      vazio.style.display = "block";
+      grafico.style.display = "none";
+      return;
+    }
+
+    const conhecidos = registos.filter(r => ESCALA_HUMOR[r.valor]);
+    if (!conhecidos.length) {
+      vazio.style.display = "block";
+      grafico.style.display = "none";
+      return;
+    }
+
+    const rotulosY = {};
+    Object.keys(ESCALA_HUMOR).forEach(v => {
+      rotulosY[ESCALA_HUMOR[v].n] = ESCALA_HUMOR[v].emoji + " " + ESCALA_HUMOR[v].rotulo;
+    });
+
+    desenharGraficoLinha(
+      "chart-humor",
+      conhecidos.map(r => formatarDataHora(r.criado_em)),
+      conhecidos.map(r => ESCALA_HUMOR[r.valor].n),
+      { color: corSkin(), min: 1, max: 6, rotulosY }
+    );
+
+    const derradeiro = conhecidos[conhecidos.length - 1];
+    const e = ESCALA_HUMOR[derradeiro.valor];
+    ultimo.textContent = `Último: ${e.emoji} ${e.rotulo} · ${formatarDataHora(derradeiro.criado_em)}`;
   }
 
   function terminarSessao(ev){

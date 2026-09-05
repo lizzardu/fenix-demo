@@ -379,6 +379,11 @@ tr.row-link:hover{ background:var(--paper-tint); }
 .milestone-photo{ margin-top:12px; }
 .milestone-photo img{ max-width:220px; border-radius:8px; border:1px solid var(--line); }
 
+/* --- marcar um alerta como tratado (área profissional) --- */
+.tratar-bloco{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); }
+.tratar-bloco input[type=text]{ flex:1; min-width:200px; padding:8px 12px; font-size:.86rem; }
+.tratar-bloco .hint{ margin:0; }
+
 /* --- fio de atualizações de cada meta (doente <-> equipa) --- */
 .meta-updates{ margin-top:16px; padding-top:14px; border-top:1px dashed var(--line); }
 .meta-updates .updates-titulo{ font-family:var(--f-mono); font-size:.7rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 10px; }
