@@ -41,7 +41,9 @@ const REMETENTE = Deno.env.get("EMAIL_REMETENTE_EQUIPA")
 const URL_PLATAFORMA = Deno.env.get("URL_PLATAFORMA") ?? "https://lizzardu.github.io/fenix-demo";
 // Segredo partilhado com o gatilho da base de dados. Impede que alguém que
 // descubra o endereço desta função a use para disparar emails.
-const SEGREDO = Deno.env.get("SEGREDO_WEBHOOK")!;
+// O trim() protege do erro mais comum a configurar isto: um espaço ou uma
+// quebra de linha apanhados ao copiar o valor para um dos dois lados.
+const SEGREDO = (Deno.env.get("SEGREDO_WEBHOOK") ?? "").trim();
 
 type Evento = {
   type?: string;
@@ -80,7 +82,16 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Método não permitido", { status: 405 });
   }
-  if (req.headers.get("x-fenix-segredo") !== SEGREDO) {
+  const recebido = (req.headers.get("x-fenix-segredo") ?? "").trim();
+  if (!SEGREDO || recebido !== SEGREDO) {
+    // Deixa nos Logs o suficiente para perceber a causa sem revelar o segredo:
+    // "não definido" e "comprimentos diferentes" pedem correções diferentes.
+    console.error(
+      "Segredo recusado. Configurado em SEGREDO_WEBHOOK: " +
+      (SEGREDO ? SEGREDO.length + " caracteres" : "NÃO DEFINIDO") +
+      ". Recebido da base de dados: " +
+      (recebido ? recebido.length + " caracteres" : "nenhum") + ".",
+    );
     return new Response("Não autorizado", { status: 401 });
   }
 
