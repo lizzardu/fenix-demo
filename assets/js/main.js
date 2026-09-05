@@ -1393,3 +1393,28 @@ function calcularBurnOp(seccao) {
     completo: respondidas === ITENS_BURN_OP.length
   };
 }
+
+/* ========================================================================
+   RESPOSTAS POR LER — contador junto a "Dúvidas", na área do doente.
+
+   Quando a equipa responde, o doente recebe email. Mas se não o abrir, ou
+   o apagar, entrava na plataforma sem sinal nenhum de que havia resposta.
+   Agora o número aparece na navegação, como já acontecia do lado
+   profissional.
+
+   Requer 014_duvidas_por_ler.sql. Se essa migração ainda não tiver sido
+   corrida, o contador simplesmente não aparece — nada rebenta.
+   ======================================================================== */
+async function atualizarBadgeDuvidas(doenteId) {
+  const el = document.getElementById("badge-duvidas");
+  if (!el || !doenteId) return;
+  try {
+    const n = await fenixApi.contarRespostasPorLer(doenteId);
+    el.textContent = n > 0 ? n : "";
+    el.title = n === 1 ? "1 resposta por ler"
+             : n > 1   ? `${n} respostas por ler` : "";
+  } catch (e) {
+    console.error("Não foi possível contar as respostas por ler:", e);
+    el.textContent = "";
+  }
+}

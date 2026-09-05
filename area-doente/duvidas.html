@@ -33,7 +33,7 @@
     <a href="jornada.html">🎯 Jornada e Metas</a>
     <a href="plano.html">🏋️ Plano de Tratamento</a>
     <a href="historico.html">🗓️ Histórico</a>
-    <a href="duvidas.html" class="active">💬 Dúvidas</a>
+    <a href="duvidas.html" class="active">💬 Dúvidas <span class="pill pill-alert" style="margin-left:6px;" id="badge-duvidas"></span></a>
     <a href="recursos.html">📚 Recursos</a>
   </div>
 </nav>
@@ -112,6 +112,17 @@
     el.innerHTML = linhas.length
       ? linhas.map(r => duvidaCardHTML(mapearDuvida(r), false)).join("")
       : `<p class="hint">Ainda não enviou nenhuma dúvida.</p>`;
+
+    // Chegou aqui, viu as respostas: o contador zera. É feito DEPOIS de
+    // desenhar a lista, para não marcar como lido o que não chegou a
+    // aparecer por causa de um erro a carregar.
+    try {
+      await fenixApi.marcarRespostasVistas();
+      const selo = document.getElementById("badge-duvidas");
+      if (selo) { selo.textContent = ""; selo.title = ""; }
+    } catch (e) {
+      console.error("Não foi possível marcar as respostas como vistas:", e);
+    }
   }
 
   async function submeterNovaDuvida(ev){
@@ -138,6 +149,7 @@
       return;
     }
     DOENTE_ID = sessao.perfil.doente_id;
+    atualizarBadgeDuvidas(DOENTE_ID);
     document.getElementById("badge-utilizador").textContent = "Olá, " + sessao.perfil.nome.split(" ")[0];
     carregarDuvidas();
   })();

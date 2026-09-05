@@ -328,6 +328,32 @@ const fenixApi = {
     return data;
   },
 
+  /* --- Respostas por ler, na área do doente.
+     Requer a coluna e a função de 014_duvidas_por_ler.sql. --- */
+
+  /** Quantas respostas da equipa este doente ainda não viu. Uma contagem no
+   *  servidor, sem trazer as dúvidas todas só para as contar. */
+  async contarRespostasPorLer(doenteId) {
+    const { count, error } = await sb
+      .from("duvidas")
+      .select("id", { count: "exact", head: true })
+      .eq("doente_id", doenteId)
+      .eq("estado", "respondida")
+      .is("resposta_vista_em", null);
+    if (error) throw error;
+    return count || 0;
+  },
+
+  /** Marca como vistas as respostas do doente com sessão iniciada.
+   *  Passa por uma função no servidor, e não por um update direto: o doente
+   *  não tem — nem deve ter — permissão de escrita na tabela das dúvidas,
+   *  senão poderia reescrever a resposta da equipa. Ver a migração 014. */
+  async marcarRespostasVistas() {
+    const { data, error } = await sb.rpc("marcar_duvidas_vistas");
+    if (error) throw error;
+    return data || 0;
+  },
+
   async submeterDuvida(doenteId, categoria, pergunta, contactoTelefonico) {
     const { data, error } = await sb.from("duvidas").insert({
       doente_id: doenteId, categoria, pergunta, contacto_telefonico: !!contactoTelefonico

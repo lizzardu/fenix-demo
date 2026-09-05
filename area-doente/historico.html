@@ -59,7 +59,7 @@
     <a href="jornada.html">🎯 Jornada e Metas</a>
     <a href="plano.html">🏋️ Plano de Tratamento</a>
     <a href="historico.html" class="active">🗓️ Histórico</a>
-    <a href="duvidas.html">💬 Dúvidas</a>
+    <a href="duvidas.html">💬 Dúvidas <span class="pill pill-alert" style="margin-left:6px;" id="badge-duvidas"></span></a>
     <a href="recursos.html">📚 Recursos</a>
   </div>
 </nav>
@@ -495,6 +495,7 @@
       return;
     }
     DOENTE_ID = sessao.perfil.doente_id;
+    atualizarBadgeDuvidas(DOENTE_ID);
     document.getElementById("badge-utilizador").textContent = "Olá, " + sessao.perfil.nome.split(" ")[0];
     carregarHistorico();
     carregarAgendamentos();
