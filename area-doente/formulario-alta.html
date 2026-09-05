@@ -5,25 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulário de Alta — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260909">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260910">
 <style>
-  /* Vista só de leitura: os campos ficam desativados, mas devem continuar a
-     parecer legíveis (não cinzentos-desmaiados como um formulário por preencher).
-
-     Os rádios e as caixas de seleção têm de ficar de FORA desta regra. Estão
-     escondidos com opacity:0 e é o <span> ao lado que desenha a opção; repor
-     opacity:1 fazia reaparecer o círculo nativo do browser por cima do chip,
-     que era a bola branca visível sobre cada seleção. O mesmo valia para as
-     escalas de 0 a 10 e para as opções em lista. */
-  #form-alta input:disabled:not([type="radio"]):not([type="checkbox"]),
-  #form-alta select:disabled,
-  #form-alta textarea:disabled{
-    opacity:1; color:var(--ink); -webkit-text-fill-color:var(--ink); cursor:default;
+  /* Vista só de leitura: pares campo/valor, sem controlos de formulário.
+     As regras antigas — que reativavam a opacidade de campos desativados —
+     desapareceram com o formulário duplicado que aqui existia. */
+  .linha-leitura{
+    display:grid; grid-template-columns:minmax(180px,42%) 1fr; gap:10px 18px;
+    padding:9px 0; border-bottom:1px solid var(--line);
   }
-  #form-alta .chip:has(input:disabled){ cursor:default; }
-  /* vista só de leitura: sem botões de adicionar/remover objetivos */
-  #bloco-formulario button,
-  #bloco-formulario .objetivo-gas-row a{ display:none; }
+  .linha-leitura:last-child{ border-bottom:none; }
+  .linha-leitura .rot{ color:var(--ink-soft); font-size:.86rem; line-height:1.4; }
+  .linha-leitura .val{ font-weight:600; color:var(--ink); font-size:.92rem; line-height:1.4; overflow-wrap:anywhere; }
+  .sub-leitura{
+    font-family:var(--f-body); font-size:.8rem; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--flame-deep); margin:22px 0 6px; padding-top:14px; border-top:1px solid var(--line);
+  }
+  .lista-leitura{ margin:0 0 6px; padding-left:20px; font-size:.92rem; }
+  .lista-leitura li{ margin-bottom:5px; }
+  @media (max-width:700px){
+    /* em ecrã estreito, rótulo por cima do valor em vez de duas colunas
+       apertadas que partiriam as duas em várias linhas */
+    .linha-leitura{ grid-template-columns:1fr; gap:2px; }
+    #layout-formulario{ grid-template-columns:1fr !important; }
+    .form-toc{ position:static; }
+  }
 </style>
 </head>
 <body class="page-tint">
@@ -75,537 +81,16 @@
 
   <div id="bloco-formulario" style="display:none;">
 
-    <div class="grid" style="grid-template-columns:220px 1fr; gap:28px; align-items:start; margin-top:24px;">
+    <div class="grid" style="grid-template-columns:220px 1fr; gap:28px; align-items:start; margin-top:24px;" id="layout-formulario">
 
-      <!-- ---------- índice fixo ---------- -->
-      <nav class="form-toc">
-        <a href="#queimadura"><span class="n">1</span> Queimadura</a>
-        <a href="#cicatriz"><span class="n">2</span> Cicatriz</a>
-        <a href="#dor"><span class="n">3</span> Dor</a>
-        <a href="#prurido"><span class="n">4</span> Prurido</a>
-        <a href="#amplitude"><span class="n">5</span> Amplitude articular</a>
-        <a href="#funcionalidade"><span class="n">6</span> Funcionalidade</a>
-        <a href="#autocuidado"><span class="n">7</span> Informação para Autocuidado</a>
-        <a href="#mapa"><span class="n">8</span> Outcomes Centrados no Doente</a>
-      </nav>
+      <!-- índice, gerado a partir dos quadros que o formulário tiver -->
+      <nav class="form-toc" id="toc-formulario"></nav>
 
-      <!-- ---------- formulário (só de leitura) ---------- -->
-      <form id="form-alta">
+      <!-- quadros, gerados a partir do que ficou gravado -->
+      <div id="quadros-formulario"></div>
 
-        <div class="card field" style="margin-bottom:24px;">
-          <div class="form-row">
-            <div>
-              <label for="data-alta">Data de Alta</label>
-              <input type="text" id="data-alta" placeholder="dd/mm/aaaa">
-            </div>
-            <div>
-              <label for="contacto">Contacto direto</label>
-              <input type="text" id="contacto" placeholder="Nome e telefone de contacto">
-              <div class="chip-group" style="margin-top:8px;">
-                <label class="chip"><input type="radio" name="contacto-tipo" checked><span>Próprio</span></label>
-                <label class="chip"><input type="radio" name="contacto-tipo"><span>Familiar</span></label>
-              </div>
-            </div>
-          </div>
-          <div class="form-row" style="margin-top:16px;">
-            <div>
-              <label for="doente-email">Email</label>
-              <input type="email" id="doente-email" placeholder="nome@exemplo.pt">
-            </div>
-            <div>
-              <label>Género</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="genero"><span>Feminino</span></label>
-                <label class="chip"><input type="radio" name="genero"><span>Masculino</span></label>
-                <label class="chip"><input type="radio" name="genero"><span>Outro</span></label>
-              </div>
-            </div>
-          </div>
-          <div style="margin-top:16px;">
-            <label for="gestor-caso">Gestor de caso</label>
-            <input type="text" id="gestor-caso-nome" placeholder="Por atribuir" disabled>
-          </div>
-        </div>
-
-        <!-- ======================= 1. QUEIMADURA ======================= -->
-        <section id="queimadura" class="form-section card">
-          <div class="section-head"><span class="section-num">1</span><h2>Características da Queimadura</h2></div>
-
-          <div class="form-row">
-            <div class="subfield">
-              <label for="q-data">Data da Queimadura</label>
-              <input type="text" id="q-data" placeholder="dd/mm/aaaa">
-            </div>
-            <div class="subfield">
-              <label for="q-scq">% Superfície corporal queimada (%SCQ)</label>
-              <input type="text" id="q-scq" placeholder="ex.: 25%">
-            </div>
-          </div>
-
-          <div class="subfield">
-            <label>Etiologia</label>
-            <div class="chip-group">
-              <label class="chip"><input type="checkbox"><span>Fogo</span></label>
-              <label class="chip"><input type="checkbox"><span>Água</span></label>
-              <label class="chip"><input type="checkbox"><span>Elétrica</span></label>
-              <label class="chip"><input type="checkbox"><span>Química</span></label>
-              <label class="chip"><input type="checkbox"><span>Contacto</span></label>
-              <label class="chip"><input type="checkbox"><span>Outra</span></label>
-            </div>
-          </div>
-
-          <div class="subfield">
-            <label>Profundidade</label>
-            <div class="chip-group">
-              <label class="chip"><input type="radio" name="profundidade"><span>2.º grau superficial</span></label>
-              <label class="chip"><input type="radio" name="profundidade"><span>2.º grau profundo</span></label>
-              <label class="chip"><input type="radio" name="profundidade"><span>3.º grau</span></label>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="subfield">
-              <label>Configuração</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="configuracao"><span>Circular</span></label>
-                <label class="chip"><input type="radio" name="configuracao"><span>Não circular</span></label>
-              </div>
-            </div>
-            <div class="subfield">
-              <label>Necessidade de escarotomia</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="escarotomia"><span>Sim</span></label>
-                <label class="chip"><input type="radio" name="escarotomia" checked><span>Não</span></label>
-              </div>
-            </div>
-          </div>
-          <div class="subfield" style="max-width:260px;">
-            <label>Necessidade de fasciotomia</label>
-            <div class="chip-group">
-              <label class="chip"><input type="radio" name="fasciotomia"><span>Sim</span></label>
-              <label class="chip"><input type="radio" name="fasciotomia" checked><span>Não</span></label>
-            </div>
-          </div>
-
-          <div class="subfield">
-            <label>Localização anatómica — Cabeça e Pescoço</label>
-            <div class="chip-group">
-              <label class="chip"><input type="checkbox"><span>Couro cabeludo</span></label>
-              <label class="chip"><input type="checkbox"><span>Face</span></label>
-              <label class="chip"><input type="checkbox"><span>Orelha esquerda</span></label>
-              <label class="chip"><input type="checkbox"><span>Orelha direita</span></label>
-              <label class="chip"><input type="checkbox"><span>Pescoço</span></label>
-            </div>
-          </div>
-
-          <div class="subfield">
-            <label>Localização anatómica — Tronco</label>
-            <div class="chip-group">
-              <label class="chip"><input type="checkbox"><span>Tórax anterior</span></label>
-              <label class="chip"><input type="checkbox"><span>Tórax posterior</span></label>
-              <label class="chip"><input type="checkbox"><span>Abdómen</span></label>
-              <label class="chip"><input type="checkbox"><span>Dorso / lombar</span></label>
-              <label class="chip"><input type="checkbox"><span>Nádegas</span></label>
-              <label class="chip"><input type="checkbox"><span>Genitais / períneo</span></label>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="subfield">
-              <label>Localização anatómica — Membro Superior Esquerdo</label>
-              <div class="chip-group">
-                <label class="chip"><input type="checkbox"><span>Ombro</span></label>
-                <label class="chip"><input type="checkbox"><span>Braço</span></label>
-                <label class="chip"><input type="checkbox"><span>Cotovelo</span></label>
-                <label class="chip"><input type="checkbox"><span>Antebraço</span></label>
-                <label class="chip"><input type="checkbox"><span>Punho</span></label>
-                <label class="chip"><input type="checkbox"><span>Mão</span></label>
-              </div>
-            </div>
-            <div class="subfield">
-              <label>Localização anatómica — Membro Superior Direito</label>
-              <div class="chip-group">
-                <label class="chip"><input type="checkbox"><span>Ombro</span></label>
-                <label class="chip"><input type="checkbox"><span>Braço</span></label>
-                <label class="chip"><input type="checkbox"><span>Cotovelo</span></label>
-                <label class="chip"><input type="checkbox"><span>Antebraço</span></label>
-                <label class="chip"><input type="checkbox"><span>Punho</span></label>
-                <label class="chip"><input type="checkbox"><span>Mão</span></label>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="subfield">
-              <label>Localização anatómica — Membro Inferior Esquerdo</label>
-              <div class="chip-group">
-                <label class="chip"><input type="checkbox"><span>Anca</span></label>
-                <label class="chip"><input type="checkbox"><span>Coxa</span></label>
-                <label class="chip"><input type="checkbox"><span>Joelho</span></label>
-                <label class="chip"><input type="checkbox"><span>Perna</span></label>
-                <label class="chip"><input type="checkbox"><span>Tornozelo</span></label>
-                <label class="chip"><input type="checkbox"><span>Pé</span></label>
-              </div>
-            </div>
-            <div class="subfield">
-              <label>Localização anatómica — Membro Inferior Direito</label>
-              <div class="chip-group">
-                <label class="chip"><input type="checkbox"><span>Anca</span></label>
-                <label class="chip"><input type="checkbox"><span>Coxa</span></label>
-                <label class="chip"><input type="checkbox"><span>Joelho</span></label>
-                <label class="chip"><input type="checkbox"><span>Perna</span></label>
-                <label class="chip"><input type="checkbox"><span>Tornozelo</span></label>
-                <label class="chip"><input type="checkbox"><span>Pé</span></label>
-              </div>
-            </div>
-          </div>
-
-          <div class="subfield">
-            <label for="zona-outra">Outra localização (não listada acima)</label>
-            <input type="text" id="zona-outra" placeholder="Descreva, se aplicável">
-          </div>
-
-          <div class="form-row">
-            <div class="subfield">
-              <label>Enxertos</label>
-              <div class="chip-group" style="margin-bottom:10px;">
-                <label class="chip"><input type="radio" name="enxertos"><span>Sim</span></label>
-                <label class="chip"><input type="radio" name="enxertos" checked><span>Não</span></label>
-              </div>
-              <input type="text" placeholder="Tipo" style="margin-bottom:8px;">
-              <input type="text" placeholder="Localização">
-            </div>
-            <div class="subfield">
-              <label>Zona dadora</label>
-              <div class="chip-group" style="margin-bottom:10px;">
-                <label class="chip"><input type="radio" name="dadora"><span>Sim</span></label>
-                <label class="chip"><input type="radio" name="dadora" checked><span>Não</span></label>
-              </div>
-              <input type="text" placeholder="Localização">
-            </div>
-          </div>
-        </section>
-
-        <!-- ======================= 2. CICATRIZ ======================= -->
-        <section id="cicatriz" class="form-section card">
-          <div class="section-head"><span class="section-num">2</span><h2>Características da Cicatriz</h2></div>
-          <p class="scale-note">Escala POSAS (Patient and Observer Scar Assessment Scale) — preenchida nas duas partes: pela equipa (Observador) e pelo doente.</p>
-
-          <!-- POSAS Observador -->
-          <div id="escala-posas-obs" class="escala-painel">
-            <p class="hint" style="font-weight:600; color:var(--blue-deep); margin:18px 0 6px;">POSAS — Observador</p>
-            <p class="scale-note">Cada item pontuado de 1 (pele normal) a 10 (pior cicatriz imaginável). Total dos 6 itens: 6–60; a opinião global não entra na soma.</p>
-            <div class="form-row">
-              <div class="subfield"><label>Vascularidade (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasobs-vasc"><span>${i}</span></label>`);}</script>
-              </div></div>
-              <div class="subfield"><label>Pigmentação (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasobs-pig"><span>${i}</span></label>`);}</script>
-              </div></div>
-              <div class="subfield"><label>Espessura (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasobs-esp"><span>${i}</span></label>`);}</script>
-              </div></div>
-              <div class="subfield"><label>Relevo/Irregularidade (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasobs-rel"><span>${i}</span></label>`);}</script>
-              </div></div>
-              <div class="subfield"><label>Flexibilidade (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasobs-flex"><span>${i}</span></label>`);}</script>
-              </div></div>
-              <div class="subfield"><label>Área de superfície (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasobs-area"><span>${i}</span></label>`);}</script>
-              </div></div>
-            </div>
-            <div class="subfield"><label>Opinião global (1–10)</label><div class="scale mini-scale">
-              <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasobs-global"><span>${i}</span></label>`);}</script>
-            </div></div>
-            <div class="subfield" style="max-width:180px; margin-bottom:0;">
-              <label for="posasobs-total">Total dos 6 itens (/60)</label>
-              <input type="text" id="posasobs-total" placeholder="calculado automaticamente" readonly>
-            </div>
-          </div>
-
-          <!-- POSAS Doente -->
-          <div id="escala-posas-doente" class="escala-painel" style="margin-top:26px; padding-top:22px; border-top:1px solid var(--line);">
-            <p class="hint" style="font-weight:600; color:var(--blue-deep); margin:0 0 6px;">POSAS — Doente</p>
-            <p class="scale-note">Cada item pontuado de 1 (igual à pele normal / sem sintoma) a 10 (muito diferente / sintoma extremo).</p>
-            <div class="form-row">
-              <div class="subfield"><label>Dor (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasdo-dor"><span>${i}</span></label>`);}</script>
-              </div></div>
-              <div class="subfield"><label>Prurido (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasdo-prur"><span>${i}</span></label>`);}</script>
-              </div></div>
-              <div class="subfield"><label>Cor (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasdo-cor"><span>${i}</span></label>`);}</script>
-              </div></div>
-              <div class="subfield"><label>Rigidez (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasdo-rig"><span>${i}</span></label>`);}</script>
-              </div></div>
-              <div class="subfield"><label>Espessura (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasdo-esp"><span>${i}</span></label>`);}</script>
-              </div></div>
-              <div class="subfield"><label>Irregularidade (1–10)</label><div class="scale mini-scale">
-                <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasdo-irr"><span>${i}</span></label>`);}</script>
-              </div></div>
-            </div>
-            <div class="subfield"><label>Opinião global (1–10)</label><div class="scale mini-scale">
-              <script>for(let i=1;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="posasdo-global"><span>${i}</span></label>`);}</script>
-            </div></div>
-            <div class="subfield" style="max-width:180px; margin-bottom:0;">
-              <label for="posasdo-total">Total dos 6 itens (/60)</label>
-              <input type="text" id="posasdo-total" placeholder="calculado automaticamente" readonly>
-            </div>
-          </div>
-
-          <div class="form-row" style="margin-top:22px;">
-            <div class="subfield">
-              <label>Sequelas previsíveis</label>
-              <div class="chip-group" style="margin-bottom:10px;">
-                <label class="chip"><input type="radio" name="sequelas"><span>Sim</span></label>
-                <label class="chip"><input type="radio" name="sequelas" checked><span>Não</span></label>
-              </div>
-              <input type="text" placeholder="Localização">
-            </div>
-            <div class="subfield">
-              <label>Bridas</label>
-              <div class="chip-group" style="margin-bottom:10px;">
-                <label class="chip"><input type="radio" name="bridas"><span>Sim</span></label>
-                <label class="chip"><input type="radio" name="bridas" checked><span>Não</span></label>
-              </div>
-              <input type="text" placeholder="Localização">
-            </div>
-          </div>
-        </section>
-
-        <!-- ======================= 3. DOR ======================= -->
-        <section id="dor" class="form-section card">
-          <div class="section-head"><span class="section-num">3</span><h2>Dor</h2></div>
-          <p class="scale-note">END 0–10 · 0 = sem dor; 10 = pior dor imaginável.</p>
-
-          <div class="subfield">
-            <label>Dor em repouso</label>
-            <div class="scale">
-              <script>for(let i=0;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="dor-repouso"><span>${i}</span></label>`);}</script>
-            </div>
-          </div>
-          <div class="subfield">
-            <label>Dor durante o movimento</label>
-            <div class="scale">
-              <script>for(let i=0;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="dor-mov"><span>${i}</span></label>`);}</script>
-            </div>
-          </div>
-          <div class="subfield" style="margin-bottom:0;">
-            <label>Dor durante a mobilização cicatricial</label>
-            <div class="scale">
-              <script>for(let i=0;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="dor-mobiliz"><span>${i}</span></label>`);}</script>
-            </div>
-          </div>
-        </section>
-
-        <!-- ======================= 4. PRURIDO ======================= -->
-        <section id="prurido" class="form-section card">
-          <div class="section-head"><span class="section-num">4</span><h2>Prurido</h2></div>
-          <p class="scale-note">NRS 0–10 · 0 = sem prurido; 10 = pior prurido imaginável.</p>
-
-          <div class="subfield">
-            <label>Intensidade do prurido</label>
-            <div class="scale">
-              <script>for(let i=0;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="prurido-int"><span>${i}</span></label>`);}</script>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="subfield">
-              <label>Impacto no sono</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="prurido-sono"><span>0 Nenhum</span></label>
-                <label class="chip"><input type="radio" name="prurido-sono"><span>1 Ligeiro</span></label>
-                <label class="chip"><input type="radio" name="prurido-sono"><span>2 Moderado</span></label>
-                <label class="chip"><input type="radio" name="prurido-sono"><span>3 Grave</span></label>
-                <label class="chip"><input type="radio" name="prurido-sono"><span>4 Muito grave</span></label>
-              </div>
-            </div>
-            <div class="subfield">
-              <label>Impacto nas atividades</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="prurido-ativ"><span>0 Nenhum</span></label>
-                <label class="chip"><input type="radio" name="prurido-ativ"><span>1 Ligeiro</span></label>
-                <label class="chip"><input type="radio" name="prurido-ativ"><span>2 Moderado</span></label>
-                <label class="chip"><input type="radio" name="prurido-ativ"><span>3 Grave</span></label>
-                <label class="chip"><input type="radio" name="prurido-ativ"><span>4 Muito grave</span></label>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ======================= 5. AMPLITUDE ARTICULAR ======================= -->
-        <section id="amplitude" class="form-section card">
-          <div class="section-head"><span class="section-num">5</span><h2>Amplitude articular observada / funcional</h2></div>
-          <p class="scale-note">Área queimada · registar graus (ativo / passivo)</p>
-
-          <table class="rom-table">
-            <tbody>
-              <tr><td>Ombro direito</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Ombro esquerdo</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Cotovelo direito</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Cotovelo esquerdo</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Punho direito</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Punho esquerdo</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Mão direita</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Mão esquerda</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Anca direita</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Anca esquerda</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Joelho direito</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Joelho esquerdo</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Maléolo direito</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Maléolo esquerdo</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-              <tr><td>Outra articulação</td><td><div class="rom-inputs"><input type="text" style="width:70px;"><span>/</span><input type="text" style="width:70px;"></div></td></tr>
-            </tbody>
-          </table>
-
-          <div class="subfield" style="margin-top:22px;">
-            <label>Classificação global</label>
-            <div class="chip-group">
-              <label class="chip"><input type="radio" name="rom-global"><span>0 Sem limitação</span></label>
-              <label class="chip"><input type="radio" name="rom-global"><span>1 Ligeira</span></label>
-              <label class="chip"><input type="radio" name="rom-global"><span>2 Moderada</span></label>
-              <label class="chip"><input type="radio" name="rom-global"><span>3 Grave</span></label>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="subfield">
-              <label>Necessidade de fato de compressão</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="fato-compressao"><span>Sim</span></label>
-                <label class="chip"><input type="radio" name="fato-compressao" checked><span>Não</span></label>
-              </div>
-            </div>
-            <div class="subfield">
-              <label>Necessidade de Produtos de Apoio</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="produtos-apoio" onclick="alternarProdutosApoio()"><span>Sim</span></label>
-                <label class="chip"><input type="radio" name="produtos-apoio" checked onclick="alternarProdutosApoio()"><span>Não</span></label>
-              </div>
-            </div>
-          </div>
-          <div id="campo-produtos-apoio" style="display:none;">
-            <div class="subfield">
-              <label>Produtos de apoio necessários</label>
-              <div class="chip-group">
-                <label class="chip"><input type="checkbox"><span>Ortótese</span></label>
-                <label class="chip"><input type="checkbox"><span>Tala</span></label>
-                <label class="chip"><input type="checkbox"><span>Silicone</span></label>
-                <label class="chip"><input type="checkbox"><span>Outros</span></label>
-              </div>
-            </div>
-            <div class="subfield" style="margin-bottom:0;">
-              <label>Outros — especificar</label>
-              <input type="text" placeholder="ex.: talas noturnas, luvas de compressão...">
-            </div>
-          </div>
-        </section>
-
-        <!-- ======================= 6. FUNCIONALIDADE ======================= -->
-        <section id="funcionalidade" class="form-section card">
-          <div class="section-head"><span class="section-num">6</span><h2>Funcionalidade</h2></div>
-          <p class="scale-note">PSFS · 0 = incapaz de realizar a atividade; 10 = consegue realizar ao nível habitual/pré-lesão.</p>
-
-          <div class="subfield">
-            <label for="psfs-1">Atividade 1</label>
-            <input type="text" id="psfs-1" placeholder="Descreva a atividade" style="margin-bottom:10px;">
-            <div class="scale mini-scale"><script>for(let i=0;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="psfs1"><span>${i}</span></label>`);}</script></div>
-          </div>
-          <div class="subfield">
-            <label for="psfs-2">Atividade 2</label>
-            <input type="text" id="psfs-2" placeholder="Descreva a atividade" style="margin-bottom:10px;">
-            <div class="scale mini-scale"><script>for(let i=0;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="psfs2"><span>${i}</span></label>`);}</script></div>
-          </div>
-          <div class="subfield">
-            <label for="psfs-3">Atividade 3</label>
-            <input type="text" id="psfs-3" placeholder="Descreva a atividade" style="margin-bottom:10px;">
-            <div class="scale mini-scale"><script>for(let i=0;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="psfs3"><span>${i}</span></label>`);}</script></div>
-          </div>
-          <div class="subfield" style="max-width:180px; margin-bottom:0;">
-            <label for="psfs-media">Média PSFS (/10)</label>
-            <input type="text" id="psfs-media" placeholder="calculado automaticamente" readonly>
-          </div>
-        </section>
-
-        <!-- ======================= 7. INFORMAÇÃO PARA AUTOCUIDADO ======================= -->
-        <section id="autocuidado" class="form-section card">
-          <div class="section-head"><span class="section-num">7</span><h2>Informação para Autocuidado</h2></div>
-
-          <table class="adesao-table">
-            <thead><tr><th>Cuidado</th><th>Resposta</th></tr></thead>
-            <tbody id="tbody-autocuidado"></tbody>
-          </table>
-
-          <div class="subfield" style="margin-top:22px; margin-bottom:0;">
-            <label for="dificuldades">Principais dificuldades identificadas</label>
-            <textarea id="dificuldades" rows="3"></textarea>
-          </div>
-        </section>
-
-        <!-- ======================= 8. OUTCOMES CENTRADOS NO DOENTE ======================= -->
-        <section id="mapa" class="form-section card">
-          <div class="section-head"><span class="section-num">8</span><h2>Outcomes Centrados no Doente</h2></div>
-
-          <div class="subfield">
-            <label>O que o doente mais receia não conseguir fazer sozinho</label>
-            <div class="chip-group" style="margin-bottom:10px;">
-              <label class="chip"><input type="checkbox"><span>Vestir-se</span></label>
-              <label class="chip"><input type="checkbox"><span>Comer e beber</span></label>
-              <label class="chip"><input type="checkbox"><span>Tomar banho</span></label>
-              <label class="chip"><input type="checkbox"><span>Andar sem ajuda</span></label>
-              <label class="chip"><input type="checkbox"><span>Preparar refeições</span></label>
-              <label class="chip"><input type="checkbox"><span>Conduzir</span></label>
-              <label class="chip"><input type="checkbox"><span>Trabalhar</span></label>
-              <label class="chip"><input type="checkbox"><span>Fazer compras</span></label>
-              <label class="chip"><input type="checkbox"><span>Atividade física</span></label>
-            </div>
-            <input type="text" placeholder="Outras">
-          </div>
-
-          <div class="subfield">
-            <label>O que mais o incomoda</label>
-            <div class="chip-group" style="margin-bottom:10px;">
-              <label class="chip"><input type="checkbox"><span>Dor</span></label>
-              <label class="chip"><input type="checkbox"><span>Prurido</span></label>
-              <label class="chip"><input type="checkbox"><span>Rigidez</span></label>
-              <label class="chip"><input type="checkbox"><span>Cicatriz</span></label>
-              <label class="chip"><input type="checkbox"><span>Sono</span></label>
-              <label class="chip"><input type="checkbox"><span>Outra</span></label>
-            </div>
-            <input type="text" placeholder="Outras">
-          </div>
-
-          <div class="subfield">
-            <label>Confiança para cuidar da cicatriz</label>
-            <p class="scale-note">0 = nada confiante · 10 = totalmente confiante</p>
-            <div class="scale">
-              <script>for(let i=0;i<=10;i++){document.write(`<label class="scale-opt"><input type="radio" name="confianca"><span>${i}</span></label>`);}</script>
-            </div>
-          </div>
-
-          <div class="subfield">
-            <label for="alivia-dor">O que alivia a sua dor</label>
-            <textarea id="alivia-dor" rows="2"></textarea>
-          </div>
-
-          <hr class="divider" style="margin:22px 0;">
-
-          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px;">
-            <label style="margin:0;">Objetivos do doente</label>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="adicionarObjetivoDoente()">+ Adicionar objetivo</button>
-          </div>
-          <p class="scale-note">Cada objetivo introduzido aqui é acrescentado automaticamente à jornada de metas do doente ao guardar.</p>
-          <div id="lista-objetivos-gas"></div>
-        </section>
-
-      </form>
     </div>
-
   </div>
-
 </main>
 
 <footer>
@@ -619,183 +104,175 @@
 <script>
   let DOENTE_ID = null;
 
-  function construirTabelaAutocuidado(){
-    const cuidados = ["Fato de Compressão","Silicone","Exercícios","Massagem / mobilização cicatricial","Hidratação","Proteção solar","Produtos de Apoio"];
-    const tbody = document.getElementById('tbody-autocuidado');
-    tbody.innerHTML = cuidados.map((label, idx) => `
-      <tr>
-        <td>${label}</td>
-        <td><div class="chip-group">
-          <label class="chip"><input type="radio" name="auto-${idx}"><span>Sim</span></label>
-          <label class="chip"><input type="radio" name="auto-${idx}"><span>Não</span></label>
-          <label class="chip"><input type="radio" name="auto-${idx}"><span>Não Aplicável</span></label>
-        </div></td>
-      </tr>`).join('');
+  /* =====================================================================
+     Vista só de leitura do Formulário de Alta.
+
+     Antes, esta página tinha uma CÓPIA do formulário da área profissional
+     — as mesmas nove secções escritas outra vez — e limitava-se a
+     preenchê-la. Com duas cópias do mesmo formulário, cada campo novo
+     tinha de ser copiado à mão para aqui, e isso falhou em silêncio: o
+     quadro 9 inteiro e doze campos dos quadros 1 e 8 nunca chegaram a ser
+     copiados, e ninguém deu por isso.
+
+     Agora a página desenha-se a partir do que ficou gravado. Não há
+     formulário nenhum escrito aqui: lê-se "dados" e mostra-se o que lá
+     estiver. Um campo acrescentado amanhã ao formulário aparece aqui
+     sozinho, sem ninguém se lembrar de nada.
+
+     O que NÃO se mostra ao doente: a pontuação BURN-OP e a prioridade de
+     seguimento. São decisões de gestão do serviço, não respostas dele —
+     ver um rótulo de "grupo de maior necessidade" sem alguém ao lado a
+     explicá-lo não ajuda ninguém. As RESPOSTAS que deu ao quadro 9
+     aparecem todas.
+     ===================================================================== */
+
+  /* Títulos dos quadros. As chaves são os ids das secções do formulário,
+     que é como "dados" vem estruturado. Um quadro que apareça em "dados"
+     sem estar nesta lista é na mesma mostrado, com o id por título — mais
+     vale um título feio do que informação escondida. */
+  const QUADROS = [
+    ["queimadura",       "1", "Características da Queimadura"],
+    ["cicatriz",         "2", "Características da Cicatriz"],
+    ["dor",              "3", "Dor"],
+    ["prurido",          "4", "Prurido"],
+    ["amplitude",        "5", "Amplitude articular"],
+    ["funcionalidade",   "6", "Funcionalidade"],
+    ["autocuidado",      "7", "Informação para Autocuidado"],
+    ["mapa",             "8", "Outcomes Centrados no Doente"],
+    ["revisao-sistemas", "9", "Revisão de Sistemas à data da alta"]
+  ];
+
+  /* Blocos que não são pares campo/valor e têm apresentação própria. */
+  const BLOCOS_ESPECIAIS = {
+    amplitude_tabela:  { quadro: "amplitude",  titulo: "Amplitude por articulação (ativa / passiva)" },
+    autocuidado_tabela:{ quadro: "autocuidado", titulo: "Ensino realizado" },
+    objetivos_gas:     { quadro: "mapa",        titulo: "Os seus objetivos" }
+  };
+
+  function esc(v){
+    return String(v == null ? "" : v)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   }
-  construirTabelaAutocuidado();
 
-  /* --- Objetivos do doente: mesma lista da área profissional, aqui só
-     para leitura (o botão "+ Adicionar" e os links "remover" ficam
-     escondidos por CSS — ver <style> no topo da página). --- */
-  let contadorObjetivosDoente = 0;
-
-  function adicionarObjetivoDoente(descricaoInicial){
-    const div = document.createElement('div');
-    div.className = 'objetivo-gas-row';
-    div.style.marginBottom = '10px';
-    div.innerHTML = `
-      <div style="display:flex; align-items:center; gap:10px;">
-        <input type="text" class="objetivo-gas-desc" placeholder="Descreva o objetivo do doente" style="flex:1;" value="${(descricaoInicial || '').replace(/"/g, '&quot;')}">
-        <a href="#" class="hint" onclick="event.preventDefault();">remover</a>
-      </div>`;
-    document.getElementById('lista-objetivos-gas').appendChild(div);
-  }
-
-  function repovoarObjetivosDoente(lista){
-    document.getElementById('lista-objetivos-gas').innerHTML = '';
-    contadorObjetivosDoente = 0;
-    (lista || []).forEach(texto => adicionarObjetivoDoente(typeof texto === 'string' ? texto : texto.descricao));
-    if (!lista || !lista.length) {
-      document.getElementById('lista-objetivos-gas').innerHTML = `<p class="hint">Sem objetivos registados.</p>`;
+  /** Um valor gravado pode ser texto, lista, {selecionados, outras} ou
+   *  {resposta, detalhe}. Devolve texto legível, ou null se estiver vazio. */
+  function valorLegivel(v){
+    if (v == null) return null;
+    if (Array.isArray(v)) return v.length ? v.join(" · ") : null;
+    if (typeof v === "object") {
+      if (Array.isArray(v.selecionados)) {
+        const partes = v.selecionados.slice();
+        if (v.outras) partes.push(v.outras);
+        return partes.length ? partes.join(" · ") : null;
+      }
+      if ("resposta" in v) {
+        const det = Array.isArray(v.detalhe) ? v.detalhe.filter(Boolean).join(" · ") : v.detalhe;
+        if (!v.resposta && !det) return null;
+        return [v.resposta, det].filter(Boolean).join(" — ");
+      }
+      return null;
     }
+    const t = String(v).trim();
+    return t === "" ? null : t;
   }
 
-  /* --- repovoamento: idêntico ao usado no editor da área profissional
-     (formulario-alta.html), para ler exatamente o mesmo formato de "dados" --- */
-  function repovoarCampo(campo, valor){
-    if (valor == null) return;
+  function linha(rotulo, valor){
+    return '<div class="linha-leitura">'
+         +   '<span class="rot">' + esc(rotulo) + '</span>'
+         +   '<span class="val">' + esc(valor) + '</span>'
+         + '</div>';
+  }
 
-    const checkboxes = campo.querySelectorAll('.chip-group input[type="checkbox"]');
-    if (checkboxes.length) {
-      const selecionados = Array.isArray(valor) ? valor : [valor];
-      checkboxes.forEach(c => {
-        const texto = c.nextElementSibling.textContent.trim();
-        c.checked = selecionados.includes(texto);
+  function tabelaLegivel(obj, titulo){
+    const linhas = Object.keys(obj || {}).map(function (k) {
+      const v = obj[k];
+      let texto = null;
+      if (v && typeof v === "object" && ("ativo" in v || "passivo" in v)) {
+        const p = [v.ativo, v.passivo].filter(function (x) { return x != null && String(x).trim() !== ""; });
+        texto = p.length ? p.join(" / ") : null;
+      } else {
+        texto = valorLegivel(v);
+      }
+      return texto ? linha(k, texto) : "";
+    }).join("");
+    if (!linhas) return "";
+    return '<h3 class="sub-leitura">' + esc(titulo) + '</h3>' + linhas;
+  }
+
+  function listaLegivel(lista, titulo){
+    const itens = (lista || []).map(function (o) {
+      return typeof o === "string" ? o : (o && o.descricao) || "";
+    }).filter(Boolean);
+    if (!itens.length) return "";
+    return '<h3 class="sub-leitura">' + esc(titulo) + '</h3>'
+         + '<ul class="lista-leitura">' + itens.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ul>';
+  }
+
+  function desenharFormulario(registo){
+    const dados = registo.dados || {};
+    const toc = document.getElementById("toc-formulario");
+    const alvo = document.getElementById("quadros-formulario");
+
+    // quadros conhecidos primeiro, depois quaisquer outros que existam nos
+    // dados e não estejam previstos — para nada ficar escondido
+    const previstos = QUADROS.map(function (q) { return q[0]; });
+    const extra = Object.keys(dados).filter(function (k) {
+      return previstos.indexOf(k) < 0 && !BLOCOS_ESPECIAIS[k]
+          && dados[k] && typeof dados[k] === "object" && !Array.isArray(dados[k]);
+    }).map(function (k, i) { return [k, String(QUADROS.length + i + 1), k]; });
+
+    const html = [], links = [];
+    QUADROS.concat(extra).forEach(function (q) {
+      const id = q[0], num = q[1], titulo = q[2];
+      const seccao = dados[id];
+      let corpo = "";
+
+      if (seccao && typeof seccao === "object") {
+        Object.keys(seccao).forEach(function (rotulo) {
+          const t = valorLegivel(seccao[rotulo]);
+          if (t) corpo += linha(rotulo, t);
+        });
+      }
+      // blocos com apresentação própria, colados ao quadro a que pertencem
+      Object.keys(BLOCOS_ESPECIAIS).forEach(function (chave) {
+        const b = BLOCOS_ESPECIAIS[chave];
+        if (b.quadro !== id || !dados[chave]) return;
+        corpo += (chave === "objetivos_gas")
+          ? listaLegivel(dados[chave], b.titulo)
+          : tabelaLegivel(dados[chave], b.titulo);
       });
-      return;
-    }
-    const radios = campo.querySelectorAll('.chip-group input[type="radio"], .scale input[type="radio"]');
-    const inputs = campo.querySelectorAll('input[type="text"], input[type="email"], textarea');
 
-    if (radios.length && inputs.length && valor && typeof valor === "object" && "resposta" in valor) {
-      radios.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === valor.resposta); });
-      if (inputs.length === 1) { inputs[0].value = valor.detalhe || ""; }
-      else if (Array.isArray(valor.detalhe)) { inputs.forEach((input, i) => { if (valor.detalhe[i] != null) input.value = valor.detalhe[i]; }); }
-      return;
-    }
-    if (radios.length) {
-      radios.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === valor); });
-      return;
-    }
-    const select = campo.querySelector('select');
-    if (select) { select.value = valor; return; }
-    if (inputs.length === 1) { inputs[0].value = valor; return; }
-    if (inputs.length > 1 && Array.isArray(valor)) {
-      inputs.forEach((input, i) => { if (valor[i] != null) input.value = valor[i]; });
-    }
-  }
-
-  function repovoarSeccao(section, dadosSecao){
-    if (!dadosSecao) return;
-    section.querySelectorAll('.subfield').forEach(campo => {
-      const labelEl = campo.querySelector('label');
-      if (!labelEl) return;
-      const chave = labelEl.textContent.trim();
-      if (chave in dadosSecao) repovoarCampo(campo, dadosSecao[chave]);
+      if (!corpo) return;   // quadro sem nada respondido não se mostra
+      links.push('<a href="#q-' + id + '"><span class="n">' + num + '</span> ' + esc(titulo) + '</a>');
+      html.push(
+        '<section class="card" id="q-' + id + '" style="margin-bottom:22px; scroll-margin-top:110px;">'
+      +   '<div class="section-head"><span class="section-num">' + num + '</span><h2>' + esc(titulo) + '</h2></div>'
+      +   corpo
+      + '</section>');
     });
-  }
 
-  function repovoarRomTable(linhas){
-    if (!linhas) return;
-    document.querySelectorAll('#amplitude .rom-table tbody tr').forEach(tr => {
-      const label = tr.children[0].textContent.trim();
-      if (!linhas[label]) return;
-      const inputs = tr.querySelectorAll('input');
-      inputs[0].value = linhas[label].ativo || '';
-      inputs[1].value = linhas[label].passivo || '';
-    });
-  }
+    toc.innerHTML = links.join("");
+    alvo.innerHTML = html.length
+      ? html.join("")
+      : '<div class="banner-info">O formulário foi gravado mas não tem campos preenchidos.</div>';
 
-  function repovoarAdesaoTable(linhas){
-    if (!linhas) return;
-    document.querySelectorAll('#autocuidado .adesao-table tbody tr').forEach(tr => {
-      const label = tr.children[0].textContent.trim();
-      if (linhas[label] == null) return;
-      const inputs = tr.children[1].querySelectorAll('input[type="radio"]');
-      inputs.forEach(r => { r.checked = (r.nextElementSibling.textContent.trim() === linhas[label]); });
-    });
-  }
-
-  function alternarProdutosApoio(){
-    const marcado = document.querySelector('input[name="produtos-apoio"]:checked');
-    const sim = marcado && marcado.nextElementSibling.textContent.trim() === 'Sim';
-    document.getElementById('campo-produtos-apoio').style.display = sim ? 'block' : 'none';
-  }
-
-  function paraBR(dataISO){
-    if (!dataISO) return '';
-    const [y, m, d] = dataISO.split('-');
-    return `${d}/${m}/${y}`;
-  }
-
-  /* desativa todos os campos, para ficar claramente só de leitura (mas
-     mantendo a mesma aparência visual dos "chips" selecionados) */
-  function desativarTodosOsCampos(){
-    document.querySelectorAll('#form-alta input, #form-alta select, #form-alta textarea').forEach(el => {
-      el.disabled = true;
-    });
+    document.getElementById("bloco-formulario").style.display = "block";
   }
 
   async function carregarFormulario(){
-    const doente = await fenixApi.obterDoente(DOENTE_ID);
-    if (doente.email) document.getElementById('doente-email').value = doente.email;
-    if (doente.genero) {
-      document.querySelectorAll('input[name="genero"]').forEach(r => {
-        r.checked = (r.nextElementSibling.textContent.trim() === doente.genero);
-      });
-    }
-    if (doente.gestor_caso_id) {
-      try {
-        const equipa = await fenixApi.listarEquipaProfissionais();
-        const gestor = equipa.find(p => p.id === doente.gestor_caso_id);
-        if (gestor) document.getElementById('gestor-caso-nome').value = gestor.nome + (gestor.especialidade ? " — " + gestor.especialidade : "");
-      } catch (e) {
-        console.error("Não foi possível identificar o gestor de caso:", e);
-      }
-    }
-
-    const ultimo = await fenixApi.obterUltimoFormularioAlta(DOENTE_ID);
-    if (!ultimo) {
-      document.getElementById('sem-formulario').style.display = 'flex';
+    let registo;
+    try {
+      registo = await fenixApi.obterUltimoFormularioAlta(DOENTE_ID);
+    } catch (e) {
+      console.error("Erro ao carregar o formulário de alta:", e);
+      const aviso = document.getElementById("sem-formulario");
+      aviso.innerHTML = "⚠️ Não foi possível carregar o formulário: " + esc(e.message || e);
+      aviso.style.display = "flex";
       return;
     }
-
-    document.getElementById('bloco-formulario').style.display = 'block';
-
-    if (ultimo.data_alta) document.getElementById('data-alta').value = paraBR(ultimo.data_alta);
-    if (ultimo.contacto_tipo) {
-      document.querySelectorAll('input[name="contacto-tipo"]').forEach(r => {
-        r.checked = (ultimo.contacto_tipo === 'proprio') === r.closest('label').innerText.includes('Próprio');
-      });
-    }
-
-    const dados = ultimo.dados || {};
-    document.querySelectorAll('.form-section').forEach(section => {
-      repovoarSeccao(section, dados[section.id]);
-    });
-    repovoarRomTable(dados.amplitude_tabela);
-    repovoarAdesaoTable(dados.autocuidado_tabela);
-    repovoarObjetivosDoente(dados.objetivos_gas);
-    alternarProdutosApoio();
-
-    const dataUltimo = new Date(ultimo.criado_em).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
-    const aviso = document.createElement('div');
-    aviso.className = 'banner-info';
-    aviso.style.margin = '20px 0';
-    aviso.innerHTML = `📋 Preenchido pela sua equipa em ${dataUltimo}.`;
-    document.getElementById('bloco-formulario').insertBefore(aviso, document.querySelector('.grid'));
-
-    desativarTodosOsCampos();
+    if (!registo) { document.getElementById("sem-formulario").style.display = "flex"; return; }
+    desenharFormulario(registo);
   }
 
   function terminarSessao(ev){
