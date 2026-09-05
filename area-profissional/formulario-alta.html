@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulário de Alta — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260905">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260906">
 </head>
 <body>
 <header class="topbar">
@@ -119,6 +119,18 @@
         </div>
 
         <!-- ======================= 1. QUEIMADURA ======================= -->
+        <div class="form-indice">
+          <div class="linha">
+            <span class="rotulo">Quadros</span>
+            <span id="indice-quadros" style="display:contents;"></span>
+            <span class="atual" id="indice-atual"></span>
+            <span class="acoes">
+              <button type="button" class="btn btn-ghost btn-sm" onclick="abrirTodos()">Abrir todos</button>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="fecharTodos()">Fechar todos</button>
+            </span>
+          </div>
+        </div>
+
         <section id="queimadura" class="form-section card">
           <div class="section-head"><span class="section-num">1</span><h2>Características da Queimadura</h2></div>
 
@@ -774,19 +786,187 @@
   }
 
   /* --- Quadro 9: as 23 perguntas do BURN-OP.
+     Navegação do formulário: quadros recolhíveis e índice de progresso.
+
+     São 9 quadros e cerca de 90 campos, e nenhum profissional preenche os
+     nove — cada área preenche o seu. Manter tudo aberto obrigava a
+     percorrer o formulário inteiro para chegar a três campos.
+
+     A transformação é feita aqui, e não no HTML dos quadros, para as
+     secções continuarem a ser HTML simples: cada uma é lida, o que vem a
+     seguir ao cabeçalho é embrulhado num corpo recolhível, e o cabeçalho
+     passa a botão. Assim, acrescentar um quadro novo no futuro não exige
+     lembrar-se de nada disto.
+     ===================================================================== */
+  const SECOES_FORM = [];
+
+  function prepararSecoes(){
+    const indice = document.getElementById('indice-quadros');
+    document.querySelectorAll('.form-section').forEach(function (sec, i) {
+      const cabecalho = sec.querySelector('.section-head');
+      if (!cabecalho) return;
+
+      // embrulhar tudo o que vem depois do cabeçalho
+      const corpo = document.createElement('div');
+      corpo.className = 'secao-corpo';
+      corpo.id = 'corpo-' + sec.id;
+      let n = cabecalho.nextSibling;
+      while (n) { const seg = n.nextSibling; corpo.appendChild(n); n = seg; }
+      sec.appendChild(corpo);
+
+      // cabeçalho passa a botão
+      const num = cabecalho.querySelector('.section-num').textContent.trim();
+      const titulo = cabecalho.querySelector('h2').textContent.trim();
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      botao.className = 'secao-toggle';
+      botao.setAttribute('aria-expanded', 'false');
+      botao.setAttribute('aria-controls', corpo.id);
+      while (cabecalho.firstChild) botao.appendChild(cabecalho.firstChild);
+
+      const progresso = document.createElement('span');
+      progresso.className = 'secao-progresso';
+      progresso.id = 'progresso-' + sec.id;
+      botao.appendChild(progresso);
+
+      const seta = document.createElement('span');
+      seta.className = 'seta';
+      seta.textContent = '▶';
+      seta.setAttribute('aria-hidden', 'true');
+      botao.appendChild(seta);
+
+      cabecalho.appendChild(botao);
+      corpo.hidden = true;
+      botao.addEventListener('click', function () { alternarSecao(sec.id); });
+
+      // entrada no índice
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'indice-item';
+      item.id = 'indice-' + sec.id;
+      item.innerHTML = '<span class="n">' + num + '</span><span class="titulo">' + titulo + '</span>';
+      item.title = num + '. ' + titulo;
+      item.setAttribute('aria-label', 'Quadro ' + num + ': ' + titulo);
+      item.addEventListener('click', function () { abrirSecao(sec.id, true); });
+      indice.appendChild(item);
+
+      SECOES_FORM.push({ id: sec.id, num: num, titulo: titulo });
+    });
+
+    // o primeiro quadro começa aberto: começa-se por ali
+    if (SECOES_FORM.length) abrirSecao(SECOES_FORM[0].id, false);
+
+    // qualquer resposta atualiza o progresso do respetivo quadro
+    document.querySelectorAll('.form-section').forEach(function (sec) {
+      sec.addEventListener('change', function () { atualizarProgresso(sec.id); });
+      sec.addEventListener('input', function () { atualizarProgresso(sec.id); });
+    });
+    atualizarTodosOsProgressos();
+  }
+
+  function alternarSecao(id){
+    const corpo = document.getElementById('corpo-' + id);
+    if (corpo.hidden) abrirSecao(id, false); else fecharSecao(id);
+  }
+
+  function fecharSecao(id){
+    document.getElementById('corpo-' + id).hidden = true;
+    document.querySelector('#' + id + ' .secao-toggle').setAttribute('aria-expanded', 'false');
+    const it = document.getElementById('indice-' + id);
+    if (it) it.classList.remove('aberto');
+  }
+
+  /** Abre um quadro. Fecha os outros: com nove quadros abertos ao mesmo
+   *  tempo voltava-se ao problema de origem. */
+  function abrirSecao(id, deslocar){
+    SECOES_FORM.forEach(function (s) { if (s.id !== id) fecharSecao(s.id); });
+    document.getElementById('corpo-' + id).hidden = false;
+    document.querySelector('#' + id + ' .secao-toggle').setAttribute('aria-expanded', 'true');
+    const it = document.getElementById('indice-' + id);
+    if (it) it.classList.add('aberto');
+    const rotuloAtual = document.getElementById('indice-atual');
+    if (rotuloAtual) {
+      const s = SECOES_FORM.find(function (x) { return x.id === id; });
+      rotuloAtual.textContent = s ? s.num + '. ' + s.titulo : '';
+    }
+    if (deslocar) document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function abrirTodos(){
+    SECOES_FORM.forEach(function (s) {
+      document.getElementById('corpo-' + s.id).hidden = false;
+      document.querySelector('#' + s.id + ' .secao-toggle').setAttribute('aria-expanded', 'true');
+    });
+  }
+
+  function fecharTodos(){
+    SECOES_FORM.forEach(function (s) { fecharSecao(s.id); });
+  }
+
+  /** Conta campos respondidos. É um indicador de progresso, não uma
+   *  validação: nem todos os campos se aplicam a todos os doentes, e
+   *  nenhum quadro é obrigatório. */
+  function contarRespostas(sec){
+    let total = 0, respondidos = 0;
+    sec.querySelectorAll('.subfield').forEach(function (campo) {
+      if (!campo.querySelector('label')) return;
+      total++;
+      const v = valorDoCampo(campo);
+      const temResposta = Array.isArray(v) ? v.length > 0
+        : (v && typeof v === 'object') ? !!(v.resposta || v.outras || (v.selecionados || []).length)
+        : (v != null && String(v).trim() !== '');
+      if (temResposta) respondidos++;
+    });
+    // o quadro 9 é feito de itens próprios, fora do padrão .subfield
+    const burnop = sec.querySelectorAll('.burnop-item');
+    if (burnop.length) {
+      total += burnop.length;
+      burnop.forEach(function (i) { if (i.querySelector('input:checked')) respondidos++; });
+    }
+    return { total: total, respondidos: respondidos };
+  }
+
+  function atualizarProgresso(id){
+    const sec = document.getElementById(id);
+    const alvo = document.getElementById('progresso-' + id);
+    const item = document.getElementById('indice-' + id);
+    if (!sec || !alvo) return;
+
+    const c = contarRespostas(sec);
+    if (!c.total) { alvo.innerHTML = ''; return; }
+    const pct = Math.round((c.respondidos / c.total) * 100);
+    const completo = c.respondidos === c.total;
+    alvo.className = 'secao-progresso' + (completo ? ' completo' : '');
+    alvo.innerHTML = '<span class="barra"><span style="width:' + pct + '%"></span></span>'
+                   + (completo ? '✓ ' : '') + c.respondidos + '/' + c.total;
+
+    if (item) {
+      item.classList.toggle('completo', completo);
+      item.classList.toggle('tem-respostas', !completo && c.respondidos > 0);
+    }
+  }
+
+  function atualizarTodosOsProgressos(){
+    SECOES_FORM.forEach(function (s) { atualizarProgresso(s.id); });
+  }
+
+  /* --- Quadro 9: as 23 perguntas do BURN-OP.
      São geradas a partir de ITENS_BURN_OP (main.js), e não escritas à mão no
-     HTML, para a lista e os pesos existirem num sítio só. Cada pergunta é um
-     .subfield com um par Sim/Não, pelo que a serialização genérica já as
-     apanha sem código adicional. --- */
+     HTML, para a lista e os pesos existirem num sítio só. Como não usam a
+     estrutura .subfield, a leitura e o repovoamento têm leitores próprios
+     (respostasBurnOp e repovoarBurnOp), abaixo. --- */
   function construirItensBurnOp(){
     const el = document.getElementById('itens-burn-op');
-    el.innerHTML = ITENS_BURN_OP.map(function (item, i) {
-      return '<div class="subfield" style="margin-bottom:12px;">'
-           +   '<label>' + item.texto + '</label>'
-           +   '<div class="chip-group">'
-           +     '<label class="chip"><input type="radio" name="bop-' + item.id + '" onchange="atualizarBurnOp()"><span>Sim</span></label>'
-           +     '<label class="chip"><input type="radio" name="bop-' + item.id + '" onchange="atualizarBurnOp()"><span>Não</span></label>'
-           +   '</div>'
+    el.className = 'burnop-grelha';
+    el.innerHTML = ITENS_BURN_OP.map(function (item) {
+      // uma pergunta curta com duas opções não precisa da largura toda:
+      // em linha, e a duas colunas, o quadro cabe de uma vez no ecrã
+      return '<div class="burnop-item">'
+           +   '<span class="pergunta">' + item.texto + '</span>'
+           +   '<span class="opcoes">'
+           +     '<label><input type="radio" name="bop-' + item.id + '" onchange="atualizarBurnOp()"><span>Sim</span></label>'
+           +     '<label><input type="radio" name="bop-' + item.id + '" onchange="atualizarBurnOp()"><span>Não</span></label>'
+           +   '</span>'
            + '</div>';
     }).join('');
     atualizarBurnOp();
@@ -801,6 +981,21 @@
       if (marcado) seccao[item.texto] = marcado.nextElementSibling.textContent.trim();
     });
     return seccao;
+  }
+
+  /** Repõe as respostas do quadro 9 ao reabrir um formulário gravado. Tal
+   *  como a serialização, tem de ser feito à parte: o quadro não usa
+   *  .subfield e o repovoamento genérico passa-lhe ao lado. */
+  function repovoarBurnOp(seccao){
+    if (!seccao) return;
+    ITENS_BURN_OP.forEach(function (item) {
+      const resposta = seccao[item.texto];
+      if (resposta == null) return;
+      document.querySelectorAll('input[name="bop-' + item.id + '"]').forEach(function (r) {
+        r.checked = (r.nextElementSibling.textContent.trim() === String(resposta).trim());
+      });
+    });
+    atualizarBurnOp();
   }
 
   function atualizarBurnOp(){
@@ -847,6 +1042,7 @@
   }
   construirTabelaAutocuidado();
   construirItensBurnOp();
+  prepararSecoes();
 
   /* --- Objetivos do doente: lista dinâmica dentro da secção 8, apenas
      texto livre (sem escala) — o profissional pode adicionar quantos
@@ -1156,6 +1352,9 @@
       });
       dados.amplitude_tabela = serializarRomTable();
       dados.autocuidado_tabela = serializarAdesaoTable();
+      // o quadro 9 não usa .subfield, por isso a serialização genérica não o
+      // apanha: tem de ser lido pelo seu próprio leitor
+      dados["revisao-sistemas"] = respostasBurnOp();
       const objetivosDoente = serializarObjetivosDoente();
       dados.objetivos_gas = objetivosDoente;
 
@@ -1329,6 +1528,7 @@
     repovoarRomTable(dados.amplitude_tabela);
     repovoarAdesaoTable(dados.autocuidado_tabela);
     repovoarObjetivosDoente(dados.objetivos_gas);
+    repovoarBurnOp(dados["revisao-sistemas"]);
     alternarProdutosApoio();
     alternarAmputacao();
 

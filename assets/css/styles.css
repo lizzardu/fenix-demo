@@ -456,3 +456,107 @@ body.page-tint{ background:var(--paper-tint); }
 
 @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
 @media print{ .topbar, .sidebar, footer, .btn{ display:none !important; } body{ background:#fff; } }
+
+/* ---------- Formulário de Alta: quadros recolhíveis ----------
+   São 9 quadros e cerca de 90 campos. Tudo aberto ao mesmo tempo dava uma
+   página impossível de percorrer, e nenhum profissional preenche os nove:
+   cada área preenche o seu. Por isso abrem um de cada vez, e o índice
+   mostra de relance o que já foi respondido. */
+.form-section{ scroll-margin-top:150px; }
+
+.secao-toggle{
+  display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+  background:none; border:none; padding:0; margin:0; cursor:pointer;
+  font-family:var(--f-body); color:inherit;
+}
+.secao-toggle .seta{
+  margin-left:auto; flex:none; color:var(--ink-soft); font-size:.9rem;
+  transition:transform .18s ease;
+}
+.secao-toggle[aria-expanded="true"] .seta{ transform:rotate(90deg); }
+.secao-toggle:hover h2{ color:var(--blue); }
+.secao-toggle h2{ transition:color .15s ease; }
+
+.secao-progresso{
+  display:flex; align-items:center; gap:8px; flex:none;
+  font-family:var(--f-mono); font-size:.72rem; color:var(--ink-soft);
+  white-space:nowrap;
+}
+.secao-progresso .barra{ width:46px; height:5px; background:var(--line); border-radius:4px; overflow:hidden; }
+.secao-progresso .barra span{ display:block; height:100%; background:var(--flame); transition:width .25s ease; }
+.secao-progresso.completo{ color:var(--ok); }
+.secao-progresso.completo .barra span{ background:var(--ok); }
+
+.secao-corpo{ padding-top:16px; }
+.secao-corpo[hidden]{ display:none; }
+
+/* ---------- índice fixo dos quadros ---------- */
+.form-indice{
+  position:sticky; top:78px; z-index:20;
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg);
+  padding:12px 14px; margin-bottom:22px;
+  box-shadow:0 2px 10px rgba(16,35,59,.05);
+}
+.form-indice .linha{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.form-indice .rotulo{
+  font-family:var(--f-mono); font-size:.66rem; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-soft); margin-right:4px;
+}
+.indice-item{
+  display:inline-flex; align-items:center; gap:6px; padding:5px 10px;
+  border:1px solid var(--line); border-radius:20px; background:#fff;
+  font-size:.78rem; color:var(--ink-soft); cursor:pointer;
+  font-family:var(--f-body); transition:all .15s ease;
+}
+.indice-item:hover{ border-color:var(--blue); color:var(--blue-deep); }
+.indice-item .n{ font-family:var(--f-mono); font-size:.72rem; font-weight:600; }
+.indice-item.tem-respostas{ border-color:var(--flame); color:var(--flame-deep); background:var(--flame-mist); }
+.indice-item.completo{ border-color:var(--ok); color:var(--ok); background:var(--ok-mist); }
+.indice-item.aberto{ box-shadow:0 0 0 2px var(--blue-light); }
+.form-indice .acoes{ margin-left:auto; display:flex; gap:6px; }
+
+/* ---------- as 23 perguntas do BURN-OP, em grelha compacta ----------
+   Uma pergunta curta com duas opções não precisa de ocupar a largura toda.
+   Em duas colunas e com linhas justas, o quadro 9 passa de ecrãs de scroll
+   para um bloco que se abarca de uma vez. */
+.burnop-grelha{ display:grid; grid-template-columns:repeat(2,1fr); gap:2px 20px; }
+.burnop-item{
+  display:flex; align-items:center; gap:12px; justify-content:space-between;
+  padding:7px 0; border-bottom:1px solid var(--line-soft, #EEF2F6);
+}
+.burnop-item .pergunta{ font-size:.86rem; line-height:1.35; }
+.burnop-item .opcoes{ display:flex; gap:4px; flex:none; }
+.burnop-item .opcoes label{ margin:0; position:relative; }
+.burnop-item .opcoes input{ position:absolute; opacity:0; inset:0; cursor:pointer; }
+.burnop-item .opcoes span{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:38px; padding:3px 9px; border:1px solid var(--line); border-radius:20px;
+  font-size:.76rem; color:var(--ink-soft); cursor:pointer; background:#fff;
+  transition:all .12s ease;
+}
+.burnop-item .opcoes input:checked + span{ border-color:var(--blue); background:var(--blue); color:#fff; font-weight:600; }
+.burnop-item .opcoes input:focus-visible + span{ outline:2px solid var(--blue); outline-offset:2px; }
+
+@media (max-width:820px){
+  .burnop-grelha{ grid-template-columns:1fr; }
+}
+
+/* Ao imprimir, nada disto se aplica: o formulário sai inteiro, com todos os
+   quadros abertos e sem o índice. */
+@media print{
+  .secao-corpo[hidden]{ display:block !important; }
+  .form-indice, .secao-toggle .seta, .secao-progresso{ display:none !important; }
+}
+
+/* O formulário ocupa uma coluna estreita, onde nove rótulos não cabem lado a
+   lado — ficavam empilhados e o índice ocupava mais espaço do que poupava.
+   Reduzido a círculos numerados, que é o que o cabeçalho de cada quadro já
+   mostra; o nome do quadro aberto aparece ao lado, e os restantes no title. */
+.indice-item{ padding:0; width:30px; height:30px; justify-content:center; border-radius:50%; }
+.indice-item .titulo{ display:none; }
+.form-indice .linha{ gap:6px; }
+.form-indice .atual{
+  font-size:.8rem; color:var(--blue-deep); font-weight:600;
+  margin-left:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.form-indice .acoes .btn{ padding:5px 10px; font-size:.72rem; }
