@@ -8,8 +8,14 @@
 <link rel="stylesheet" href="../assets/css/styles.css?v=20260909">
 <style>
   /* Vista só de leitura: os campos ficam desativados, mas devem continuar a
-     parecer legíveis (não cinzentos-desmaiados como um formulário por preencher). */
-  #form-alta input:disabled,
+     parecer legíveis (não cinzentos-desmaiados como um formulário por preencher).
+
+     Os rádios e as caixas de seleção têm de ficar de FORA desta regra. Estão
+     escondidos com opacity:0 e é o <span> ao lado que desenha a opção; repor
+     opacity:1 fazia reaparecer o círculo nativo do browser por cima do chip,
+     que era a bola branca visível sobre cada seleção. O mesmo valia para as
+     escalas de 0 a 10 e para as opções em lista. */
+  #form-alta input:disabled:not([type="radio"]):not([type="checkbox"]),
   #form-alta select:disabled,
   #form-alta textarea:disabled{
     opacity:1; color:var(--ink); -webkit-text-fill-color:var(--ink); cursor:default;
