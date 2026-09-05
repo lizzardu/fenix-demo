@@ -72,6 +72,12 @@
       <div style="display:flex; gap:10px; flex-wrap:wrap;" id="equipa-doente"></div>
     </div>
 
+    <!-- ---------- prioridade de seguimento ---------- -->
+    <div class="card" style="margin-bottom:28px;" id="cartao-prioridade">
+      <p class="eyebrow" style="margin-bottom:10px;">Prioridade de seguimento</p>
+      <div id="prioridade-conteudo"><p class="hint" style="margin:0;">A calcular...</p></div>
+    </div>
+
     <!-- ---------- comunicação da equipa (interno, nunca visível ao doente) ---------- -->
     <div class="card" style="margin-bottom:32px; border-left:3px solid var(--flame-deep);">
       <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:10px;">
@@ -211,6 +217,9 @@
 
     // comunicação interna da equipa
     carregarComunicacoesEquipa();
+
+    // prioridade de seguimento, derivada do Formulário de Alta
+    carregarPrioridade();
 
     // evolução do check-in rápido de humor
     carregarHumor();
@@ -382,6 +391,76 @@
     const derradeiro = conhecidos[conhecidos.length - 1];
     const e = ESCALA_HUMOR[derradeiro.valor];
     ultimo.textContent = `Último: ${e.emoji} ${e.rotulo} · ${formatarDataHora(derradeiro.criado_em)}`;
+  }
+
+  /* ---------------------------------------------------------------------
+     Prioridade de seguimento, derivada do último Formulário de Alta.
+     A lógica e os pesos estão em main.js (calcularPrioridadeSeguimento).
+     Aqui só se apresenta — incluindo os fatores que contribuíram, porque
+     uma classificação que não se consegue explicar não deve ser seguida.
+     --------------------------------------------------------------------- */
+  function listaFatores(titulo, eixo) {
+    const niveis = { baixo: "baixo", medio: "intermédio", alto: "alto" };
+    const itens = eixo.fatores.length
+      ? eixo.fatores
+          .slice()
+          .sort((a, b) => b.pontos - a.pontos)
+          .map(f => `<li style="margin-bottom:4px;">${escaparHtml(f.texto)}
+                       <span class="mono hint" style="margin:0;">+${f.pontos}</span></li>`)
+          .join("")
+      : `<li class="hint">Sem fatores assinalados.</li>`;
+    return `
+      <div>
+        <p class="hint" style="margin:0 0 6px; font-weight:600; color:var(--blue-deep);">
+          ${titulo} — ${niveis[eixo.nivel]} <span class="mono">(${eixo.pontos} pontos)</span>
+        </p>
+        <ul style="margin:0; padding-left:18px; font-size:.88rem;">${itens}</ul>
+      </div>`;
+  }
+
+  async function carregarPrioridade() {
+    const el = document.getElementById("prioridade-conteudo");
+    let formulario;
+    try {
+      formulario = await fenixApi.obterUltimoFormularioAlta(DOENTE.id);
+    } catch (e) {
+      console.error("Erro ao carregar o Formulário de Alta para a prioridade:", e);
+      el.innerHTML = `<p class="hint" style="margin:0;">⚠️ Não foi possível calcular: ${escaparHtml(e.message || e)}</p>`;
+      return;
+    }
+    if (!formulario) {
+      el.innerHTML = `<p class="hint" style="margin:0;">A prioridade é calculada a partir do Formulário de Alta, que ainda não foi preenchido para este doente.</p>`;
+      return;
+    }
+
+    const p = calcularPrioridadeSeguimento(formulario.dados);
+    if (!p) {
+      el.innerHTML = `<p class="hint" style="margin:0;">O Formulário de Alta gravado não tem dados suficientes para calcular a prioridade.</p>`;
+      return;
+    }
+
+    el.innerHTML = `
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:6px;">
+        <span class="pill pill-${p.cor}" style="font-size:.82rem; padding:5px 14px;">${p.rotulo}</span>
+        <span style="color:var(--ink-soft); font-size:.9rem;">${p.descricao}</span>
+      </div>
+
+      <p style="margin:0 0 18px; font-size:.9rem;">
+        <strong>Cadência proposta:</strong>
+        <span class="mono">${descreverCadencia(p.cadencia)}</span> após a alta.
+      </p>
+
+      <div class="grid g-2" style="gap:22px; margin-bottom:16px;">
+        ${listaFatores("Carga clínica e funcional", p.clinico)}
+        ${listaFatores("Carga sintomática e psicossocial", p.psicossocial)}
+      </div>
+
+      <p class="hint" style="margin:0; border-top:1px dashed var(--line); padding-top:12px;">
+        Proposta de estratificação, não um instrumento validado. Os dois eixos são
+        contados em separado de propósito: a extensão da queimadura prediz o resultado
+        funcional, mas não prediz bem o ajustamento psicológico. A decisão sobre a
+        cadência é da equipa.
+      </p>`;
   }
 
   function terminarSessao(ev){

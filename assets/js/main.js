@@ -1005,3 +1005,236 @@ async function atualizarBadgeAlertas() {
     el.textContent = "";
   }
 }
+
+/* ========================================================================
+   PRIORIDADE DE SEGUIMENTO — matriz de risco a partir do Formulário de Alta
+
+   O QUE ISTO É, E O QUE NÃO É
+   Não é um instrumento validado. É uma proposta de estratificação, para a
+   equipa calibrar. Existe um instrumento publicado para este fim — o
+   BURN-OP, que estratifica necessidades de reabilitação pós-alta em três
+   grupos — e o caminho sério é confrontar esta matriz com ele.
+
+   PORQUE SÃO DOIS EIXOS E NÃO UM SÓ
+   A tentação é somar tudo numa pontuação de gravidade. A literatura não
+   sustenta isso: a extensão e a profundidade predizem o resultado
+   funcional, mas não predizem bem o ajustamento psicológico a um e dois
+   anos — aí pesam mais o estado emocional prévio, a dor e o prurido. Um
+   doente com 8% de superfície queimada nas mãos, com dor intensa e sem
+   confiança para cuidar da cicatriz, precisa de mais contacto do que um com
+   25% no tronco a evoluir bem. Uma pontuação única esconderia esse doente;
+   dois eixos mostram-no.
+
+   Nada é calculado e guardado: deriva-se do último formulário sempre que se
+   abre a ficha. Assim, corrigir o formulário corrige a prioridade, e não há
+   pontuações antigas a apodrecer na base de dados.
+   ======================================================================== */
+
+/* Pesos provisórios, à espera de calibração clínica. Estão todos aqui, num
+   sítio só, para poderem ser discutidos e alterados sem mexer na lógica. */
+const PESOS_PRIORIDADE = {
+  scq:            [{ min: 30, pontos: 6 }, { min: 20, pontos: 4 }, { min: 10, pontos: 2 }],
+  espessuraTotal: 2,
+  maos:           3,   // desproporcionadas no impacto funcional face à área que ocupam
+  cabecaPescoco:  2,
+  amputacao:      4,
+  enxertos:       1,
+  escaroFascio:   1,
+  amplitude:      { "1": 1, "2": 2, "3": 3 },
+  psfsBaixa:      2,   // média PSFS <= 4
+  sequelas:       2,
+  bridas:         2,
+  produtosApoio:  1,
+  dorAlta:        3,   // >= 7
+  dorModerada:    1,   // 4 a 6
+  pruridoAlto:    2,
+  sonoAfetado:    2,
+  confiancaBaixa: 3,   // <= 3
+  confiancaMedia: 1,   // 4 a 6
+  receios:        [{ min: 4, pontos: 3 }, { min: 2, pontos: 2 }, { min: 1, pontos: 1 }],
+  incomodoPsico:  1,   // por cada de: cicatriz, sono
+  posasDoente:    2    // >= 40/60
+};
+
+const LIMIARES_EIXO = { medio: 4, alto: 8 };
+
+/* Cadências ancoradas nos cinco marcos que a plataforma já usa. A prioridade
+   alta antecipa e adensa o primeiro mês, que é quando a dor, o prurido e o
+   desânimo são maiores; a baixa dispensa o contacto das duas semanas.
+   Nenhuma dispensa a avaliação aos 12 meses. */
+const CADENCIAS_SEGUIMENTO = {
+  alta: {
+    rotulo: "Prioridade alta",
+    cor: "alert",
+    cadencia: [7, 14, 28, 42, 90, 180, 365],
+    descricao: "Contactos mais precoces e mais próximos no primeiro mês."
+  },
+  intermedia: {
+    rotulo: "Prioridade intermédia",
+    cor: "flame",
+    cadencia: [14, 42, 90, 180, 365],
+    descricao: "Calendário padrão de seguimento."
+  },
+  baixa: {
+    rotulo: "Prioridade baixa",
+    cor: "ok",
+    cadencia: [42, 90, 180, 365],
+    descricao: "Contactos mais espaçados, dispensando o das duas semanas."
+  }
+};
+
+/** Lê um campo do formulário, que pode estar gravado como texto, lista, ou
+ *  { selecionados, outras } / { resposta, detalhe }. */
+function valorFormulario(seccao, rotulo) {
+  const v = seccao ? seccao[rotulo] : undefined;
+  if (v == null) return null;
+  if (Array.isArray(v)) return v;
+  if (typeof v === "object") {
+    if (Array.isArray(v.selecionados)) return v.selecionados;
+    if ("resposta" in v) return v.resposta;
+    return null;
+  }
+  return v;
+}
+
+function primeiroNumero(valor) {
+  if (valor == null) return null;
+  const m = String(valor).replace(",", ".").match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+}
+
+function ehSim(valor) {
+  return String(valor == null ? "" : valor).trim().toLowerCase() === "sim";
+}
+
+function pontosPorEscalao(valor, escaloes) {
+  if (valor == null) return 0;
+  for (const e of escaloes) if (valor >= e.min) return e.pontos;
+  return 0;
+}
+
+/**
+ * Calcula a prioridade de seguimento a partir da coluna "dados" de um
+ * formulários_alta. Devolve os dois eixos, a classe, a cadência proposta e —
+ * o mais importante — os fatores que contribuíram, para a equipa poder
+ * discordar com conhecimento de causa em vez de aceitar um número.
+ */
+function calcularPrioridadeSeguimento(dados) {
+  if (!dados) return null;
+  const q  = dados.queimadura     || {};
+  const c  = dados.cicatriz       || {};
+  const d  = dados.dor            || {};
+  const pr = dados.prurido        || {};
+  const am = dados.amplitude      || {};
+  const fu = dados.funcionalidade || {};
+  const mp = dados.mapa           || {};
+
+  const clinicos = [];
+  const psico = [];
+  const juntar = (lista, pontos, texto) => { if (pontos > 0) lista.push({ pontos, texto }); };
+
+  /* ---------- eixo clínico e funcional ---------- */
+  const scq = primeiroNumero(valorFormulario(q, "% Superfície corporal queimada (%SCQ)"));
+  juntar(clinicos, pontosPorEscalao(scq, PESOS_PRIORIDADE.scq), "Extensão de " + scq + "% da superfície corporal");
+
+  const profundidade = String(valorFormulario(q, "Profundidade") || "");
+  if (/3|total/i.test(profundidade)) juntar(clinicos, PESOS_PRIORIDADE.espessuraTotal, "Profundidade: " + profundidade);
+
+  const temMao = [
+    "Localização anatómica — Membro Superior Esquerdo",
+    "Localização anatómica — Membro Superior Direito"
+  ].some(g => {
+    const itens = valorFormulario(q, g);
+    return Array.isArray(itens) && itens.some(i => /m[ãa]o|dedo/i.test(i));
+  });
+  if (temMao) juntar(clinicos, PESOS_PRIORIDADE.maos, "Envolvimento das mãos");
+
+  const cabeca = valorFormulario(q, "Localização anatómica — Cabeça e Pescoço");
+  if (Array.isArray(cabeca) && cabeca.length) juntar(clinicos, PESOS_PRIORIDADE.cabecaPescoco, "Envolvimento da cabeça ou pescoço");
+
+  if (ehSim(valorFormulario(q, "Amputação"))) juntar(clinicos, PESOS_PRIORIDADE.amputacao, "Amputação");
+  if (ehSim(valorFormulario(q, "Enxertos")))  juntar(clinicos, PESOS_PRIORIDADE.enxertos, "Enxertos");
+  if (ehSim(valorFormulario(q, "Necessidade de escarotomia")) || ehSim(valorFormulario(q, "Necessidade de fasciotomia")))
+    juntar(clinicos, PESOS_PRIORIDADE.escaroFascio, "Escarotomia ou fasciotomia");
+
+  const romTexto = valorFormulario(am, "Classificação global");
+  const rom = String(romTexto || "").trim().charAt(0);
+  if (PESOS_PRIORIDADE.amplitude[rom])
+    juntar(clinicos, PESOS_PRIORIDADE.amplitude[rom], "Limitação de amplitude articular: " + romTexto);
+
+  const psfs = primeiroNumero(valorFormulario(fu, "Média PSFS (/10)"));
+  if (psfs != null && psfs <= 4) juntar(clinicos, PESOS_PRIORIDADE.psfsBaixa, "Função autorreportada baixa (PSFS " + psfs + "/10)");
+
+  if (ehSim(valorFormulario(c, "Sequelas previsíveis"))) juntar(clinicos, PESOS_PRIORIDADE.sequelas, "Sequelas previsíveis");
+  if (ehSim(valorFormulario(c, "Bridas")))               juntar(clinicos, PESOS_PRIORIDADE.bridas, "Bridas");
+  if (ehSim(valorFormulario(c, "Necessidade de Produtos de Apoio")))
+    juntar(clinicos, PESOS_PRIORIDADE.produtosApoio, "Necessidade de produtos de apoio");
+
+  /* ---------- eixo sintomático e psicossocial ---------- */
+  const dores = ["Dor em repouso", "Dor durante o movimento", "Dor durante a mobilização cicatricial"]
+    .map(r => primeiroNumero(valorFormulario(d, r))).filter(v => v != null);
+  const dorMax = dores.length ? Math.max.apply(null, dores) : null;
+  if (dorMax != null && dorMax >= 7)      juntar(psico, PESOS_PRIORIDADE.dorAlta, "Dor elevada à data da alta (" + dorMax + "/10)");
+  else if (dorMax != null && dorMax >= 4) juntar(psico, PESOS_PRIORIDADE.dorModerada, "Dor moderada à data da alta (" + dorMax + "/10)");
+
+  const pruridoInt = primeiroNumero(valorFormulario(pr, "Intensidade do prurido"));
+  if (pruridoInt != null && pruridoInt >= 7) juntar(psico, PESOS_PRIORIDADE.pruridoAlto, "Prurido intenso (" + pruridoInt + "/10)");
+  const sono = primeiroNumero(valorFormulario(pr, "Impacto no sono"));
+  if (sono != null && sono >= 7) juntar(psico, PESOS_PRIORIDADE.sonoAfetado, "Sono afetado pelo prurido (" + sono + "/10)");
+
+  const confianca = primeiroNumero(valorFormulario(mp, "Confiança para cuidar da cicatriz"));
+  if (confianca != null && confianca <= 3)      juntar(psico, PESOS_PRIORIDADE.confiancaBaixa, "Pouca confiança para cuidar da cicatriz (" + confianca + "/10)");
+  else if (confianca != null && confianca <= 6) juntar(psico, PESOS_PRIORIDADE.confiancaMedia, "Confiança intermédia para cuidar da cicatriz (" + confianca + "/10)");
+
+  const receios = valorFormulario(mp, "O que o doente mais receia não conseguir fazer sozinho");
+  const nReceios = Array.isArray(receios) ? receios.length : 0;
+  juntar(psico, pontosPorEscalao(nReceios, PESOS_PRIORIDADE.receios),
+         "Receia não conseguir fazer sozinho: " + (Array.isArray(receios) ? receios.join(", ") : ""));
+
+  const incomoda = valorFormulario(mp, "O que mais o incomoda");
+  if (Array.isArray(incomoda)) {
+    incomoda.filter(i => /cicatriz|sono/i.test(i))
+      .forEach(i => juntar(psico, PESOS_PRIORIDADE.incomodoPsico, "Incomoda-o: " + i));
+  }
+
+  const posas = primeiroNumero(valorFormulario(c, "Total dos 6 itens (/60)"));
+  if (posas != null && posas >= 40) juntar(psico, PESOS_PRIORIDADE.posasDoente, "Cicatriz mal avaliada pelo próprio (POSAS " + posas + "/60)");
+
+  /* ---------- classificação ---------- */
+  const somar = lista => lista.reduce((t, f) => t + f.pontos, 0);
+  const pontosClinico = somar(clinicos);
+  const pontosPsico   = somar(psico);
+  const nivel = p => p >= LIMIARES_EIXO.alto ? "alto" : (p >= LIMIARES_EIXO.medio ? "medio" : "baixo");
+  const nc = nivel(pontosClinico), np = nivel(pontosPsico);
+
+  // Basta um eixo alto para subir a prioridade. Dois eixos médios em
+  // simultâneo também sobem: é o doente que não se destaca em nada e por isso
+  // passa despercebido, mas que acumula carga dos dois lados.
+  let classe;
+  if (nc === "alto" || np === "alto")        classe = "alta";
+  else if (nc === "medio" && np === "medio") classe = "alta";
+  else if (nc === "medio" || np === "medio") classe = "intermedia";
+  else                                       classe = "baixa";
+
+  const cadencia = CADENCIAS_SEGUIMENTO[classe];
+  return {
+    clinico:      { pontos: pontosClinico, nivel: nc, fatores: clinicos },
+    psicossocial: { pontos: pontosPsico,   nivel: np, fatores: psico },
+    classe:    classe,
+    rotulo:    cadencia.rotulo,
+    cor:       cadencia.cor,
+    cadencia:  cadencia.cadencia,
+    descricao: cadencia.descricao
+  };
+}
+
+/** Traduz a cadência em dias para texto legível. Abaixo dos três meses conta
+ *  em semanas, que é como a equipa e o doente falam desta fase — e evita o
+ *  absurdo de 30 e 42 dias aparecerem ambos como "1 mês". */
+function descreverCadencia(dias) {
+  return dias.map(function (d) {
+    if (d < 90) return (d / 7) + " sem";
+    const meses = Math.round(d / 30);
+    return meses + (meses === 1 ? " mês" : " meses");
+  }).join(" · ");
+}
