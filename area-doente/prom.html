@@ -164,6 +164,7 @@
           <span class="face">🥲</span><span class="lbl">Preciso de ajuda</span>
         </button>
       </div>
+      <div id="humor-aviso" class="banner-alert" style="display:none; margin-top:16px; text-align:left;"></div>
       <button type="button" class="btn btn-ghost btn-sm" style="margin-top:18px;" onclick="fecharModalHumor()">Agora não</button>
     </div>
   </div>
@@ -244,14 +245,22 @@
   /* regista o check-in e fecha o pop-up pouco depois, para o doente ver
      a sua escolha destacada antes de o pop-up desaparecer */
   async function responderHumor(botao){
-    document.querySelectorAll('.mood-face').forEach(b => b.disabled = true);
+    const aviso = document.getElementById('humor-aviso');
+    aviso.style.display = 'none';
+    document.querySelectorAll('.mood-face').forEach(b => { b.disabled = true; b.classList.remove('is-picked'); });
     botao.classList.add('is-picked');
     try {
       await fenixApi.registarCheckinHumor(DOENTE_ID, botao.dataset.valor);
+      setTimeout(fecharModalHumor, 500);
     } catch (e) {
+      // não fechar o pop-up a fingir que ficou registado: antes, o erro ia
+      // só para a consola e nem o doente nem a equipa davam por nada
       console.error("Não foi possível registar o check-in de humor:", e);
+      aviso.textContent = "Não foi possível registar a sua resposta. Tente outra vez — se continuar a falhar, avise a equipa.";
+      aviso.style.display = 'block';
+      botao.classList.remove('is-picked');
+      document.querySelectorAll('.mood-face').forEach(b => { b.disabled = false; });
     }
-    setTimeout(fecharModalHumor, 500);
   }
 
   function terminarSessao(ev){

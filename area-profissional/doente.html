@@ -348,14 +348,20 @@
       return;
     }
 
-    if (!registos.length) {
-      vazio.style.display = "block";
-      grafico.style.display = "none";
-      return;
-    }
+    // Um doente sem check-ins e um doente cujos check-ins a equipa não tem
+    // permissão para ler dão exatamente o mesmo resultado: lista vazia. Por
+    // isso a mensagem cobre as duas hipóteses, em vez de afirmar a primeira.
+    const semDados = `Ainda não há check-ins para mostrar.
+      Aparecem aqui depois de o doente responder a "Como se sente hoje?", no fim de uma avaliação.
+      Se o doente já respondeu e continua vazio, falta correr a migração
+      <span class="mono">009_alertas_humor.sql</span>, que dá à equipa permissão para ler estes registos.`;
 
     const conhecidos = registos.filter(r => ESCALA_HUMOR[r.valor]);
     if (!conhecidos.length) {
+      vazio.innerHTML = registos.length
+        ? `Há ${registos.length} check-in(s) registado(s), mas com valores de uma escala antiga.
+           Corra a migração <span class="mono">008_checkins_humor_escala.sql</span> para os converter.`
+        : semDados;
       vazio.style.display = "block";
       grafico.style.display = "none";
       return;
