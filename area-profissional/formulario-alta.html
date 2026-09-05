@@ -289,6 +289,43 @@
               <textarea id="amputacao-detalhe" rows="2" placeholder="ex.: amputação transmetacárpica do 3.º dedo da mão direita, a 12/07/2026"></textarea>
             </div>
           </div>
+
+          <hr class="divider" style="margin:22px 0;">
+          <p class="scale-note" style="margin-bottom:14px;">
+            Dados do internamento. São os fatores que a literatura associa a maior necessidade
+            de reabilitação após a alta, e entram no cálculo da prioridade de seguimento.
+          </p>
+
+          <div class="form-row">
+            <div class="subfield">
+              <label>Lesão inalatória</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="inalatoria"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="inalatoria" checked><span>Não</span></label>
+              </div>
+            </div>
+            <div class="subfield">
+              <label for="dias-internamento">Dias de internamento</label>
+              <input type="text" id="dias-internamento" placeholder="ex.: 24">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="subfield">
+              <label for="n-cirurgias">Número de intervenções cirúrgicas</label>
+              <input type="text" id="n-cirurgias" placeholder="ex.: 3">
+            </div>
+            <div class="subfield">
+              <label for="dias-ventilacao">Dias de ventilação mecânica</label>
+              <input type="text" id="dias-ventilacao" placeholder="0 se não houve">
+            </div>
+          </div>
+
+          <div class="subfield">
+            <label for="perda-peso">Perda de peso durante o internamento (%)</label>
+            <input type="text" id="perda-peso" placeholder="ex.: 8">
+            <p class="scale-note">Percentagem do peso à admissão. Deixe em branco se não foi medido.</p>
+          </div>
         </section>
 
         <!-- ======================= 2. CICATRIZ ======================= -->
@@ -598,12 +635,102 @@
 
           <hr class="divider" style="margin:22px 0;">
 
+          <hr class="divider" style="margin:22px 0;">
+          <p class="scale-note" style="margin-bottom:14px;">
+            Estado emocional e contexto social à data da alta. A literatura mostra que o
+            estado emocional prévio prediz o ajustamento psicológico a um e dois anos melhor
+            do que a gravidade da queimadura — e nada disto se via no formulário.
+          </p>
+
+          <div class="subfield">
+            <label>Nas últimas duas semanas, com que frequência se sentiu em baixo, deprimido ou sem esperança?</label>
+            <p class="scale-note">Item de rastreio (PHQ-2). Não é diagnóstico — sinaliza quem beneficia de avaliação por Psicologia.</p>
+            <div class="chip-group">
+              <label class="chip"><input type="radio" name="phq2-humor"><span>0 Nunca</span></label>
+              <label class="chip"><input type="radio" name="phq2-humor"><span>1 Vários dias</span></label>
+              <label class="chip"><input type="radio" name="phq2-humor"><span>2 Mais de metade dos dias</span></label>
+              <label class="chip"><input type="radio" name="phq2-humor"><span>3 Quase todos os dias</span></label>
+            </div>
+          </div>
+
+          <div class="subfield">
+            <label>Nas últimas duas semanas, com que frequência teve pouco interesse ou prazer em fazer coisas?</label>
+            <div class="chip-group">
+              <label class="chip"><input type="radio" name="phq2-interesse"><span>0 Nunca</span></label>
+              <label class="chip"><input type="radio" name="phq2-interesse"><span>1 Vários dias</span></label>
+              <label class="chip"><input type="radio" name="phq2-interesse"><span>2 Mais de metade dos dias</span></label>
+              <label class="chip"><input type="radio" name="phq2-interesse"><span>3 Quase todos os dias</span></label>
+            </div>
+          </div>
+
+          <div class="subfield">
+            <label>Acompanhamento em saúde mental antes da queimadura</label>
+            <div class="chip-group">
+              <label class="chip"><input type="radio" name="saude-mental-previa"><span>Sim</span></label>
+              <label class="chip"><input type="radio" name="saude-mental-previa" checked><span>Não</span></label>
+              <label class="chip"><input type="radio" name="saude-mental-previa"><span>Desconhecido</span></label>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="subfield">
+              <label>Com quem vive</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="com-quem-vive"><span>Sozinho</span></label>
+                <label class="chip"><input type="radio" name="com-quem-vive"><span>Acompanhado</span></label>
+                <label class="chip"><input type="radio" name="com-quem-vive"><span>Instituição</span></label>
+              </div>
+            </div>
+            <div class="subfield">
+              <label>Cuidador disponível em casa</label>
+              <div class="chip-group">
+                <label class="chip"><input type="radio" name="cuidador"><span>Sim</span></label>
+                <label class="chip"><input type="radio" name="cuidador"><span>Não</span></label>
+                <label class="chip"><input type="radio" name="cuidador"><span>Parcial</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="subfield">
+            <label>Situação laboral e expectativa de regresso ao trabalho</label>
+            <div class="chip-group">
+              <label class="chip"><input type="radio" name="regresso-trabalho"><span>Não aplicável</span></label>
+              <label class="chip"><input type="radio" name="regresso-trabalho"><span>Regresso previsto</span></label>
+              <label class="chip"><input type="radio" name="regresso-trabalho"><span>Regresso incerto</span></label>
+              <label class="chip"><input type="radio" name="regresso-trabalho"><span>Sem perspetiva de regresso</span></label>
+            </div>
+          </div>
+
           <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px;">
             <label style="margin:0;">Objetivos do doente</label>
             <button type="button" class="btn btn-ghost btn-sm" onclick="adicionarObjetivoDoente()">+ Adicionar objetivo</button>
           </div>
           <p class="scale-note">Ao guardar, cada objetivo escrito aqui passa a ser uma meta na jornada do doente, marcada como <strong>definida pela equipa</strong>. O doente vê-a na sua área e pode ir escrevendo atualizações sobre como está a correr — que a equipa lê e responde em Jornada e Metas.</p>
           <div id="lista-objetivos-gas"></div>
+        </section>
+
+        <!-- ======================= 9. REVISÃO DE SISTEMAS (BURN-OP) ======================= -->
+        <section id="revisao-sistemas" class="form-section card">
+          <div class="section-head"><span class="section-num">9</span><h2>Revisão de Sistemas à data da alta</h2></div>
+          <p class="scale-note" style="margin-bottom:4px;">
+            As 23 perguntas do <strong>BURN-OP</strong> (Bhattacharya et al., <i>Burns</i> 2024), instrumento
+            validado que identifica os doentes com maior necessidade de reabilitação após a alta.
+            São de resposta rápida, Sim ou Não, e devem ser feitas ao próprio doente.
+          </p>
+          <p class="scale-note" style="margin-bottom:18px;">
+            É um rastreio, não um diagnóstico. Tem elevada especificidade mas deixa passar cerca de
+            metade dos casos, pelo que um resultado negativo não dispensa o julgamento clínico.
+          </p>
+
+          <div id="itens-burn-op"></div>
+
+          <div class="card" style="background:var(--paper-tint); margin-top:20px;">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <p class="eyebrow" style="margin:0;">Pontuação BURN-OP</p>
+              <span class="hint" style="margin:0;" id="burnop-progresso"></span>
+            </div>
+            <div id="burnop-resultado" style="margin-top:10px;"></div>
+          </div>
         </section>
 
         <div class="form-actions">
@@ -615,6 +742,7 @@
           <span class="pill pill-ok">Guardado</span>
           <h3 style="margin-top:14px;">Avaliação registada</h3>
           <p style="color:var(--ink-soft); margin:0 0 12px;">O contexto clínico foi atualizado e o plano de seguimento (CarePlan) com os checkpoints de PROMs foi agendado automaticamente.</p>
+          <div id="resumo-prioridade" style="margin-bottom:14px;"></div>
           <div id="resumo-metas"></div>
         </div>
 
@@ -631,6 +759,7 @@
 <script>
   let DOENTE_ID = null;
   let DOENTE_PROCESSO = null;
+  let DOENTE_REGISTO = null;   // registo completo: a idade entra no cálculo da prioridade
 
   function alternarProdutosApoio(){
     const marcado = document.querySelector('input[name="produtos-apoio"]:checked');
@@ -642,6 +771,65 @@
     const marcado = document.querySelector('input[name="amputacao"]:checked');
     const sim = marcado && marcado.nextElementSibling.textContent.trim() === 'Sim';
     document.getElementById('campo-amputacao').style.display = sim ? 'block' : 'none';
+  }
+
+  /* --- Quadro 9: as 23 perguntas do BURN-OP.
+     São geradas a partir de ITENS_BURN_OP (main.js), e não escritas à mão no
+     HTML, para a lista e os pesos existirem num sítio só. Cada pergunta é um
+     .subfield com um par Sim/Não, pelo que a serialização genérica já as
+     apanha sem código adicional. --- */
+  function construirItensBurnOp(){
+    const el = document.getElementById('itens-burn-op');
+    el.innerHTML = ITENS_BURN_OP.map(function (item, i) {
+      return '<div class="subfield" style="margin-bottom:12px;">'
+           +   '<label>' + item.texto + '</label>'
+           +   '<div class="chip-group">'
+           +     '<label class="chip"><input type="radio" name="bop-' + item.id + '" onchange="atualizarBurnOp()"><span>Sim</span></label>'
+           +     '<label class="chip"><input type="radio" name="bop-' + item.id + '" onchange="atualizarBurnOp()"><span>Não</span></label>'
+           +   '</div>'
+           + '</div>';
+    }).join('');
+    atualizarBurnOp();
+  }
+
+  /** Lê as respostas do quadro 9 tal como ficarão gravadas, para o resultado
+   *  mostrado durante o preenchimento ser exatamente o que é calculado no fim. */
+  function respostasBurnOp(){
+    const seccao = {};
+    ITENS_BURN_OP.forEach(function (item) {
+      const marcado = document.querySelector('input[name="bop-' + item.id + '"]:checked');
+      if (marcado) seccao[item.texto] = marcado.nextElementSibling.textContent.trim();
+    });
+    return seccao;
+  }
+
+  function atualizarBurnOp(){
+    const r = calcularBurnOp(respostasBurnOp());
+    document.getElementById('burnop-progresso').textContent =
+      r.respondidas + " de " + r.total + " perguntas respondidas";
+
+    if (!r.respondidas) {
+      document.getElementById('burnop-resultado').innerHTML =
+        '<p class="hint" style="margin:0;">A pontuação aparece à medida que responde.</p>';
+      return;
+    }
+    const acima = r.cluster3;
+    const aviso = r.completo ? "" :
+      '<p class="hint" style="margin:8px 0 0;">Faltam ' + (r.total - r.respondidas) +
+      ' perguntas. Uma pontuação baixa com perguntas por responder não significa risco baixo.</p>';
+
+    document.getElementById('burnop-resultado').innerHTML =
+        '<div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">'
+      +   '<span class="mono" style="font-size:1.5rem; font-weight:600; color:var(--blue-deep);">'
+      +      r.pontos + '<span style="font-size:.9rem; color:var(--ink-soft);"> / ' + r.maximo + '</span></span>'
+      +   '<span class="pill ' + (acima ? 'pill-alert' : 'pill-ok') + '">'
+      +      (acima ? 'Acima do limiar (' + r.limiar + ')' : 'Abaixo do limiar (' + r.limiar + ')') + '</span>'
+      + '</div>'
+      + '<p style="margin:8px 0 0; font-size:.9rem; color:var(--ink-soft);">'
+      +   (acima
+            ? 'Perfil compatível com o grupo de maior necessidade de reabilitação. Justifica seguimento multidisciplinar prioritário.'
+            : 'Não sugere o grupo de maior necessidade. Atenção: o instrumento deixa passar cerca de metade desses doentes — não dispensa o julgamento clínico.')
+      + '</p>' + aviso;
   }
 
   function construirTabelaAutocuidado(){
@@ -658,6 +846,7 @@
       </tr>`).join('');
   }
   construirTabelaAutocuidado();
+  construirItensBurnOp();
 
   /* --- Objetivos do doente: lista dinâmica dentro da secção 8, apenas
      texto livre (sem escala) — o profissional pode adicionar quantos
@@ -869,6 +1058,59 @@
     return linhas;
   }
 
+  /** A idade entra no cálculo e vem do registo do doente, não do formulário.
+   *  DOENTE_REGISTO é preenchido no arranque da página. */
+  function idadeDoDoente(){
+    const nasc = DOENTE_REGISTO && DOENTE_REGISTO.data_nascimento;
+    if (!nasc) return null;
+    const d = new Date(nasc);
+    if (isNaN(d)) return null;
+    const hoje = new Date();
+    let anos = hoje.getFullYear() - d.getFullYear();
+    const m = hoje.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < d.getDate())) anos--;
+    return anos;
+  }
+
+  /** Mostra a prioridade na confirmação, a seguir a gravar. Não altera o
+   *  plano de seguimento: a decisão sobre a cadência é da equipa. */
+  function mostrarPrioridade(p){
+    const el = document.getElementById('resumo-prioridade');
+    if (!p) {
+      el.innerHTML = `<p class="hint" style="margin:0;">Não foi possível calcular a prioridade de seguimento a partir deste formulário. O formulário ficou gravado.</p>`;
+      return;
+    }
+    const niveis = { baixo: "baixo", medio: "intermédio", alto: "alto" };
+    const b = p.burnOp;
+    const blocoBurnOp = (b && b.respondidas)
+      ? `<p style="margin:0 0 6px; font-size:.9rem;">
+           <strong>BURN-OP:</strong> <span class="mono">${b.pontos}/${b.maximo}</span>
+           ${b.cluster3
+             ? `<span class="pill pill-alert" style="margin-left:6px;">acima do limiar de ${b.limiar}</span>`
+             : `<span class="pill pill-ok" style="margin-left:6px;">abaixo do limiar de ${b.limiar}</span>`}
+           ${b.completo ? "" : `<span class="hint" style="margin-left:6px;">(${b.total - b.respondidas} perguntas por responder)</span>`}
+         </p>`
+      : `<p class="hint" style="margin:0 0 6px;">BURN-OP por preencher — quadro 9.</p>`;
+    el.innerHTML = `
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+        <span class="pill pill-${p.cor}" style="font-size:.82rem; padding:5px 14px;">${p.rotulo}</span>
+        <span style="color:var(--ink-soft); font-size:.9rem;">${p.descricao}</span>
+      </div>
+      ${blocoBurnOp}
+      <p style="margin:0 0 6px; font-size:.9rem;">
+        Carga clínica e funcional: <strong>${niveis[p.clinico.nivel]}</strong> (${p.clinico.pontos} pontos) ·
+        Carga sintomática e psicossocial: <strong>${niveis[p.psicossocial.nivel]}</strong> (${p.psicossocial.pontos} pontos)
+      </p>
+      <p style="margin:0 0 6px; font-size:.9rem;">
+        <strong>Cadência proposta:</strong> <span class="mono">${descreverCadencia(p.cadencia)}</span> após a alta.
+      </p>
+      <p class="hint" style="margin:0;">
+        Proposta, não uma alteração automática. O ajuste ao plano de seguimento é feito pela
+        equipa. Os fatores que a produziram ficam gravados com o formulário e podem ser
+        consultados na ficha do doente.
+      </p>`;
+  }
+
   /** Diz ao profissional o que aconteceu de facto à migração dos objetivos
    *  da secção 8 para a jornada. Se alguma meta não pôde ser criada, isso
    *  aparece aqui em vez de ficar só na consola. */
@@ -917,7 +1159,18 @@
       const objetivosDoente = serializarObjetivosDoente();
       dados.objetivos_gas = objetivosDoente;
 
-      await fenixApi.guardarFormularioAlta(DOENTE_ID, dados, dataAlta, contactoTipo);
+      // prioridade de seguimento, calculada a partir deste formulário e
+      // gravada com ele. Se falhar, o formulário grava na mesma sem ela —
+      // perder a avaliação de alta por causa de um cálculo seria absurdo.
+      let prioridade = null;
+      try {
+        prioridade = calcularPrioridadeSeguimento(dados, idadeDoDoente());
+        prioridade.burnOp = calcularBurnOp(dados["revisao-sistemas"]);
+      } catch (e) {
+        console.error("Não foi possível calcular a prioridade de seguimento:", e);
+      }
+
+      await fenixApi.guardarFormularioAlta(DOENTE_ID, dados, dataAlta, contactoTipo, prioridade);
       const resumoMetas = await criarMetasApartirDosObjetivos(DOENTE_ID, objetivosDoente);
 
       // a secção 1 (queimadura) atualiza automaticamente o contexto clínico do doente
@@ -964,6 +1217,7 @@
         await fenixApi.atualizarDoenteContexto(DOENTE_ID, contexto);
       }
 
+      mostrarPrioridade(prioridade);
       mostrarResumoMetas(resumoMetas, objetivosDoente.length);
       document.getElementById('confirm-alta').style.display = 'block';
       document.getElementById('confirm-alta').scrollIntoView({behavior:'smooth'});
@@ -1102,6 +1356,7 @@
 
     const doente = await fenixApi.obterDoentePorProcesso(obterProcessoDaURL("PROC-2026-0142"));
     DOENTE_ID = doente.id;
+    DOENTE_REGISTO = doente;
     DOENTE_PROCESSO = doente.processo;
     document.getElementById("titulo-formulario").textContent = "Formulário de Alta — " + doente.nome;
     document.getElementById("sidebar-nome-doente").textContent = doente.nome;

@@ -126,13 +126,47 @@ const fenixApi = {
   /* ---------------------------------------------------------------------
      FORMULÁRIO DE ALTA
      --------------------------------------------------------------------- */
-  async guardarFormularioAlta(doenteId, dados, dataAlta, contactoTipo) {
+  /** Grava o formulário e, com ele, a prioridade de seguimento calculada.
+   *  A prioridade fica na linha do formulário — é o registo do que se sabia
+   *  naquele momento — e é copiada para o doente, para a lista de doentes
+   *  poder ordenar sem reler os formulários todos.
+   *  Requer as colunas de 013_prioridade_seguimento.sql. */
+  async guardarFormularioAlta(doenteId, dados, dataAlta, contactoTipo, prioridade) {
     const { data: userData } = await sb.auth.getUser();
-    const { data, error } = await sb.from("formularios_alta").insert({
+    const linha = {
       doente_id: doenteId, dados, data_alta: dataAlta, contacto_tipo: contactoTipo,
       criado_por: userData.user ? userData.user.id : null
-    }).select().single();
+    };
+    if (prioridade) {
+      linha.prioridade              = prioridade.classe;
+      linha.prioridade_clinico      = prioridade.clinico.pontos;
+      linha.prioridade_psicossocial = prioridade.psicossocial.pontos;
+      if (prioridade.burnOp) {
+        linha.burnop_pontos      = prioridade.burnOp.pontos;
+        linha.burnop_cluster3    = prioridade.burnOp.cluster3;
+        linha.burnop_respondidas = prioridade.burnOp.respondidas;
+      }
+      linha.prioridade_fatores      = {
+        clinico: prioridade.clinico.fatores,
+        psicossocial: prioridade.psicossocial.fatores,
+        cadencia: prioridade.cadencia
+      };
+    }
+    const { data, error } = await sb.from("formularios_alta").insert(linha).select().single();
     if (error) throw error;
+
+    // a cópia no doente é conveniência para a listagem: se falhar, o
+    // formulário fica na mesma gravado e a prioridade continua lá
+    if (prioridade) {
+      try {
+        await sb.from("doentes").update({
+          prioridade_seguimento: prioridade.classe,
+          prioridade_atualizada_em: new Date().toISOString()
+        }).eq("id", doenteId);
+      } catch (e) {
+        console.error("Não foi possível copiar a prioridade para o doente:", e);
+      }
+    }
     return data;
   },
 

@@ -433,7 +433,8 @@
       return;
     }
 
-    const p = calcularPrioridadeSeguimento(formulario.dados);
+    const anos = idadeEmAnos(DOENTE.data_nascimento);
+    const p = calcularPrioridadeSeguimento(formulario.dados, anos);
     if (!p) {
       el.innerHTML = `<p class="hint" style="margin:0;">O Formulário de Alta gravado não tem dados suficientes para calcular a prioridade.</p>`;
       return;

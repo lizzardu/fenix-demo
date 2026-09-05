@@ -1053,7 +1053,24 @@ const PESOS_PRIORIDADE = {
   confiancaMedia: 1,   // 4 a 6
   receios:        [{ min: 4, pontos: 3 }, { min: 2, pontos: 2 }, { min: 1, pontos: 1 }],
   incomodoPsico:  1,   // por cada de: cicatriz, sono
-  posasDoente:    2    // >= 40/60
+  posasDoente:    2,   // >= 40/60
+
+  /* Acrescentados depois do mapeamento contra o BURN-OP. Os cinco primeiros
+     são os discriminadores publicados do grupo de maior necessidade; os
+     restantes cobrem os domínios psicossociais que o instrumento usa e que o
+     formulário não recolhia. */
+  inalatoria:      3,
+  internamento:    [{ min: 30, pontos: 3 }, { min: 14, pontos: 2 }, { min: 7, pontos: 1 }],
+  cirurgias:       [{ min: 5, pontos: 3 }, { min: 3, pontos: 2 }, { min: 1, pontos: 1 }],
+  ventilacao:      [{ min: 7, pontos: 3 }, { min: 1, pontos: 2 }],
+  perdaPeso:       2,   // >= 10% do peso à admissão
+  idade:           [{ min: 65, pontos: 2 }, { min: 50, pontos: 1 }],
+  phq2:            3,   // soma dos 2 itens >= 3 é o ponto de corte habitual
+  saudeMentalPrevia: 3, // o preditor mais forte do ajustamento psicológico
+  vivesSozinho:    2,
+  semCuidador:     2,
+  regressoIncerto: 1,
+  semRegresso:     2
 };
 
 const LIMIARES_EIXO = { medio: 4, alto: 8 };
@@ -1119,7 +1136,7 @@ function pontosPorEscalao(valor, escaloes) {
  * o mais importante — os fatores que contribuíram, para a equipa poder
  * discordar com conhecimento de causa em vez de aceitar um número.
  */
-function calcularPrioridadeSeguimento(dados) {
+function calcularPrioridadeSeguimento(dados, idadeAnos) {
   if (!dados) return null;
   const q  = dados.queimadura     || {};
   const c  = dados.cicatriz       || {};
@@ -1170,6 +1187,24 @@ function calcularPrioridadeSeguimento(dados) {
   if (ehSim(valorFormulario(c, "Necessidade de Produtos de Apoio")))
     juntar(clinicos, PESOS_PRIORIDADE.produtosApoio, "Necessidade de produtos de apoio");
 
+  /* Discriminadores publicados do grupo de maior necessidade (BURN-OP) */
+  if (ehSim(valorFormulario(q, "Lesão inalatória"))) juntar(clinicos, PESOS_PRIORIDADE.inalatoria, "Lesão inalatória");
+
+  const dias = primeiroNumero(valorFormulario(q, "Dias de internamento"));
+  juntar(clinicos, pontosPorEscalao(dias, PESOS_PRIORIDADE.internamento), "Internamento de " + dias + " dias");
+
+  const cirurgias = primeiroNumero(valorFormulario(q, "Número de intervenções cirúrgicas"));
+  juntar(clinicos, pontosPorEscalao(cirurgias, PESOS_PRIORIDADE.cirurgias), cirurgias + " intervenções cirúrgicas");
+
+  const ventil = primeiroNumero(valorFormulario(q, "Dias de ventilação mecânica"));
+  juntar(clinicos, pontosPorEscalao(ventil, PESOS_PRIORIDADE.ventilacao), ventil + " dias de ventilação mecânica");
+
+  const perdaPeso = primeiroNumero(valorFormulario(q, "Perda de peso durante o internamento (%)"));
+  if (perdaPeso != null && perdaPeso >= 10) juntar(clinicos, PESOS_PRIORIDADE.perdaPeso, "Perda de peso de " + perdaPeso + "% no internamento");
+
+  // a idade vem do registo do doente, não do formulário: já lá estava
+  juntar(clinicos, pontosPorEscalao(idadeAnos, PESOS_PRIORIDADE.idade), idadeAnos + " anos à data da alta");
+
   /* ---------- eixo sintomático e psicossocial ---------- */
   const dores = ["Dor em repouso", "Dor durante o movimento", "Dor durante a mobilização cicatricial"]
     .map(r => primeiroNumero(valorFormulario(d, r))).filter(v => v != null);
@@ -1199,6 +1234,26 @@ function calcularPrioridadeSeguimento(dados) {
 
   const posas = primeiroNumero(valorFormulario(c, "Total dos 6 itens (/60)"));
   if (posas != null && posas >= 40) juntar(psico, PESOS_PRIORIDADE.posasDoente, "Cicatriz mal avaliada pelo próprio (POSAS " + posas + "/60)");
+
+  /* Domínios psicossociais do BURN-OP, acrescentados ao formulário depois do
+     mapeamento. É onde estava o maior vazio: nenhum destes era recolhido. */
+  const humor = primeiroNumero(valorFormulario(mp, "Nas últimas duas semanas, com que frequência se sentiu em baixo, deprimido ou sem esperança?"));
+  const interesse = primeiroNumero(valorFormulario(mp, "Nas últimas duas semanas, com que frequência teve pouco interesse ou prazer em fazer coisas?"));
+  if (humor != null && interesse != null && (humor + interesse) >= 3)
+    juntar(psico, PESOS_PRIORIDADE.phq2, "Rastreio de humor positivo à data da alta (PHQ-2 " + (humor + interesse) + "/6)");
+
+  if (ehSim(valorFormulario(mp, "Acompanhamento em saúde mental antes da queimadura")))
+    juntar(psico, PESOS_PRIORIDADE.saudeMentalPrevia, "Acompanhamento em saúde mental anterior à queimadura");
+
+  const vive = String(valorFormulario(mp, "Com quem vive") || "");
+  if (/sozinho/i.test(vive)) juntar(psico, PESOS_PRIORIDADE.vivesSozinho, "Vive sozinho");
+
+  const cuidador = String(valorFormulario(mp, "Cuidador disponível em casa") || "");
+  if (/^n[ãa]o$/i.test(cuidador.trim())) juntar(psico, PESOS_PRIORIDADE.semCuidador, "Sem cuidador disponível em casa");
+
+  const trabalho = String(valorFormulario(mp, "Situação laboral e expectativa de regresso ao trabalho") || "");
+  if (/sem perspetiva/i.test(trabalho))   juntar(psico, PESOS_PRIORIDADE.semRegresso, "Sem perspetiva de regresso ao trabalho");
+  else if (/incerto/i.test(trabalho))     juntar(psico, PESOS_PRIORIDADE.regressoIncerto, "Regresso ao trabalho incerto");
 
   /* ---------- classificação ---------- */
   const somar = lista => lista.reduce((t, f) => t + f.pontos, 0);
@@ -1237,4 +1292,104 @@ function descreverCadencia(dias) {
     const meses = Math.round(d / 30);
     return meses + (meses === 1 ? " mês" : " meses");
   }).join(" · ");
+}
+
+/** Idade em anos completos a partir de uma data ISO. Devolve null se não
+ *  houver data — a prioridade tem de continuar a ser calculável sem ela. */
+function idadeEmAnos(dataISO) {
+  if (!dataISO) return null;
+  const d = new Date(dataISO);
+  if (isNaN(d)) return null;
+  const hoje = new Date();
+  let anos = hoje.getFullYear() - d.getFullYear();
+  const m = hoje.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < d.getDate())) anos--;
+  return anos;
+}
+
+/* ========================================================================
+   BURN-OP — BUrn Rehabilitative Needs, OutPatient
+   Bhattacharya et al., Burns 2024. Instrumento de 23 perguntas ponderadas,
+   derivado da "Adult Review of Systems Discharge" do Burn Model System.
+
+   Identifica o Cluster 3 — 6% dos doentes com alta, os de maior carga
+   sintomática e maior necessidade de reabilitação. AUC 0,93; no limiar de
+   46 pontos, especificidade 98,99% e exatidão 96,19%.
+
+   ATENÇÃO À SENSIBILIDADE. No estudo original houve 33 verdadeiros
+   positivos e 30 falsos negativos: pouco mais de metade dos doentes do
+   Cluster 3 são apanhados. Os autores são explícitos — é um instrumento de
+   rastreio, não deve ser o único determinante da decisão clínica, e casos
+   perto do limiar exigem avaliação complementar.
+
+   É por isso que aqui coexiste com a matriz de dois eixos: o BURN-OP é
+   muito específico mas deixa passar quase metade dos casos; a matriz usa
+   dados que o BURN-OP não vê (extensão, mãos, contexto psicossocial) e
+   serve de rede para os apanhar. Um positivo em qualquer dos dois merece
+   atenção.
+
+   As perguntas são de resposta Sim/Não. "Não" vale sempre zero.
+   ======================================================================== */
+const BURN_OP_LIMIAR = 46;
+
+const ITENS_BURN_OP = [
+  { id: "palpebras",     pontos: 4, texto: "Problemas nas pálpebras?" },
+  { id: "lacrimejo",     pontos: 4, texto: "Lacrimejo dos olhos?" },
+  { id: "dorm-maos",     pontos: 4, texto: "Dormência nas mãos?" },
+  { id: "dorm-pes",      pontos: 1, texto: "Dormência nos pés?" },
+  { id: "incha-pernas",  pontos: 4, texto: "Inchaço nos pés ou nas pernas?" },
+  { id: "incha-maos",    pontos: 4, texto: "Inchaço nas mãos ou nos braços?" },
+  { id: "cancro-pele",   pontos: 1, texto: "Cancro da pele?" },
+  { id: "gravidez",      pontos: 4, texto: "Alguma vez esteve grávida ou foi pai de uma criança?" },
+  { id: "coagulos",      pontos: 1, texto: "Coágulos nas pernas ou nos pulmões?" },
+  { id: "sudacao",       pontos: 4, texto: "Sudação excessiva?" },
+  { id: "audicao",       pontos: 4, texto: "Perda de audição?" },
+  { id: "voz",           pontos: 4, texto: "Notou alguma alteração na voz?" },
+  { id: "visao",         pontos: 4, texto: "Problemas de visão não corrigidos por óculos ou lentes de contacto?" },
+  { id: "memoria",       pontos: 4, texto: "Dificuldades de memória?" },
+  { id: "pensamento",    pontos: 4, texto: "Dificuldade em organizar o pensamento?" },
+  { id: "dorm-cicatriz", pontos: 4, texto: "Dormência nas cicatrizes de queimadura?" },
+  { id: "equilibrio",    pontos: 4, texto: "Problemas de equilíbrio?" },
+  { id: "varizes",       pontos: 4, texto: "Varizes?" },
+  { id: "dor-articular", pontos: 4, texto: "Dor articular?" },
+  { id: "frio",          pontos: 4, texto: "Intolerância ao frio?" },
+  { id: "calor",         pontos: 4, texto: "Intolerância ao calor?" },
+  { id: "alcool",        pontos: 1, texto: "História de abuso de álcool?" },
+  { id: "drogas",        pontos: 1, texto: "História de abuso de substâncias?" }
+];
+
+const BURN_OP_MAXIMO = ITENS_BURN_OP.reduce(function (t, i) { return t + i.pontos; }, 0);
+
+/**
+ * Calcula o BURN-OP a partir da secção de revisão de sistemas do formulário.
+ * Devolve os pontos, se ultrapassa o limiar, os itens positivos e quantas
+ * perguntas ficaram por responder — porque um score baixo obtido com
+ * metade das perguntas em branco não significa risco baixo.
+ */
+function calcularBurnOp(seccao) {
+  if (!seccao) return null;
+  let pontos = 0;
+  const positivos = [];
+  let respondidas = 0;
+
+  ITENS_BURN_OP.forEach(function (item) {
+    const v = seccao[item.texto];
+    if (v == null || v === "") return;
+    respondidas++;
+    if (String(v).trim().toLowerCase() === "sim") {
+      pontos += item.pontos;
+      positivos.push({ texto: item.texto, pontos: item.pontos });
+    }
+  });
+
+  return {
+    pontos: pontos,
+    maximo: BURN_OP_MAXIMO,
+    limiar: BURN_OP_LIMIAR,
+    cluster3: pontos >= BURN_OP_LIMIAR,
+    positivos: positivos.sort(function (a, b) { return b.pontos - a.pontos; }),
+    respondidas: respondidas,
+    total: ITENS_BURN_OP.length,
+    completo: respondidas === ITENS_BURN_OP.length
+  };
 }
