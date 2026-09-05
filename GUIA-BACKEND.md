@@ -250,8 +250,15 @@ dados de saúde não devem viajar assim.
    supabase functions deploy notificar-equipa
    ```
 
-4. **Definir as variáveis da função**, no painel do Supabase em
-   Edge Functions → notificar-equipa → Secrets:
+4. **Definir as variáveis**, no painel do Supabase em
+   **Edge Functions → Secrets**, ou diretamente em
+   `https://supabase.com/dashboard/project/<id-do-projeto>/functions/secrets`.
+
+   Atenção: esta página pertence à **secção** Edge Functions, e não a uma
+   função em particular. Se abrir a função `notificar-equipa`, os separadores
+   são Overview, Invocations, Logs, Code e Settings — não há ali nenhum
+   "Secrets". Os segredos são partilhados por todas as funções do projeto,
+   como se explica mais abaixo.
 
    - `SEGREDO_WEBHOOK` — uma frase longa à sua escolha, inventada por si
    - `URL_PLATAFORMA` — ex. `https://lizzardu.github.io/fenix-demo`
