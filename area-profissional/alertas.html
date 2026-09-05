@@ -41,9 +41,10 @@
     <p class="eyebrow">Unidade de Queimados</p>
     <h1 style="font-size:1.8rem;">Alertas</h1>
     <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
-      Sinais que podem precisar da sua atenção: resultados PROM acima do esperado
-      e dúvidas de doentes ainda por responder. Calculado a partir da última
-      resposta de cada doente — não substitui o julgamento clínico.
+      Sinais que podem precisar da sua atenção: check-ins de humor em que o doente
+      se disse muito em baixo ou pediu ajuda, dúvidas ainda por responder, e
+      resultados PROM fora dos limiares. Calculado a partir da última resposta de
+      cada doente — não substitui o julgamento clínico.
     </p>
 
     <div id="lista-alertas" style="max-width:820px; margin-top:24px;">
@@ -97,7 +98,16 @@
 
     const cartoes = [];
 
-    // 1) dúvidas por responder
+    // 1) check-in de humor — primeiro, por ser o sinal mais direto de que
+    //    o doente não está bem
+    alertas.humor.forEach(h => {
+      cartoes.push(alertaCardHTML(
+        h.doente.nome, h.doente.processo, h.rotulo, h.texto,
+        formatarDataHoraCurta(h.checkin.criado_em)
+      ));
+    });
+
+    // 2) dúvidas por responder
     alertas.duvidas.forEach(d => {
       const processo = d.doentes ? d.doentes.processo : "";
       cartoes.push(alertaCardHTML(
@@ -110,7 +120,7 @@
       ));
     });
 
-    // 2) últimas respostas PROM fora dos limiares
+    // 3) últimas respostas PROM fora dos limiares
     alertas.proms.forEach(a => {
       cartoes.push(alertaCardHTML(
         a.doente.nome, a.doente.processo, a.instrumento,

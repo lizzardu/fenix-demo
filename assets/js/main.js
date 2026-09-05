@@ -883,14 +883,31 @@ const LIMIARES_ALERTA = {
   "BSHS-B":  { max: 25, texto: v => `Qualidade de vida (BSHS-B) baixa (${v}/100)` }
 };
 
+/* Estados do check-in rápido de humor que geram alerta. A ordem importa: o
+   pedido de ajuda aparece primeiro na lista, por ser o sinal mais direto. */
+const HUMOR_ALERTA = {
+  "preciso-de-ajuda": { urgencia: 0, rotulo: "🥲 Pediu ajuda",
+                        texto: "No último check-in, respondeu “Preciso de ajuda”." },
+  "muito-em-baixo":   { urgencia: 1, rotulo: "😔 Muito em baixo",
+                        texto: "No último check-in, respondeu “Muito em baixo”." }
+};
+
 /** Recolhe tudo o que conta como alerta. Devolve
- *  { duvidas: [...], proms: [...], total: n } — as listas trazem já o que a
- *  página precisa para desenhar cada cartão. */
+ *  { humor: [...], duvidas: [...], proms: [...], total: n } — as listas trazem
+ *  já o que a página precisa para desenhar cada cartão. */
 async function recolherAlertas() {
-  const [duvidas, doentes, respostas] = await Promise.all([
+  // o check-in de humor é opcional: se a tabela ou a política de leitura
+  // ainda não existirem, os restantes alertas continuam a funcionar
+  const checkinsPromise = fenixApi.listarCheckinsHumorTodos().catch(e => {
+    console.error("Não foi possível ler os check-ins de humor:", e);
+    return [];
+  });
+
+  const [duvidas, doentes, respostas, checkins] = await Promise.all([
     fenixApi.listarDuvidas(),
     fenixApi.listarDoentes(),
-    fenixApi.listarPromsTodos(Object.keys(LIMIARES_ALERTA))
+    fenixApi.listarPromsTodos(Object.keys(LIMIARES_ALERTA)),
+    checkinsPromise
   ]);
 
   const duvidasPendentes = duvidas.filter(d => d.estado === "pendente");
@@ -917,10 +934,26 @@ async function recolherAlertas() {
     if (disparou) promsEmAlerta.push({ doente, instrumento: r.instrumento, valor, resposta: r });
   });
 
+  // último check-in de humor de cada doente — só o mais recente conta, tal
+  // como nos PROMs, para um mau dia já ultrapassado não ficar a alertar
+  const ultimoCheckin = {};
+  checkins.forEach(c => { ultimoCheckin[c.doente_id] = c; });
+
+  const humorEmAlerta = [];
+  Object.keys(ultimoCheckin).forEach(doenteId => {
+    const c = ultimoCheckin[doenteId];
+    const nivel = HUMOR_ALERTA[c.valor];
+    const doente = porId[doenteId];
+    if (!nivel || !doente) return;
+    humorEmAlerta.push({ doente, valor: c.valor, checkin: c, ...nivel });
+  });
+  humorEmAlerta.sort((a, b) => a.urgencia - b.urgencia);
+
   return {
+    humor: humorEmAlerta,
     duvidas: duvidasPendentes,
     proms: promsEmAlerta,
-    total: duvidasPendentes.length + promsEmAlerta.length
+    total: humorEmAlerta.length + duvidasPendentes.length + promsEmAlerta.length
   };
 }
 

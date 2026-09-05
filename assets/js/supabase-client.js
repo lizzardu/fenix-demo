@@ -430,6 +430,17 @@ const fenixApi = {
     return data;
   },
 
+  /** Check-ins de humor de TODOS os doentes, numa única consulta, para o
+   *  cálculo dos alertas. Requer que os profissionais possam ler a tabela —
+   *  ver a política em 009_alertas_humor.sql. */
+  async listarCheckinsHumorTodos() {
+    const { data, error } = await sb
+      .from("checkins_humor").select("doente_id, valor, criado_em")
+      .order("criado_em");
+    if (error) throw error;
+    return data;
+  },
+
   /* ---------------------------------------------------------------------
      COMUNICAÇÃO DA EQUIPA — notas internas sobre um doente, trocadas entre
      profissionais. Usadas na ficha do doente (area-profissional/doente.html).
