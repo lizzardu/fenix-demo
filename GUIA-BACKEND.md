@@ -195,3 +195,73 @@ pessoa com o link exato da foto consegue vê-la, mas não há uma lista pública
 de todas as fotos). Para maior privacidade, seria preciso mudar para URLs
 assinadas temporárias em vez de URLs públicas — uma alteração pequena em
 `marcarMetaConquistada()` que faço quando quiser avançar para essa parte.
+
+---
+
+## Avisos por email à equipa
+
+Sempre que um doente coloca uma dúvida ou submete uma resposta a um
+questionário, a equipa pode receber um email. O envio é feito por uma Supabase
+Edge Function, chamada pela própria base de dados.
+
+**Porque não é feito no browser.** O envio de email exige uma chave secreta do
+fornecedor. Se essa chave estivesse na plataforma, qualquer pessoa que a
+abrisse conseguiria lê-la e enviar email em nome da Unidade. Além disso, um
+aviso disparado pelo browser não sairia se o doente fechasse a página logo a
+seguir a submeter. Por isso o gatilho está na base de dados.
+
+**O que o email leva.** Apenas a indicação de que há algo novo e uma ligação
+para a plataforma. Não leva o nome do doente, o número de processo, o texto da
+dúvida nem resultados. O email sai para fora dos sistemas da ULS, passa por um
+fornecedor externo e fica em caixas de correio que a instituição não controla —
+dados de saúde não devem viajar assim.
+
+### Passos
+
+1. **Conta no fornecedor de email.** Crie uma conta em resend.com e gere uma
+   API key. Para produção, verifique o domínio da ULS no painel do Resend; para
+   testar, pode usar o remetente `onboarding@resend.dev`.
+
+2. **Correr a migração.** No SQL Editor do Supabase, corra
+   `database/011_notificacoes_email.sql`.
+
+3. **Publicar a Edge Function.** Com o Supabase CLI instalado:
+
+   ```
+   supabase login
+   supabase link --project-ref <id-do-projeto>
+   supabase functions deploy notificar-equipa
+   ```
+
+4. **Definir as variáveis da função**, no painel do Supabase em
+   Edge Functions → notificar-equipa → Secrets:
+
+   - `RESEND_API_KEY` — a chave do passo 1
+   - `SEGREDO_WEBHOOK` — uma frase longa à sua escolha, inventada por si
+   - `EMAIL_REMETENTE` — ex. `Fénix <avisos@ulssjose.min-saude.pt>`
+   - `URL_PLATAFORMA` — ex. `https://lizzardu.github.io/fenix-demo`
+
+   (`SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` são preenchidas
+   automaticamente pelo Supabase.)
+
+5. **Dizer à base de dados onde está a função.** No SQL Editor, substituindo os
+   dois valores — o segredo tem de ser exatamente o mesmo do passo 4:
+
+   ```sql
+   insert into integracoes_config (chave, valor) values
+     ('url_notificar_equipa', 'https://<id-do-projeto>.supabase.co/functions/v1/notificar-equipa'),
+     ('segredo_webhook',      '<o mesmo segredo do passo 4>')
+   on conflict (chave) do update set valor = excluded.valor;
+   ```
+
+6. **Indicar quem recebe.** Na plataforma, em Definições → Avisos por email,
+   acrescente o endereço da Unidade e escolha que avisos quer ligados.
+
+### Enquanto não estiver configurado
+
+Nada rebenta. Os gatilhos verificam se `integracoes_config` está preenchida e,
+se não estiver, não fazem nada. As dúvidas e as respostas continuam a ser
+gravadas normalmente. A secção nas Definições diz o que falta.
+
+Um aviso que falhe nunca impede a gravação: o gatilho apanha o erro e deixa-o
+no log do Postgres como *warning*.

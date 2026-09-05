@@ -441,6 +441,47 @@ const fenixApi = {
     return data;
   },
 
+  /* ---------------------------------------------------------------------
+     AVISOS POR EMAIL À EQUIPA — quem recebe e que avisos estão ligados.
+     O envio em si é feito por uma Edge Function, chamada pela base de
+     dados: a chave do fornecedor de email nunca pode estar no browser.
+     Ver 011_notificacoes_email.sql e supabase/functions/notificar-equipa.
+     --------------------------------------------------------------------- */
+  async listarDestinatariosAviso() {
+    const { data, error } = await sb
+      .from("notificacoes_destinatarios").select("*").order("criado_em");
+    if (error) throw error;
+    return data;
+  },
+
+  async adicionarDestinatarioAviso(email, nome) {
+    const { data, error } = await sb.from("notificacoes_destinatarios")
+      .insert({ email: email.trim().toLowerCase(), nome: nome || null })
+      .select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async removerDestinatarioAviso(id) {
+    const { error } = await sb.from("notificacoes_destinatarios").delete().eq("id", id);
+    if (error) throw error;
+  },
+
+  async obterConfigAvisos() {
+    const { data, error } = await sb
+      .from("notificacoes_config").select("*").eq("id", 1).maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  async guardarConfigAvisos(campos) {
+    const { data, error } = await sb.from("notificacoes_config")
+      .update(Object.assign({}, campos, { atualizado_em: new Date().toISOString() }))
+      .eq("id", 1).select().single();
+    if (error) throw error;
+    return data;
+  },
+
   /* --- Alertas dados como tratados pela equipa.
      Requer a tabela "alertas_tratados" — ver 010_alertas_tratados.sql. --- */
 
