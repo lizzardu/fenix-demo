@@ -231,8 +231,16 @@ tr.row-link:hover{ background:var(--paper-tint); }
 .stage-card .stage-icon{ width:44px; height:44px; margin-bottom:16px; }
 
 /* ---------- subnavegação da área do doente ---------- */
-.subnav{ background:#fff; border-bottom:1px solid var(--line); }
-.subnav .wrap{ display:flex; gap:4px; }
+/* Acompanha o scroll, colada por baixo da topbar (78px). O z-index fica um
+   abaixo do da topbar para passar por trás dela e não ao contrário.
+   O overflow-x mantém todos os separadores alcançáveis em ecrãs estreitos,
+   onde os seis não cabem lado a lado, sem pôr a página a deslizar na
+   horizontal. */
+.subnav{
+  background:#fff; border-bottom:1px solid var(--line);
+  position:sticky; top:78px; z-index:29;
+}
+.subnav .wrap{ display:flex; gap:4px; overflow-x:auto; }
 .subnav a{
   display:inline-flex; align-items:center; gap:7px; padding:15px 18px;
   font-size:.88rem; font-weight:600; color:var(--ink-soft); text-decoration:none;
