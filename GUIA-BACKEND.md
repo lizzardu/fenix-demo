@@ -218,9 +218,26 @@ dados de saúde não devem viajar assim.
 
 ### Passos
 
-1. **Conta no fornecedor de email.** Crie uma conta em resend.com e gere uma
-   API key. Para produção, verifique o domínio da ULS no painel do Resend; para
-   testar, pode usar o remetente `onboarding@resend.dev`.
+1. **Conta no fornecedor de email.** Basta uma conta em resend.com.
+
+   **Não é preciso uma conta separada** para os avisos à equipa e para os
+   emails ao doente. A mesma conta envia de vários endereços, e permite criar
+   várias API keys. O recomendado é **uma conta, duas chaves**: uma para os
+   avisos à equipa, outra para os emails ao doente. Assim, se uma for
+   comprometida ou tiver de ser trocada, revoga-se só essa e o outro circuito
+   continua a funcionar. Duas contas separadas também funcionam, mas obrigam a
+   verificar o domínio duas vezes, a gerir dois planos e a procurar em dois
+   sítios quando algo falha — sem nenhuma vantagem em troca.
+
+   Em Resend → API Keys → Create API Key, dê-lhe um nome que se perceba
+   (ex. `fenix-avisos-equipa`). A chave só é mostrada uma vez.
+
+   **Atenção ao remetente de testes.** Enquanto não verificar um domínio, o
+   Resend só deixa enviar de `onboarding@resend.dev` **e só para o endereço
+   com que se registou na conta**. Qualquer outro destinatário é recusado.
+   Serve para um primeiro teste, mas para a Unidade receber mesmo os avisos
+   é preciso verificar um domínio em Resend → Domains e usar um remetente
+   desse domínio em `EMAIL_REMETENTE`.
 
 2. **Correr a migração.** No SQL Editor do Supabase, corra
    `database/011_notificacoes_email.sql`.
