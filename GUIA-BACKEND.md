@@ -279,14 +279,26 @@ dados de saúde não devem viajar assim.
    automaticamente pelo Supabase.)
 
 5. **Dizer à base de dados onde está a função.** No SQL Editor, substituindo os
-   dois valores — o segredo tem de ser exatamente o mesmo do passo 4:
+   três valores — o segredo tem de ser exatamente o mesmo do passo 4:
 
    ```sql
    insert into integracoes_config (chave, valor) values
      ('url_notificar_equipa', 'https://<id-do-projeto>.supabase.co/functions/v1/notificar-equipa'),
-     ('segredo_webhook',      '<o mesmo segredo do passo 4>')
+     ('segredo_webhook',      '<o mesmo segredo do passo 4>'),
+     ('chave_anon',           '<a chave publicável, a mesma de supabase-config.js>')
    on conflict (chave) do update set valor = excluded.valor;
    ```
+
+   A `chave_anon` é obrigatória: o Supabase recusa qualquer chamada a uma Edge
+   Function que não traga cabeçalho `Authorization`, e rejeita-a no gateway
+   antes de o código da função correr. Não é um segredo — é a mesma chave
+   publicável que já está no site. Quem autoriza de facto é o
+   `segredo_webhook`.
+
+   Se instalou os avisos antes de setembro de 2026, corra também
+   `database/012_corrige_chamada_edge_function.sql`: a primeira versão do
+   gatilho não enviava esse cabeçalho e as chamadas eram recusadas em
+   silêncio.
 
 6. **Indicar quem recebe.** Na plataforma, em Definições → Avisos por email,
    acrescente o endereço da Unidade e escolha que avisos quer ligados.
