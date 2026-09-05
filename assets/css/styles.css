@@ -560,3 +560,110 @@ body.page-tint{ background:var(--paper-tint); }
   margin-left:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .form-indice .acoes .btn{ padding:5px 10px; font-size:.72rem; }
+
+/* ========================================================================
+   TELEMÓVEL E TABLET — área do doente
+   Medido em 375x812 antes de escrever isto. A boa notícia é que nada
+   transbordava na horizontal; os problemas eram outros três, e sistemáticos.
+   ======================================================================== */
+
+/* ---------- tablet ---------- */
+@media (max-width:900px){
+  .wrap, .wrap-narrow{ padding-left:20px; padding-right:20px; }
+  .card{ padding:20px; }
+  main.wrap{ padding-left:20px !important; padding-right:20px !important; }
+}
+
+/* ---------- telemóvel ---------- */
+@media (max-width:700px){
+
+  /* PROBLEMA 1 — a topbar tinha altura fixa de 78px mas o conteúdo ocupava
+     126px: o nome do utilizador e o botão Sair ficavam cortados. Passa a
+     crescer com o que tem dentro.
+     E deixa de ser fixa: num ecrã de 812px, 78px de cabeçalho mais a barra
+     de separadores comiam 16% da altura útil de forma permanente. Numa
+     página a que se chega já autenticado, a marca não precisa de ficar
+     sempre à vista; a navegação precisa. Por isso o cabeçalho sobe com o
+     scroll e é a barra de separadores que fica colada ao topo. */
+  .topbar{ position:static; }
+  .topbar .wrap{ height:auto; min-height:0; padding:12px 20px; gap:12px 14px; }
+  .brandbar{ gap:12px; }
+  .brand img{ height:32px; }
+  .brand .brand-name{ font-size:1.15rem; }
+  .uls-logo img{ height:26px; }
+  .subnav{ top:0; }
+
+  /* PROBLEMA 2 — campos de texto com menos de 16px fazem o iOS aproximar a
+     página sozinho quando se toca neles, e depois o doente fica com o ecrã
+     desalinhado. 16px é o limiar exato a partir do qual o Safari deixa de o
+     fazer. Não é uma questão estética. */
+  input[type=text], input[type=email], input[type=password], input[type=tel],
+  input[type=number], input[type=date], textarea, select{
+    font-size:16px;
+  }
+
+  /* PROBLEMA 3 — alvos de toque abaixo do recomendado. Os botões 👍/👎 dos
+     recursos mediam 45x31 e havia 36 deles numa página; os botões pequenos
+     tinham 38px de altura. Passam todos a caber num polegar. */
+  .btn{ padding:13px 20px; }
+  .btn-sm{ padding:11px 16px; font-size:.85rem; }
+  .rating-btn{ min-width:48px; min-height:44px; font-size:1.05rem; }
+  .rating-row{ gap:10px; }
+
+  /* a escala 0–10 encolhia para 34px por opção em vez de mudar de linha */
+  .scale{ gap:8px; }
+  .scale-opt{ flex:0 0 auto; }
+  .scale-opt span{ width:44px; height:44px; }
+
+  /* o resto: respirar melhor num ecrã estreito */
+  .wrap, .wrap-narrow{ padding-left:16px; padding-right:16px; }
+  main.wrap{ padding:28px 16px 64px !important; }
+  .card{ padding:18px; }
+  h1{ font-size:1.6rem !important; }
+  h2{ font-size:1.3rem; }
+  .subnav a{ padding:13px 14px; }
+  .likert-opt div{ padding:14px 16px; }
+  .chip span{ min-height:40px; display:inline-flex; align-items:center; }
+
+  /* tabelas: deslizam dentro do seu contentor, sem arrastar a página */
+  .card-flush{ overflow-x:auto; }
+  .resource-item{ flex-wrap:wrap; gap:10px; }
+
+  /* o pop-up de humor ocupa o ecrã todo em telemóvel */
+  .modal-box{ padding:22px 18px; }
+}
+
+/* ---------- ecrãs muito estreitos ---------- */
+@media (max-width:380px){
+  .brand .brand-name small{ display:none; }
+  .mood-faces{ grid-template-columns:repeat(2,1fr); }
+}
+
+/* ---------- tablets e qualquer ecrã tátil ----------
+   As regras de toque não podem parar nos 700px. Um iPad é um ecrã grande
+   operado com um dedo, não com um rato: os alvos pequenos e o zoom
+   automático do iOS ao focar um campo afetam-no exatamente da mesma
+   maneira. Daí o pointer:coarse, que apanha o tátil independentemente da
+   largura, e o limite de 1024px para os tablets que não o anunciam. */
+@media (max-width:1024px), (pointer:coarse){
+  input[type=text], input[type=email], input[type=password], input[type=tel],
+  input[type=number], input[type=date], input[type=datetime-local],
+  textarea, select{ font-size:16px; }
+
+  .btn{ padding:13px 20px; }
+  .btn-sm{ padding:11px 16px; font-size:.85rem; }
+  .rating-btn{ min-width:48px; min-height:44px; font-size:1.05rem; }
+  .rating-row{ gap:10px; }
+  .scale-opt{ flex:0 0 auto; }
+  .scale-opt span{ width:44px; height:44px; }
+  .likert-opt div{ padding:14px 16px; }
+}
+
+/* Os separadores encolhiam até o texto partir em três linhas ("Plano de
+   Tratamento"), e a barra ficava com 190px de altura. Passam a manter a
+   largura e a deslizar na horizontal — que era a intenção do overflow-x,
+   anulada pelo flex-shrink por omissão. */
+.subnav a{ white-space:nowrap; flex:0 0 auto; }
+.subnav .wrap{ scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+.subnav .wrap::-webkit-scrollbar{ height:3px; }
+.subnav .wrap::-webkit-scrollbar-thumb{ background:var(--line); border-radius:3px; }

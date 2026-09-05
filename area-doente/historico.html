@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Histórico e Agendamentos — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260906">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260909">
 <style>
   /* styles.css só estiliza input[type=text|email|password|tel] e textarea;
      esta página usa também select, date e datetime-local — reutilizam-se
@@ -21,6 +21,15 @@
   input[type="date"]:focus,
   input[type="datetime-local"]:focus{
     outline:2px solid var(--blue); outline-offset:2px;
+  }
+  /* Estas regras vêm depois de styles.css e ganham-lhe, incluindo à regra
+     de telemóvel que impede o iOS de aproximar a página ao tocar num campo.
+     Por isso a exceção tem de ser repetida aqui: abaixo de 16px, o Safari
+     aproxima sozinho e o doente fica com o ecrã desalinhado. */
+  @media (max-width:1024px), (pointer:coarse){
+    select,
+    input[type="date"],
+    input[type="datetime-local"]{ font-size:16px; }
   }
 </style>
 </head>
