@@ -1782,3 +1782,37 @@ function mostrarPedidoSatisfacao(pedido) {
 function caminhoParaAreaDoente() {
   return window.location.pathname.indexOf("/area-doente/") >= 0 ? "" : "area-doente/";
 }
+
+/* ------------------------------------------------------------------------
+   O convite arranca sozinho, sem depender de cada página o chamar.
+
+   As páginas HTML não levam número de versão no endereço e o GitHub Pages
+   manda guardá-las durante dez minutos: uma página em cache continua a ser
+   a antiga, sem a linha nova, mesmo depois de tudo publicado — foi o que
+   aconteceu quando isto foi lançado. O main.js é versionado, por isso o
+   que vive aqui chega sempre.
+
+   As chamadas que ficaram nas páginas não estorvam: a segunda encontra o
+   pop-up já criado e não faz nada.
+   ------------------------------------------------------------------------ */
+async function arrancarConviteSatisfacao() {
+  const caminho = window.location.pathname;
+  if (caminho.indexOf("/area-doente/") < 0) return;
+  // a meio de um questionário, não: nem o de PROMs nem o de satisfação
+  if (/prom\.html|satisfacao\.html/.test(caminho)) return;
+  if (!window.fenixApi || !fenixApi.utilizadorAtual) return;
+
+  try {
+    const sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "doente") return;
+    await verificarSatisfacaoPendente(sessao.perfil.doente_id);
+  } catch (e) {
+    console.warn("Não foi possível verificar o convite de avaliação:", e);
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", arrancarConviteSatisfacao);
+} else {
+  arrancarConviteSatisfacao();
+}

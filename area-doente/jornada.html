@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>A minha jornada — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260912">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260913">
 </head>
 <body class="page-tint">
 <header class="topbar">
@@ -91,7 +91,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260912"></script>
+<script src="../assets/js/main.js?v=20260913"></script>
 <script>
   let DOENTE_ID = null;
   const arquivosReais = {}; // guarda o File real (não a pré-visualização) por meta.id, até ser gravado
@@ -215,7 +215,6 @@
     }
     DOENTE_ID = sessao.perfil.doente_id;
     atualizarBadgeDuvidas(DOENTE_ID);
-    verificarSatisfacaoPendente(DOENTE_ID);
     document.getElementById("badge-utilizador").textContent = "Olá, " + sessao.perfil.nome.split(" ")[0];
     carregarJornada();
   })();
