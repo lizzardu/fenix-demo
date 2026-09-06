@@ -737,8 +737,11 @@ function exercicioEditorHTML(ex) {
   const mediaEsforco = totalRegistos
     ? (ex.registos.reduce((s, r) => s + r.esforco, 0) / totalRegistos).toFixed(1)
     : "—";
+  const suspenso = ex.estado === "suspenso";
   return `
-    <div class="card" style="margin-bottom:16px;" id="plano-row-${ex.id}">
+    <div class="card" style="margin-bottom:16px;${suspenso ? " border-style:dashed; background:var(--paper-tint);" : ""}" id="plano-row-${ex.id}">
+      ${suspenso ? `<p style="margin:0 0 12px;"><span class="pill pill-alert">Suspenso</span>
+        <span class="hint" style="margin-left:8px;">Não aparece ao doente. O histórico fica guardado.</span></p>` : ""}
       <div class="form-row">
         <div class="field" style="margin-bottom:12px;">
           <label>Nome do exercício</label>
@@ -768,10 +771,18 @@ function exercicioEditorHTML(ex) {
         <span class="pill pill-flame">Adesão: ${totalRegistos} registo(s) · esforço médio ${mediaEsforco}</span>
         <div style="display:flex; gap:8px;">
           <button type="button" class="btn btn-primary btn-sm" id="btn-guardar-${ex.id}" onclick="guardarExercicio('${ex.id}')">Guardar alterações</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="alternarSuspensaoExercicio('${ex.id}', ${suspenso})">${suspenso ? "Reativar" : "Suspender"}</button>
           <button type="button" class="btn btn-ghost btn-sm" onclick="removerExercicio('${ex.id}')">Remover</button>
         </div>
       </div>
     </div>`;
+}
+
+/* versão de demonstração (sem base de dados): só atualiza o objeto local */
+function alternarSuspensaoExercicio(id, suspenso) {
+  const ex = DEMO_PATIENT.plano.exercicios.find(e => e.id === id);
+  if (ex) ex.estado = suspenso ? "ativo" : "suspenso";
+  renderPlanoEditor("plano-editor");
 }
 
 /* versão de demonstração (sem base de dados): só atualiza o objeto local */

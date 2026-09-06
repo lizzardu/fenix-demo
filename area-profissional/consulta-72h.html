@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contacto às 72 horas — Fénix</title>
+<title>Formulário 1.º Contacto — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
 <link rel="stylesheet" href="../assets/css/styles.css?v=20260910">
 </head>
@@ -36,7 +36,7 @@
     </div>
     <a href="doente.html" data-processo-link>🗂️ Resumo</a>
     <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
-    <a href="consulta-72h.html" data-processo-link class="active">⏱️ Contacto 72h</a>
+    <a href="consulta-72h.html" data-processo-link class="active">⏱️ 1.º Contacto</a>
     <a href="plano-tratamento.html" data-processo-link>🏋️ Plano de Tratamento</a>
     <a href="jornada.html" data-processo-link>🎯 Jornada e Metas</a>
     <a href="agenda-proms.html" data-processo-link>📅 Agenda de PROMs</a>
@@ -49,7 +49,7 @@
     <a href="doente.html" class="hint" id="link-voltar" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha do doente</a>
 
     <p class="eyebrow" id="titulo-doente">Primeiro contacto pós-alta</p>
-    <h1 style="font-size:1.9rem;">Contacto às 72 horas</h1>
+    <h1 style="font-size:1.9rem;">Formulário 1.º Contacto</h1>
     <p style="color:var(--ink-soft); max-width:74ch; margin-top:6px;">
       Serve para confirmar se a alta correu bem na prática, registar a evolução nas primeiras
       72 horas, perceber se o doente está a conseguir cuidar de si, e decidir com que frequência
@@ -372,7 +372,7 @@
 
       <div class="form-actions">
         <a href="doente.html" class="btn btn-ghost" id="btn-cancelar">Voltar</a>
-        <button type="submit" class="btn btn-primary" id="btn-guardar">Guardar contacto das 72h</button>
+        <button type="submit" class="btn btn-primary" id="btn-guardar">Guardar 1.º contacto</button>
       </div>
 
       <div id="confirmacao" class="card" style="margin-top:20px; display:none;">
@@ -473,22 +473,33 @@
     el.style.display = "flex";
   }
 
-  /* --- metas e plano herdados da alta: confirmar ou ajustar --- */
+  /* --- metas e plano herdados da alta: confirmar ou ajustar ---
+     Um ajuste não fica só aqui: a meta reescrita e a prescrição alterada
+     passam para a Jornada e para o Plano do doente, que é onde ele as vê.
+     Por isso o campo de ajuste é obrigatório quando se escolhe "precisa de
+     ajuste" — sem ele não haveria o que enviar. */
   function desenharMetas(){
     const el = document.getElementById("metas-alta");
-    if (!METAS.length) {
+    const porFazer = METAS.filter(function(m){ return m.estado !== "done"; });
+    if (!porFazer.length) {
       el.innerHTML = '<p class="eyebrow" style="margin-bottom:6px;">Metas</p>'
-        + '<p class="hint" style="margin:0;">Não há metas definidas para este doente.</p>';
+        + '<p class="hint" style="margin:0;">' + (METAS.length
+            ? "Todas as metas deste doente já estão concluídas."
+            : "Não há metas definidas para este doente.") + "</p>";
       return;
     }
     el.innerHTML = '<p class="eyebrow" style="margin-bottom:10px;">Metas definidas na alta</p>'
-      + METAS.map(function(m){
-        return '<div class="subfield" style="margin-bottom:10px;">'
+      + porFazer.map(function(m){
+        return '<div class="subfield" style="margin-bottom:14px;">'
              +   '<label>' + esc(m.label) + '</label>'
              +   '<div class="chip-group">'
-             +     '<label class="chip"><input type="radio" name="meta-' + m.id + '"><span>Mantém</span></label>'
-             +     '<label class="chip"><input type="radio" name="meta-' + m.id + '"><span>Precisa de ajuste</span></label>'
-             +     '<label class="chip"><input type="radio" name="meta-' + m.id + '"><span>Já atingida</span></label>'
+             +     '<label class="chip"><input type="radio" name="meta-' + m.id + '" onchange="alternarAjuste(\'meta\',\'' + m.id + '\')"><span>Mantém</span></label>'
+             +     '<label class="chip"><input type="radio" name="meta-' + m.id + '" onchange="alternarAjuste(\'meta\',\'' + m.id + '\')"><span>Precisa de ajuste</span></label>'
+             +     '<label class="chip"><input type="radio" name="meta-' + m.id + '" onchange="alternarAjuste(\'meta\',\'' + m.id + '\')"><span>Já atingida</span></label>'
+             +   '</div>'
+             +   '<div id="caixa-meta-' + m.id + '" hidden style="margin-top:10px;">'
+             +     '<textarea id="ajuste-meta-' + m.id + '" rows="2" placeholder="Como fica a meta a partir de agora — é este o texto que o doente passa a ver na Jornada">' + esc(m.label) + '</textarea>'
+             +     '<p class="scale-note">Substitui a meta anterior na Jornada do doente, com uma nota a explicar a alteração.</p>'
              +   '</div>'
              + '</div>';
       }).join("");
@@ -496,38 +507,134 @@
 
   function desenharPlano(){
     const el = document.getElementById("plano-alta");
-    if (!EXERCICIOS.length) {
+    const ativos = EXERCICIOS.filter(function(x){ return x.estado !== "suspenso"; });
+    if (!ativos.length) {
       el.innerHTML = '<p class="eyebrow" style="margin-bottom:6px;">Plano terapêutico</p>'
-        + '<p class="hint" style="margin:0;">Não há plano prescrito para este doente.</p>';
+        + '<p class="hint" style="margin:0;">' + (EXERCICIOS.length
+            ? "Todos os cuidados prescritos estão suspensos."
+            : "Não há plano prescrito para este doente.") + "</p>";
       return;
     }
     el.innerHTML = '<p class="eyebrow" style="margin-bottom:10px;">Plano terapêutico prescrito</p>'
-      + EXERCICIOS.map(function(x){
+      + ativos.map(function(x){
         const desc = x.prescricao ? " — " + esc(x.prescricao) : "";
-        return '<div class="subfield" style="margin-bottom:10px;">'
+        return '<div class="subfield" style="margin-bottom:14px;">'
              +   '<label>' + esc(x.nome) + '<span class="hint" style="font-weight:400;">' + desc + '</span></label>'
              +   '<div class="chip-group">'
-             +     '<label class="chip"><input type="radio" name="ex-' + x.id + '"><span>Mantém</span></label>'
-             +     '<label class="chip"><input type="radio" name="ex-' + x.id + '"><span>Precisa de ajuste</span></label>'
-             +     '<label class="chip"><input type="radio" name="ex-' + x.id + '"><span>Suspender</span></label>'
+             +     '<label class="chip"><input type="radio" name="ex-' + x.id + '" onchange="alternarAjuste(\'ex\',\'' + x.id + '\')"><span>Mantém</span></label>'
+             +     '<label class="chip"><input type="radio" name="ex-' + x.id + '" onchange="alternarAjuste(\'ex\',\'' + x.id + '\')"><span>Precisa de ajuste</span></label>'
+             +     '<label class="chip"><input type="radio" name="ex-' + x.id + '" onchange="alternarAjuste(\'ex\',\'' + x.id + '\')"><span>Suspender</span></label>'
+             +   '</div>'
+             +   '<div id="caixa-ex-' + x.id + '" hidden style="margin-top:10px;">'
+             +     '<textarea id="ajuste-ex-' + x.id + '" rows="2"></textarea>'
+             +     '<p class="scale-note" id="nota-ex-' + x.id + '"></p>'
              +   '</div>'
              + '</div>';
       }).join("");
+  }
+
+  /** Mostra a caixa de ajuste consoante a decisão tomada na linha. */
+  function alternarAjuste(tipo, id){
+    const marcado = document.querySelector('input[name="' + tipo + '-' + id + '"]:checked');
+    const decisao = marcado ? marcado.nextElementSibling.textContent.trim() : "";
+    const caixa = document.getElementById("caixa-" + tipo + "-" + id);
+    const campo = document.getElementById("ajuste-" + tipo + "-" + id);
+    if (!caixa) return;
+
+    if (tipo === "ex") {
+      const nota = document.getElementById("nota-ex-" + id);
+      if (decisao === "Precisa de ajuste") {
+        const original = (EXERCICIOS.find(function(x){ return x.id === id; }) || {}).prescricao || "";
+        campo.placeholder = "Nova prescrição — séries, repetições, frequência";
+        if (!campo.value) campo.value = original;
+        nota.textContent = "Substitui a prescrição no Plano de Tratamento do doente.";
+      } else if (decisao === "Suspender") {
+        campo.placeholder = "Motivo da suspensão";
+        campo.value = "";
+        nota.textContent = "Deixa de aparecer ao doente. Fica na ficha, com o histórico, e pode ser reativado no Plano de Tratamento.";
+      }
+      caixa.hidden = (decisao !== "Precisa de ajuste" && decisao !== "Suspender");
+    } else {
+      caixa.hidden = (decisao !== "Precisa de ajuste");
+    }
   }
 
   /** Lê as decisões sobre metas e plano, que não seguem o padrão .subfield
    *  com rótulo fixo (os nomes dos campos vêm dos ids das linhas). */
   function lerRevisaoPlano(){
     const r = { metas: [], plano: [] };
+    const texto = function(tipo, id){
+      const c = document.getElementById("ajuste-" + tipo + "-" + id);
+      return c ? c.value.trim() : "";
+    };
     METAS.forEach(function(m){
       const marcado = document.querySelector('input[name="meta-' + m.id + '"]:checked');
-      if (marcado) r.metas.push({ id: m.id, label: m.label, decisao: marcado.nextElementSibling.textContent.trim() });
+      if (!marcado) return;
+      const decisao = marcado.nextElementSibling.textContent.trim();
+      r.metas.push({ id: m.id, label: m.label, decisao: decisao,
+                     ajuste: decisao === "Precisa de ajuste" ? texto("meta", m.id) : null });
     });
     EXERCICIOS.forEach(function(x){
       const marcado = document.querySelector('input[name="ex-' + x.id + '"]:checked');
-      if (marcado) r.plano.push({ id: x.id, nome: x.nome, decisao: marcado.nextElementSibling.textContent.trim() });
+      if (!marcado) return;
+      const decisao = marcado.nextElementSibling.textContent.trim();
+      r.plano.push({ id: x.id, nome: x.nome, decisao: decisao,
+                     ajuste: (decisao === "Precisa de ajuste" || decisao === "Suspender") ? texto("ex", x.id) : null });
     });
     return r;
+  }
+
+  /** Impede guardar um ajuste sem conteúdo: seria uma decisão registada que
+   *  não chegaria ao doente. Devolve a lista de faltas, vazia se estiver bem. */
+  function faltasNaRevisao(revisao){
+    const faltas = [];
+    revisao.metas.forEach(function(m){
+      if (m.decisao === "Precisa de ajuste" && !m.ajuste) faltas.push('a meta "' + m.label + '"');
+    });
+    revisao.plano.forEach(function(x){
+      if (x.decisao === "Precisa de ajuste" && !x.ajuste) faltas.push('a prescrição de "' + x.nome + '"');
+      if (x.decisao === "Suspender" && !x.ajuste) faltas.push('o motivo para suspender "' + x.nome + '"');
+    });
+    return faltas;
+  }
+
+  /** Passa os ajustes para a Jornada e para o Plano do doente.
+   *  Corre depois de o contacto estar gravado: o registo clínico é o que não
+   *  se pode perder, e as decisões ficam lá mesmo que uma propagação falhe. */
+  async function aplicarAjustes(revisao){
+    const falhados = [];
+
+    for (const m of revisao.metas) {
+      try {
+        if (m.decisao === "Precisa de ajuste") {
+          await fenixApi.atualizarMeta(m.id, { label: m.ajuste });
+          await fenixApi.registarAtualizacaoMeta(m.id, DOENTE.id,
+            "Meta revista no 1.º contacto pós-alta. Antes: “" + m.label + "”.");
+        } else if (m.decisao === "Já atingida") {
+          await fenixApi.atualizarMeta(m.id, { estado: "done" });
+          await fenixApi.registarAtualizacaoMeta(m.id, DOENTE.id,
+            "Meta dada como atingida no 1.º contacto pós-alta.");
+        }
+      } catch (e) {
+        console.error("Falhou o ajuste da meta " + m.id, e);
+        falhados.push('meta "' + m.label + '"');
+      }
+    }
+
+    for (const x of revisao.plano) {
+      try {
+        if (x.decisao === "Precisa de ajuste") {
+          await fenixApi.atualizarExercicio(x.id, { prescricao: x.ajuste });
+        } else if (x.decisao === "Suspender") {
+          await fenixApi.atualizarExercicio(x.id, { estado: "suspenso" });
+        }
+      } catch (e) {
+        console.error("Falhou o ajuste do exercício " + x.id, e);
+        falhados.push('"' + x.nome + '"');
+      }
+    }
+
+    return falhados;
   }
 
   async function submeterContacto(ev){
@@ -542,7 +649,19 @@
       document.querySelectorAll(".form-section").forEach(function(sec){
         dados[sec.id] = serializarQuadro(sec);
       });
-      dados["revisao-plano"] = lerRevisaoPlano();
+      const revisao = lerRevisaoPlano();
+      dados["revisao-plano"] = revisao;
+
+      const faltas = faltasNaRevisao(revisao);
+      if (faltas.length) {
+        erro.innerHTML = "⚠️ Falta preencher " + esc(faltas.join("; "))
+          + ". Um ajuste sem texto não chegaria ao doente.";
+        erro.style.display = "flex";
+        erro.scrollIntoView({ behavior: "smooth", block: "center" });
+        abrirQuadro("revisao-plano", false);
+        btn.disabled = false; btn.textContent = "Guardar 1.º contacto";
+        return;
+      }
 
       const alarmes = sinaisDeAlarme();
       const decisaoEl = document.querySelector('input[name="decisao"]:checked');
@@ -556,7 +675,7 @@
           data_hora: new Date(dataHora).toISOString(),
           especialidade: "Unidade de Queimados — seguimento",
           local: document.getElementById("ag-tipo").value,
-          notas: "Agendado no contacto das 72 horas."
+          notas: "Agendado no 1.º contacto pós-alta."
         });
         agendamentoId = marcacao ? marcacao.id : null;
       }
@@ -570,17 +689,19 @@
         agendamento_id: agendamentoId
       });
 
-      mostrarConfirmacao(registo, alarmes, agendamentoId, dataHora);
+      const falhados = await aplicarAjustes(revisao);
+
+      mostrarConfirmacao(registo, alarmes, agendamentoId, dataHora, revisao, falhados);
       btn.textContent = "Guardado ✓";
     } catch (e) {
-      console.error("Erro ao guardar o contacto das 72h:", e);
+      console.error("Erro ao guardar o 1.º contacto:", e);
       erro.innerHTML = "⚠️ Não foi possível guardar: " + esc(e.message || e);
       erro.style.display = "flex";
-      btn.disabled = false; btn.textContent = "Guardar contacto das 72h";
+      btn.disabled = false; btn.textContent = "Guardar 1.º contacto";
     }
   }
 
-  function mostrarConfirmacao(registo, alarmes, agendamentoId, dataHora){
+  function mostrarConfirmacao(registo, alarmes, agendamentoId, dataHora, revisao, falhados){
     const p = prioridadeResultante();
     const nomes = { baixa: "Baixa", intermedia: "Intermédia", alta: "Alta" };
     const partes = [];
@@ -589,6 +710,25 @@
     partes.push(agendamentoId
       ? '<p style="margin:0 0 8px;"><strong>Próximo contacto:</strong> ' + esc(new Date(dataHora).toLocaleString("pt-PT")) + ", já visível no Histórico do doente.</p>"
       : '<p class="hint" style="margin:0 0 8px;">Não foi agendado nenhum contacto.</p>');
+    const enviados = [];
+    (revisao.metas || []).forEach(function(m){
+      if (m.decisao === "Precisa de ajuste") enviados.push("meta reescrita: “" + esc(m.ajuste) + "”");
+      if (m.decisao === "Já atingida")       enviados.push("meta dada como atingida: “" + esc(m.label) + "”");
+    });
+    (revisao.plano || []).forEach(function(x){
+      if (x.decisao === "Precisa de ajuste") enviados.push("nova prescrição de " + esc(x.nome) + ": “" + esc(x.ajuste) + "”");
+      if (x.decisao === "Suspender")         enviados.push(esc(x.nome) + " suspenso");
+    });
+    if (enviados.length) {
+      partes.push('<p style="margin:0 0 8px;"><strong>Passou para o lado do doente:</strong></p>'
+        + '<ul style="margin:0 0 10px 18px; padding:0; font-size:.9rem; color:var(--ink-soft);"><li>'
+        + enviados.join("</li><li>") + "</li></ul>");
+    }
+    if (falhados && falhados.length) {
+      partes.push('<div class="banner-alert" style="margin:0 0 10px;"><div>⚠️ O contacto ficou gravado, mas não foi possível atualizar '
+        + esc(falhados.join("; ")) + ". Faça a alteração diretamente na Jornada ou no Plano de Tratamento.</div></div>");
+    }
+
     partes.push('<p class="hint" style="margin:0;">A alteração da prioridade fica registada neste contacto. O ajuste do plano de seguimento é feito pela equipa.</p>');
     document.getElementById("resumo-contacto").innerHTML = partes.join("");
     const c = document.getElementById("confirmacao");
@@ -659,7 +799,7 @@
     atualizarBadgeAlertas();
 
     DOENTE = await fenixApi.obterDoentePorProcesso(obterProcessoDaURL("PROC-2026-0142"));
-    document.getElementById("titulo-doente").textContent = "Contacto às 72 horas — " + DOENTE.nome;
+    document.getElementById("titulo-doente").textContent = "Formulário 1.º Contacto — " + DOENTE.nome;
     document.getElementById("sidebar-nome-doente").textContent = DOENTE.nome;
     ligarSidebarAoProcesso(DOENTE.processo);
     const voltar = `doente.html?processo=${encodeURIComponent(DOENTE.processo)}`;

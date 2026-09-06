@@ -36,7 +36,7 @@
     </div>
     <a href="doente.html" data-processo-link>🗂️ Resumo</a>
     <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
-    <a href="consulta-72h.html" data-processo-link>⏱️ Contacto 72h</a>
+    <a href="consulta-72h.html" data-processo-link>⏱️ 1.º Contacto</a>
     <a href="plano-tratamento.html" data-processo-link class="active">🏋️ Plano de Tratamento</a>
     <a href="jornada.html" data-processo-link>🎯 Jornada e Metas</a>
     <a href="agenda-proms.html" data-processo-link>📅 Agenda de PROMs</a>
@@ -79,7 +79,7 @@
     const exercicios = await fenixApi.listarExercicios(DOENTE_ID);
     DEMO_PATIENT.plano.exercicios = exercicios.map(ex => ({
       id: ex.id, nome: ex.nome, categoria: ex.categoria, descricao: ex.descricao,
-      prescricao: ex.prescricao, registos: ex.plano_registos || []
+      prescricao: ex.prescricao, estado: ex.estado, registos: ex.plano_registos || []
     }));
     renderPlanoEditor('plano-editor');
   }
@@ -102,6 +102,18 @@
     } catch (e) {
       alert("Não foi possível guardar: " + (e.message || e));
       btn.disabled = false; btn.textContent = original;
+    }
+  }
+
+  /* substitui a versão de demonstração: suspende a sério.
+     Suspender não apaga — o exercício continua aqui, com os registos de
+     execução, e volta a aparecer ao doente quando for reativado. */
+  async function alternarSuspensaoExercicio(id, suspenso){
+    try {
+      await fenixApi.atualizarExercicio(id, { estado: suspenso ? "ativo" : "suspenso" });
+      await carregarPlanoEditor();
+    } catch (e) {
+      alert("Não foi possível alterar o estado: " + (e.message || e));
     }
   }
 

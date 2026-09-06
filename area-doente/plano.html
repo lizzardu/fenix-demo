@@ -74,7 +74,10 @@
 
   async function carregarPlano(){
     const exercicios = await fenixApi.listarExercicios(DOENTE_ID);
-    DEMO_PATIENT.plano.exercicios = exercicios.map(ex => ({
+    // Os suspensos pela equipa continuam na ficha, com o histórico, mas
+    // desaparecem daqui: mostrá-los seria pedir ao doente que fizesse algo
+    // que a equipa mandou parar.
+    DEMO_PATIENT.plano.exercicios = exercicios.filter(ex => ex.estado !== "suspenso").map(ex => ({
       id: ex.id, nome: ex.nome, categoria: ex.categoria, descricao: ex.descricao, prescricao: ex.prescricao,
       registos: (ex.plano_registos || [])
         .slice()
