@@ -179,6 +179,45 @@ const fenixApi = {
   },
 
   /* ---------------------------------------------------------------------
+     CONTACTO ÀS 72 HORAS
+     Um registo por contacto. Não se substitui nem se apaga: se for preciso
+     contactar outra vez, fica outro registo, e a sequência das duas leituras
+     é ela própria informação clínica.
+     --------------------------------------------------------------------- */
+  async registarConsulta72h(doenteId, registo) {
+    const sessao = await this.utilizadorAtual();
+    if (!sessao || !sessao.perfil) throw new Error("Sessão não iniciada.");
+    const { data, error } = await sb.from("consultas_72h").insert({
+      doente_id: doenteId,
+      realizado_por_id: sessao.user.id,
+      realizado_por_nome: sessao.perfil.nome,
+      dados: registo.dados || {},
+      red_flags: !!registo.red_flags,
+      red_flags_lista: registo.red_flags_lista || [],
+      decisao_prioridade: registo.decisao_prioridade || null,
+      prioridade_final: registo.prioridade_final || null,
+      agendamento_id: registo.agendamento_id || null
+    }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async listarConsultas72h(doenteId) {
+    const { data, error } = await sb.from("consultas_72h").select("*")
+      .eq("doente_id", doenteId).order("data_contacto", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  async obterUltimaConsulta72h(doenteId) {
+    const { data, error } = await sb.from("consultas_72h").select("*")
+      .eq("doente_id", doenteId).order("data_contacto", { ascending: false })
+      .limit(1).maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  /* ---------------------------------------------------------------------
      PROMs
      --------------------------------------------------------------------- */
   async submeterProm(doenteId, instrumento, respostas, scores) {

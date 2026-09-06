@@ -1418,3 +1418,200 @@ async function atualizarBadgeDuvidas(doenteId) {
     el.textContent = "";
   }
 }
+
+/* ========================================================================
+   QUADROS RECOLHÍVEIS COM ÍNDICE DE PROGRESSO
+
+   O mesmo comportamento do Formulário de Alta: os quadros abrem um de cada
+   vez, um índice fixo mostra o estado de cada um, e cada cabeçalho traz uma
+   barra com os campos respondidos.
+
+   Nota para quem mantiver isto: o Formulário de Alta tem uma cópia própria
+   desta lógica, escrita antes desta. Fazia sentido passá-lo a usar esta —
+   ficaria uma implementação só — mas o formulário está congelado por pedido
+   expresso, e mexer-lhe para uma arrumação interna não justificaria o risco.
+   Quando houver oportunidade, é uma substituição direta.
+   ======================================================================== */
+const SECOES_REGISTADAS = [];
+
+/**
+ * Transforma as .form-section da página em quadros recolhíveis e preenche o
+ * índice. Trabalha sobre o HTML existente: cada secção continua a ser uma
+ * <section> simples, e acrescentar uma nova não exige tocar aqui.
+ *   idIndice — elemento onde os botões do índice são criados
+ */
+function prepararQuadros(idIndice) {
+  const indice = document.getElementById(idIndice);
+  SECOES_REGISTADAS.length = 0;
+
+  document.querySelectorAll(".form-section").forEach(function (sec) {
+    const cabecalho = sec.querySelector(".section-head");
+    if (!cabecalho) return;
+
+    const corpo = document.createElement("div");
+    corpo.className = "secao-corpo";
+    corpo.id = "corpo-" + sec.id;
+    let n = cabecalho.nextSibling;
+    while (n) { const seg = n.nextSibling; corpo.appendChild(n); n = seg; }
+    sec.appendChild(corpo);
+
+    const num = cabecalho.querySelector(".section-num").textContent.trim();
+    const titulo = cabecalho.querySelector("h2").textContent.trim();
+
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "secao-toggle";
+    botao.setAttribute("aria-expanded", "false");
+    botao.setAttribute("aria-controls", corpo.id);
+    while (cabecalho.firstChild) botao.appendChild(cabecalho.firstChild);
+
+    const progresso = document.createElement("span");
+    progresso.className = "secao-progresso";
+    progresso.id = "progresso-" + sec.id;
+    botao.appendChild(progresso);
+
+    const seta = document.createElement("span");
+    seta.className = "seta";
+    seta.textContent = "▶";
+    seta.setAttribute("aria-hidden", "true");
+    botao.appendChild(seta);
+
+    cabecalho.appendChild(botao);
+    corpo.hidden = true;
+    botao.addEventListener("click", function () { alternarQuadro(sec.id); });
+
+    if (indice) {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "indice-item";
+      item.id = "indice-" + sec.id;
+      item.innerHTML = '<span class="n">' + num + '</span><span class="titulo">' + titulo + "</span>";
+      item.title = num + ". " + titulo;
+      item.setAttribute("aria-label", "Quadro " + num + ": " + titulo);
+      item.addEventListener("click", function () { abrirQuadro(sec.id, true); });
+      indice.appendChild(item);
+    }
+
+    SECOES_REGISTADAS.push({ id: sec.id, num: num, titulo: titulo });
+
+    sec.addEventListener("change", function () { atualizarProgressoQuadro(sec.id); });
+    sec.addEventListener("input",  function () { atualizarProgressoQuadro(sec.id); });
+  });
+
+  if (SECOES_REGISTADAS.length) abrirQuadro(SECOES_REGISTADAS[0].id, false);
+  SECOES_REGISTADAS.forEach(function (s) { atualizarProgressoQuadro(s.id); });
+}
+
+function alternarQuadro(id) {
+  const corpo = document.getElementById("corpo-" + id);
+  if (corpo.hidden) abrirQuadro(id, false); else fecharQuadro(id);
+}
+
+function fecharQuadro(id) {
+  document.getElementById("corpo-" + id).hidden = true;
+  const t = document.querySelector("#" + id + " .secao-toggle");
+  if (t) t.setAttribute("aria-expanded", "false");
+  const it = document.getElementById("indice-" + id);
+  if (it) it.classList.remove("aberto");
+}
+
+/** Abre um quadro e fecha os outros: com todos abertos voltava-se à página
+ *  interminável que isto existe para evitar. */
+function abrirQuadro(id, deslocar) {
+  SECOES_REGISTADAS.forEach(function (s) { if (s.id !== id) fecharQuadro(s.id); });
+  document.getElementById("corpo-" + id).hidden = false;
+  const t = document.querySelector("#" + id + " .secao-toggle");
+  if (t) t.setAttribute("aria-expanded", "true");
+  const it = document.getElementById("indice-" + id);
+  if (it) it.classList.add("aberto");
+  const rotulo = document.getElementById("indice-atual");
+  if (rotulo) {
+    const s = SECOES_REGISTADAS.find(function (x) { return x.id === id; });
+    rotulo.textContent = s ? s.num + ". " + s.titulo : "";
+  }
+  if (deslocar) document.getElementById(id).scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function abrirTodosOsQuadros() {
+  SECOES_REGISTADAS.forEach(function (s) {
+    document.getElementById("corpo-" + s.id).hidden = false;
+    const t = document.querySelector("#" + s.id + " .secao-toggle");
+    if (t) t.setAttribute("aria-expanded", "true");
+  });
+}
+
+function fecharTodosOsQuadros() {
+  SECOES_REGISTADAS.forEach(function (s) { fecharQuadro(s.id); });
+}
+
+/** Conta campos respondidos. Indicador de progresso, não validação: nem
+ *  todos os campos se aplicam a todos os doentes. */
+function atualizarProgressoQuadro(id) {
+  const sec = document.getElementById(id);
+  const alvo = document.getElementById("progresso-" + id);
+  const item = document.getElementById("indice-" + id);
+  if (!sec || !alvo) return;
+
+  let total = 0, respondidos = 0;
+  sec.querySelectorAll(".subfield").forEach(function (campo) {
+    if (!campo.querySelector("label")) return;
+    total++;
+    const v = valorDoCampoGenerico(campo);
+    const tem = Array.isArray(v) ? v.length > 0
+      : (v && typeof v === "object") ? !!(v.resposta || v.outras || (v.selecionados || []).length)
+      : (v != null && String(v).trim() !== "");
+    if (tem) respondidos++;
+  });
+
+  if (!total) { alvo.innerHTML = ""; return; }
+  const pct = Math.round((respondidos / total) * 100);
+  const completo = respondidos === total;
+  alvo.className = "secao-progresso" + (completo ? " completo" : "");
+  alvo.innerHTML = '<span class="barra"><span style="width:' + pct + '%"></span></span>'
+                 + (completo ? "✓ " : "") + respondidos + "/" + total;
+  if (item) {
+    item.classList.toggle("completo", completo);
+    item.classList.toggle("tem-respostas", !completo && respondidos > 0);
+  }
+}
+
+/** Lê o valor de um .subfield: chips, escalas, texto ou o caso misto de
+ *  rádio Sim/Não com campo de texto associado. */
+function valorDoCampoGenerico(campo) {
+  const checkboxes = campo.querySelectorAll('.chip-group input[type="checkbox"]');
+  if (checkboxes.length) {
+    const selecionados = Array.from(checkboxes).filter(function (c) { return c.checked; })
+      .map(function (c) { return c.nextElementSibling.textContent.trim(); });
+    const caixa = campo.querySelector('input[type="text"], textarea');
+    const outras = caixa ? caixa.value.trim() : "";
+    return outras ? { selecionados: selecionados, outras: outras } : selecionados;
+  }
+  const radios = campo.querySelectorAll('.chip-group input[type="radio"], .scale input[type="radio"]');
+  const inputs = campo.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="datetime-local"], textarea');
+
+  if (radios.length && inputs.length) {
+    const marcado = Array.from(radios).find(function (r) { return r.checked; });
+    const detalhe = inputs.length === 1 ? inputs[0].value : Array.from(inputs).map(function (i) { return i.value; });
+    return { resposta: marcado ? marcado.nextElementSibling.textContent.trim() : null, detalhe: detalhe };
+  }
+  if (radios.length) {
+    const marcado = Array.from(radios).find(function (r) { return r.checked; });
+    return marcado ? marcado.nextElementSibling.textContent.trim() : null;
+  }
+  const select = campo.querySelector("select");
+  if (select) return select.value;
+  if (inputs.length === 1) return inputs[0].value;
+  if (inputs.length > 1) return Array.from(inputs).map(function (i) { return i.value; });
+  return null;
+}
+
+/** Serializa uma secção inteira: { "texto do label": valor }. */
+function serializarQuadro(sec) {
+  const r = {};
+  sec.querySelectorAll(".subfield").forEach(function (campo) {
+    const label = campo.querySelector("label");
+    if (!label) return;
+    r[label.textContent.trim()] = valorDoCampoGenerico(campo);
+  });
+  return r;
+}
