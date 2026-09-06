@@ -1,17 +1,21 @@
--- ============================================================================
--- FÉNIX — Registo do contacto às 72 horas após a alta
--- Migração 015 · executar no SQL Editor do Supabase
---
--- O primeiro contacto até 72 horas é o momento em que se confirma se a alta
--- correu bem na prática: se o doente tem medicação e material em casa, se
--- percebeu o plano, e como está a evoluir. É também onde a periodicidade dos
--- contactos seguintes é confirmada ou alterada.
---
--- As respostas ficam em "dados" (jsonb), pelo mesmo motivo dos formulários de
--- alta: os campos vão mudar com a prática clínica e não vale a pena uma
--- coluna por pergunta. O que fica em colunas próprias é aquilo sobre que é
--- preciso pesquisar e contar — os sinais de alarme e a decisão de prioridade.
--- ============================================================================
+/* ============================================================================
+   FENIX - Registo do contacto as 72 horas apos a alta
+   Migracao 015 - executar no SQL Editor do Supabase
+
+   O primeiro contacto ate 72 horas e o momento em que se confirma se a alta
+   correu bem na pratica: se o doente tem medicacao e material em casa, se
+   percebeu o plano, e como esta a evoluir. E tambem onde a periodicidade dos
+   contactos seguintes e confirmada ou alterada.
+
+   As respostas ficam em "dados" (jsonb), pelo mesmo motivo dos formularios de
+   alta: os campos vao mudar com a pratica clinica e nao vale a pena uma coluna
+   por pergunta. O que fica em colunas proprias e aquilo sobre que e preciso
+   pesquisar e contar: os sinais de alarme e a decisao de prioridade.
+
+   Nota: os comentarios deste ficheiro estao em blocos, e nao em linhas com
+   dois travessoes, para que uma quebra de linha acidental durante a copia nao
+   transforme metade de uma frase em SQL.
+   ============================================================================ */
 
 create table if not exists consultas_72h (
   id                  uuid primary key default gen_random_uuid(),
@@ -22,8 +26,8 @@ create table if not exists consultas_72h (
 
   dados               jsonb not null default '{}'::jsonb,
 
-  -- Extraídos para coluna porque são o que se procura depois: quantos
-  -- contactos detetaram sinais de alarme, e quantos mudaram a prioridade.
+  /* Extraidos para coluna porque sao o que se procura depois: quantos
+     contactos detetaram sinais de alarme, e quantos mudaram a prioridade. */
   red_flags           boolean not null default false,
   red_flags_lista     text[] default '{}',
   decisao_prioridade  text check (decisao_prioridade in ('manter','aumentar','baixar')),
@@ -35,23 +39,23 @@ create table if not exists consultas_72h (
 );
 
 comment on table consultas_72h is
-  'Um registo por contacto realizado até 72h após a alta. "dados" guarda as respostas; as colunas próprias guardam o que é preciso pesquisar.';
+  'Um registo por contacto realizado ate 72h apos a alta. A coluna dados guarda as respostas; as colunas proprias guardam o que e preciso pesquisar.';
 comment on column consultas_72h.red_flags is
   'Verdadeiro se o contacto detetou febre, agravamento local, abertura da ferida ou hemorragia.';
 comment on column consultas_72h.agendamento_id is
-  'Marcação criada a partir deste contacto, para aparecer no perfil do doente.';
+  'Marcacao criada a partir deste contacto, para aparecer no perfil do doente.';
 
 create index if not exists consultas_72h_doente_idx
   on consultas_72h (doente_id, data_contacto desc);
 create index if not exists consultas_72h_red_flags_idx
   on consultas_72h (red_flags) where red_flags;
 
--- ---------------------------------------------------------------------------
--- REGRAS DE ACESSO
--- Os profissionais registam e consultam. O doente lê o seu próprio registo:
--- é a consulta dele, e o que lá está foi respondido por ele. Não escreve.
--- Sem política de DELETE: um contacto clínico registado não se apaga.
--- ---------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------
+   REGRAS DE ACESSO
+   Os profissionais registam e consultam. O doente le o seu proprio registo: e
+   a consulta dele, e o que la esta foi respondido por ele. Nao escreve.
+   Sem politica de DELETE: um contacto clinico registado nao se apaga.
+   --------------------------------------------------------------------------- */
 alter table consultas_72h enable row level security;
 
 drop policy if exists "profissionais registam consultas 72h" on consultas_72h;
