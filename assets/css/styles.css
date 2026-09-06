@@ -207,8 +207,29 @@ tr.row-link:hover{ background:var(--paper-tint); }
 .sidebar a{ display:flex; align-items:center; gap:10px; padding:11px 28px; color:var(--ink-soft); text-decoration:none; font-size:.88rem; font-weight:500; border-left:3px solid transparent; }
 .sidebar a.active{ color:var(--blue-deep); border-left-color:var(--flame-deep); background:var(--paper-tint); font-weight:600; }
 .sidebar a:hover:not(.active){ background:var(--paper-tint); }
-.main-area{ padding:36px; }
-@media (max-width:860px){ .app-shell{ grid-template-columns:1fr; } .sidebar{ display:none; } }
+/* min-width:0 porque um item de grelha não encolhe abaixo do seu conteúdo
+   mínimo por omissão: bastava um rótulo que não parte para a coluna ficar
+   mais larga do que o ecrã e a página inteira deslizar na horizontal. */
+.main-area{ padding:36px; min-width:0; }
+/* Em telemóvel e tablet não há espaço para uma coluna fixa, mas escondê-la
+   sem mais deixava a página sem navegação nenhuma. Passa a abrir por cima do
+   conteúdo, a partir do botão Menu, e fecha-se ao escolher um destino. */
+.btn-menu{ display:none; }
+@media (max-width:900px){
+  .app-shell{ grid-template-columns:1fr; }
+  .sidebar{ display:none; }
+  .btn-menu{ display:inline-flex; }
+
+  body.menu-aberto{ overflow:hidden; }
+  body.menu-aberto .sidebar{
+    display:block; position:fixed; top:78px; left:0; right:0; bottom:0;
+    z-index:40; height:auto; max-height:calc(100vh - 78px); overflow-y:auto;
+    padding:10px 0 34px;
+    border-right:none; box-shadow:0 14px 32px rgba(0,44,84,.2);
+  }
+  /* alvos de toque: 48px de altura, o mínimo confortável no telemóvel */
+  body.menu-aberto .sidebar a{ padding:15px 24px; font-size:1rem; }
+}
 
 .chart-box{ position:relative; height:220px; }
 .chart-box.small{ height:140px; }
@@ -618,6 +639,9 @@ body.page-tint{ background:var(--paper-tint); }
   /* o resto: respirar melhor num ecrã estreito */
   .wrap, .wrap-narrow{ padding-left:16px; padding-right:16px; }
   main.wrap{ padding:28px 16px 64px !important; }
+  /* o conteúdo do app-shell segue a mesma margem: 36px de cada lado num
+     telemóvel de 375px deixavam 303px úteis */
+  .main-area{ padding:28px 16px 64px; }
   .card{ padding:18px; }
   h1{ font-size:1.6rem !important; }
   h2{ font-size:1.3rem; }

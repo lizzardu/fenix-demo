@@ -1626,3 +1626,76 @@ function serializarQuadro(sec) {
   });
   return r;
 }
+
+/* ========================================================================
+   BOTÃO DE MENU EM ECRÃS PEQUENOS
+
+   A barra lateral é a navegação de todo o site, dos dois lados. Em ecrãs
+   estreitos não cabe, e escondê-la deixava a página sem forma de sair dali.
+   Este botão aparece só abaixo dos 900px (é o CSS que o mostra) e abre a
+   barra por cima do conteúdo.
+
+   Fica em main.js, e não em cada página, para não haver oito cópias do
+   mesmo botão a divergir com o tempo.
+   ======================================================================== */
+function prepararMenuLateral() {
+  const barra = document.querySelector(".sidebar");
+  const nav = document.querySelector(".topbar nav");
+  if (!barra || !nav || document.getElementById("btn-menu")) return;
+
+  if (!barra.id) barra.id = "menu-lateral";
+
+  const botao = document.createElement("button");
+  botao.id = "btn-menu";
+  botao.type = "button";
+  botao.className = "btn btn-ghost-light btn-sm btn-menu";
+  botao.setAttribute("aria-controls", barra.id);
+  botao.setAttribute("aria-expanded", "false");
+  botao.textContent = "☰ Menu";
+  botao.addEventListener("click", function () {
+    document.body.classList.contains("menu-aberto") ? fecharMenuLateral() : abrirMenuLateral();
+  });
+  nav.insertBefore(botao, nav.firstChild);
+
+  // Escolher um destino fecha o menu. Sem isto, um link para a própria
+  // página (ou uma âncora) deixava a barra aberta por cima do conteúdo.
+  barra.addEventListener("click", function (ev) {
+    if (ev.target.closest("a")) fecharMenuLateral();
+  });
+
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") fecharMenuLateral();
+  });
+}
+
+function abrirMenuLateral() {
+  document.body.classList.add("menu-aberto");
+
+  // A barra de topo não tem sempre 78px: no telemóvel o nome e os botões
+  // passam para uma segunda linha e ela cresce. Medir evita que o menu abra
+  // por baixo dela, tapado.
+  const topo = document.querySelector(".topbar");
+  const barra = document.querySelector(".sidebar");
+  if (topo && barra) {
+    const altura = Math.round(topo.getBoundingClientRect().bottom);
+    barra.style.top = altura + "px";
+    barra.style.maxHeight = "calc(100vh - " + altura + "px)";
+  }
+
+  const b = document.getElementById("btn-menu");
+  if (b) { b.setAttribute("aria-expanded", "true"); b.textContent = "✕ Fechar"; }
+}
+
+function fecharMenuLateral() {
+  document.body.classList.remove("menu-aberto");
+  const barra = document.querySelector(".sidebar");
+  if (barra) { barra.style.top = ""; barra.style.maxHeight = ""; }
+  const b = document.getElementById("btn-menu");
+  if (b) { b.setAttribute("aria-expanded", "false"); b.textContent = "☰ Menu"; }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", prepararMenuLateral);
+} else {
+  prepararMenuLateral();
+}

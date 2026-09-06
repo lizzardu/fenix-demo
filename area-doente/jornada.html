@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>A minha jornada — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260910">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260911">
 </head>
 <body class="page-tint">
 <header class="topbar">
@@ -27,8 +27,8 @@
   </div>
 </header>
 
-<nav class="subnav">
-  <div class="wrap">
+<div class="app-shell">
+  <aside class="sidebar">
     <a href="dashboard.html">🏠 Início</a>
     <a href="jornada.html" class="active">🎯 Jornada e Metas</a>
     <a href="plano.html">🏋️ Plano de Tratamento</a>
@@ -36,10 +36,9 @@
     <a href="duvidas.html">💬 Dúvidas <span class="pill pill-alert" style="margin-left:6px;" id="badge-duvidas"></span></a>
     <a href="recursos.html">📚 Recursos</a>
     <a href="formulario-alta.html">📝 Formulário de Alta</a>
-  </div>
-</nav>
+  </aside>
 
-<main class="wrap" style="padding:44px 32px 80px;">
+  <main class="main-area">
 
   <p class="eyebrow">A sua jornada de recuperação</p>
   <h1 style="font-size:2rem;">As suas metas</h1>
@@ -83,6 +82,7 @@
   <div id="badge-shelf" class="badge-shelf" style="max-width:900px;"></div>
 
 </main>
+</div>
 
 <footer>
   <div class="wrap"><span>Fénix — protótipo de demonstração, dados fictícios. As fotos submetidas ficam apenas nesta sessão do browser.</span></div>
@@ -91,7 +91,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js"></script>
+<script src="../assets/js/main.js?v=20260911"></script>
 <script>
   let DOENTE_ID = null;
   const arquivosReais = {}; // guarda o File real (não a pré-visualização) por meta.id, até ser gravado
