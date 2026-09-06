@@ -26,16 +26,35 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Os segredos são partilhados por todo o projeto. Este circuito escreve ao
-// doente, tal como o dos avisos de resposta a dúvidas, por isso herda a chave
-// e o remetente já existentes se não tiver nomes próprios.
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY_DOENTE")
-  ?? Deno.env.get("RESEND_API_KEY")!;
-const REMETENTE = Deno.env.get("EMAIL_REMETENTE_DOENTE")
-  ?? Deno.env.get("EMAIL_REMETENTE")
-  ?? "Fénix <onboarding@resend.dev>";
-const URL_PLATAFORMA = Deno.env.get("URL_PLATAFORMA") ?? "https://lizzardu.github.io/fenix-demo";
-const SEGREDO = (Deno.env.get("SEGREDO_WEBHOOK") ?? "").trim();
+// Os segredos são partilhados por todo o projeto, e neste projeto nem todos
+// têm o mesmo formato de nome: alguns levam o prefixo FENIX_, outros não.
+// Em vez de exigir um nome exato — e falhar em silêncio quando não o
+// encontra, que foi o que aconteceu — procura por ordem de preferência e
+// diz nos registos qual usou.
+function segredo(...nomes: string[]): { valor?: string; nome?: string } {
+  for (const nome of nomes) {
+    const valor = Deno.env.get(nome);
+    if (valor) return { valor, nome };
+  }
+  return {};
+}
+
+const chave = segredo("RESEND_API_KEY_DOENTE", "FENIX_RESEND_API_KEY", "RESEND_API_KEY");
+const remetente = segredo("EMAIL_REMETENTE_DOENTE", "FENIX_EMAIL_REMETENTE", "EMAIL_REMETENTE");
+const plataforma = segredo("URL_PLATAFORMA", "FENIX_URL_PLATAFORMA");
+const webhook = segredo("SEGREDO_WEBHOOK", "FENIX_SEGREDO_WEBHOOK");
+
+const RESEND_API_KEY = chave.valor ?? "";
+const REMETENTE = remetente.valor ?? "Fénix <onboarding@resend.dev>";
+const URL_PLATAFORMA = plataforma.valor ?? "https://lizzardu.github.io/fenix-demo";
+const SEGREDO = (webhook.valor ?? "").trim();
+
+// Nomes, nunca valores: os registos são visíveis a quem tenha acesso ao painel.
+console.log(
+  "Configuração: chave=" + (chave.nome ?? "NENHUMA ENCONTRADA") +
+  " remetente=" + (remetente.nome ?? "por omissão (onboarding@resend.dev)") +
+  " segredo=" + (webhook.nome ?? "NENHUM ENCONTRADO"),
+);
 
 const TEXTOS = {
   breve: {
@@ -151,7 +170,17 @@ Deno.serve(async (req) => {
   if (!resposta.ok) {
     const detalhe = await resposta.text();
     console.error("O fornecedor de email recusou o envio:", resposta.status, detalhe);
-    return new Response("Falha no envio", { status: 502 });
+    if (!RESEND_API_KEY) {
+      console.error("Não foi encontrada nenhuma chave da API de email. "
+        + "Procurei RESEND_API_KEY_DOENTE, FENIX_RESEND_API_KEY e RESEND_API_KEY.");
+    }
+    // O motivo vai no corpo da resposta para aparecer em net._http_response,
+    // sem ser preciso ir aos registos de cada vez.
+    return Response.json(
+      { enviado: false, estado: resposta.status, motivo: detalhe.slice(0, 300),
+        remetente: REMETENTE, chave_encontrada: !!RESEND_API_KEY },
+      { status: 502 },
+    );
   }
 
   const dados = await resposta.json().catch(() => ({} as Record<string, unknown>));
