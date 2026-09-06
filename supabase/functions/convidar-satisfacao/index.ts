@@ -99,13 +99,31 @@ Deno.serve(async (req) => {
     return new Response("Pedido não encontrado", { status: 404 });
   }
 
-  // O endereço vive no convite de acesso, que é onde a equipa o registou.
+  // O endereço pode estar em dois sítios, e nem sempre nos dois:
+  //   1. no convite de acesso, se foi a equipa a registá-lo;
+  //   2. na conta de autenticação, que é o endereço com que o doente entra.
+  // Contas criadas antes de haver convites, ou criadas à mão no painel do
+  // Supabase, só têm o segundo. Procurar apenas no primeiro deixava esses
+  // doentes sem convite, sem nada que o explicasse.
   const { data: conta } = await sb
     .from("contas_acesso").select("email")
     .eq("doente_id", pedido.doente_id).eq("ativada", true)
     .order("criado_em", { ascending: false }).limit(1).maybeSingle();
 
-  const para = conta?.email?.trim();
+  let para = conta?.email?.trim();
+
+  if (!para) {
+    const { data: perfil } = await sb
+      .from("perfis").select("id")
+      .eq("doente_id", pedido.doente_id).eq("papel", "doente")
+      .limit(1).maybeSingle();
+    if (perfil?.id) {
+      const { data: utilizador } = await sb.auth.admin.getUserById(perfil.id);
+      para = utilizador?.user?.email?.trim();
+      if (para) console.log("Endereço obtido da conta de autenticação.");
+    }
+  }
+
   if (!para) {
     // Não é um erro: nem todos os doentes deram email, e alguns usam só SMS.
     // O pop-up na plataforma continua a fazer o trabalho.
