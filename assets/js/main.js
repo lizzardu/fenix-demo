@@ -1699,3 +1699,86 @@ if (document.readyState === "loading") {
 } else {
   prepararMenuLateral();
 }
+
+/* ========================================================================
+   PEDIDO DE AVALIAÇÃO DA SATISFAÇÃO
+
+   Quem pede é a equipa, no fim da consulta. Do lado do doente aparece
+   aqui, no primeiro acesso a seguir ao pedido, e também num email.
+
+   Três saídas, de propósito:
+     Responder agora   — abre o questionário
+     Agora não         — some nesta visita e volta na próxima
+     Não quero         — fecha o pedido, e não volta a aparecer
+
+   A terceira é a que faz isto ser um convite e não uma cobrança. Fica
+   gravada como recusa: sem ela não se distinguiria quem não quis responder
+   de quem nunca viu o pedido, e a taxa de resposta não diria nada.
+   ======================================================================== */
+const CHAVE_ADIADO = "fenix-satisfacao-adiada";
+
+async function verificarSatisfacaoPendente(doenteId) {
+  if (!doenteId || !window.fenixApi || !fenixApi.pedidoSatisfacaoPendente) return;
+  try {
+    const pedido = await fenixApi.pedidoSatisfacaoPendente(doenteId);
+    if (!pedido) return;
+    if (sessionStorage.getItem(CHAVE_ADIADO) === pedido.id) return;  // "agora não"
+    mostrarPedidoSatisfacao(pedido);
+  } catch (e) {
+    // Um convite que não aparece não pode impedir o doente de usar a página.
+    console.warn("Não foi possível verificar pedidos de avaliação:", e);
+  }
+}
+
+function mostrarPedidoSatisfacao(pedido) {
+  if (document.getElementById("modal-satisfacao")) return;
+
+  const final = pedido.tipo === "final";
+  const caixa = document.createElement("div");
+  caixa.id = "modal-satisfacao";
+  caixa.className = "modal-overlay";
+  caixa.setAttribute("role", "dialog");
+  caixa.setAttribute("aria-modal", "true");
+  caixa.setAttribute("aria-labelledby", "satisfacao-titulo");
+  caixa.style.display = "flex";
+  caixa.innerHTML =
+    '<div class="modal-box" style="text-align:left; max-width:470px;">'
+  +   '<p class="eyebrow" style="margin-bottom:4px;">' + (final ? "Fim do acompanhamento" : "Depois da consulta") + "</p>"
+  +   '<h3 id="satisfacao-titulo" style="margin:0 0 8px;">'
+  +     (final ? "Como correu o seu acompanhamento?" : "Como correu a sua consulta?") + "</h3>"
+  +   '<p class="hint" style="margin:0 0 6px;">'
+  +     (final ? "Treze perguntas, cerca de três minutos." : "Sete perguntas, cerca de um minuto.")
+  +     " A sua opinião ajuda a equipa a melhorar o acompanhamento.</p>"
+  +   '<p class="hint" style="margin:0 0 20px;">Responder é voluntário e não afeta em nada o seu seguimento.</p>'
+  +   '<div style="display:flex; flex-direction:column; gap:9px;">'
+  +     '<a class="btn btn-primary btn-block" href="' + caminhoParaAreaDoente() + 'satisfacao.html?pedido=' + pedido.id + '">Responder agora</a>'
+  +     '<button type="button" class="btn btn-ghost btn-block" id="satisfacao-depois">Agora não</button>'
+  +     '<button type="button" class="btn btn-ghost btn-block" id="satisfacao-recusar" style="color:var(--ink-soft); border-color:transparent;">Não quero responder</button>'
+  +   "</div>"
+  + "</div>";
+  document.body.appendChild(caixa);
+
+  document.getElementById("satisfacao-depois").addEventListener("click", function () {
+    try { sessionStorage.setItem(CHAVE_ADIADO, pedido.id); } catch (e) { /* modo privado */ }
+    caixa.remove();
+  });
+
+  document.getElementById("satisfacao-recusar").addEventListener("click", async function () {
+    const b = this;
+    b.disabled = true; b.textContent = "A registar...";
+    try {
+      await fenixApi.recusarSatisfacao(pedido.id);
+      caixa.remove();
+    } catch (e) {
+      console.error("Não foi possível registar a recusa:", e);
+      b.disabled = false; b.textContent = "Não quero responder";
+      alert("Não foi possível registar agora. Tente daqui a pouco.");
+    }
+  });
+}
+
+/** As páginas do doente estão todas em area-doente/, mas o pop-up pode ser
+ *  mostrado a partir de uma delas ou da raiz. */
+function caminhoParaAreaDoente() {
+  return window.location.pathname.indexOf("/area-doente/") >= 0 ? "" : "area-doente/";
+}

@@ -120,6 +120,30 @@
       <div id="com-historico"><p class="hint" style="margin:0;">A carregar...</p></div>
     </div>
 
+    <!-- ---------- satisfação (PREM) ---------- -->
+    <div class="card" style="margin-bottom:28px;" id="cartao-satisfacao">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+        <p class="eyebrow" style="margin:0;">Avaliação da satisfação</p>
+        <span class="hint" style="margin:0;" id="satisfacao-media"></span>
+      </div>
+      <p class="hint" style="margin:0 0 16px;">
+        No fim da consulta, peça a avaliação ao doente. Ele recebe um email com a
+        ligação e um convite quando entrar na plataforma — e pode recusar, que
+        também fica registado.
+      </p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button type="button" class="btn btn-flame btn-sm" id="btn-pedir-breve" onclick="pedirSatisfacao('breve')">
+          Pedir avaliação desta consulta
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-pedir-final" onclick="pedirSatisfacao('final')">
+          Pedir avaliação final do acompanhamento
+        </button>
+        <span class="hint" style="margin:0;" id="satisfacao-estado"></span>
+      </div>
+      <hr class="divider" style="margin:22px 0 18px;">
+      <div id="satisfacao-lista"><p class="hint" style="margin:0;">A carregar...</p></div>
+    </div>
+
     <!-- ---------- jornada ---------- -->
     <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">
       <p class="eyebrow" style="margin:0;">Jornada de recuperação, em resumo</p>
@@ -219,6 +243,9 @@
     // comunicação interna da equipa
     carregarComunicacoesEquipa();
 
+    // avaliação da satisfação (PREM)
+    carregarSatisfacao();
+
     // prioridade de seguimento, derivada do Formulário de Alta
     carregarPrioridade();
 
@@ -304,6 +331,87 @@
     } catch (e) {
       console.error("Erro ao carregar a comunicação da equipa:", e);
       el.innerHTML = `<div class="banner-alert">⚠️ Não foi possível carregar o histórico: ${escaparHtml(e.message || e)}</div>`;
+    }
+  }
+
+  /* ---------- avaliação da satisfação (PREM) ----------
+     A equipa pede, o doente responde ou recusa. Aqui vê-se o que foi pedido,
+     o que voltou e o que ficou por responder. A recusa aparece como qualquer
+     outro desfecho: é informação, não uma falha. */
+  const ROTULO_SATISFACAO = { breve: "Depois da consulta", final: "Fim do acompanhamento" };
+
+  async function pedirSatisfacao(tipo){
+    const estado = document.getElementById("satisfacao-estado");
+    const botoes = [document.getElementById("btn-pedir-breve"), document.getElementById("btn-pedir-final")];
+    if (tipo === "final" && !confirm("Pedir a avaliação final do acompanhamento a este doente?")) return;
+
+    botoes.forEach(b => b.disabled = true);
+    estado.textContent = "A enviar o convite...";
+    try {
+      await fenixApi.pedirAvaliacaoSatisfacao(DOENTE.id, tipo, null);
+      estado.textContent = "Convite enviado. O doente recebe o email e vê o convite ao entrar.";
+      await carregarSatisfacao();
+    } catch (e) {
+      console.error("Erro ao pedir a avaliação:", e);
+      estado.textContent = "Não foi possível pedir: " + (e.message || e);
+    } finally {
+      botoes.forEach(b => b.disabled = false);
+    }
+  }
+
+  function satisfacaoLinhaHTML(p){
+    const quando = new Date(p.criado_em).toLocaleDateString("pt-PT", { day:"2-digit", month:"short", year:"numeric" });
+    const selos = {
+      pendente:   '<span class="pill pill-pending">Por responder</span>',
+      respondida: '<span class="pill pill-ok">Respondida</span>',
+      recusada:   '<span class="pill pill-flame">Dispensada pelo doente</span>'
+    };
+    let detalhe = "";
+    if (p.estado === "respondida" && p.respostas) {
+      const linhas = Object.keys(p.respostas).map(function(k){
+        const r = p.respostas[k];
+        const extra = r.detalhe ? ' <span class="hint">— ' + escaparHtml(r.detalhe) + "</span>" : "";
+        return "<li style=\"margin-bottom:5px;\"><span class=\"hint\">" + escaparHtml(r.pergunta) + "</span><br><strong>"
+             + escaparHtml(r.resposta) + "</strong>" + extra + "</li>";
+      }).join("");
+      detalhe = '<details style="margin-top:10px;"><summary class="hint" style="cursor:pointer;">Ver as respostas</summary>'
+              + '<ul style="margin:12px 0 0 18px; padding:0; font-size:.88rem;">' + linhas + "</ul></details>";
+    }
+    const nota = (p.estado === "respondida" && p.satisfacao_global != null)
+      ? '<span class="pill pill-ok" style="margin-left:6px;">' + p.satisfacao_global + "/10</span>" : "";
+
+    return '<div style="padding:12px 0; border-bottom:1px solid var(--line);">'
+         +   '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">'
+         +     (selos[p.estado] || "") + nota
+         +     '<span style="font-weight:600; font-size:.9rem;">' + (ROTULO_SATISFACAO[p.tipo] || p.tipo) + "</span>"
+         +     '<span class="hint" style="margin:0;">' + quando + " · pedida por " + escaparHtml(p.pedido_por_nome) + "</span>"
+         +   "</div>" + detalhe
+         + "</div>";
+  }
+
+  async function carregarSatisfacao(){
+    const lista = document.getElementById("satisfacao-lista");
+    const media = document.getElementById("satisfacao-media");
+    try {
+      const pedidos = await fenixApi.listarPedidosSatisfacao(DOENTE.id);
+      if (!pedidos.length) {
+        lista.innerHTML = '<p class="hint" style="margin:0;">Ainda não foi pedida nenhuma avaliação a este doente.</p>';
+        media.textContent = "";
+        return;
+      }
+      lista.innerHTML = pedidos.map(satisfacaoLinhaHTML).join("");
+
+      const notas = pedidos.filter(p => p.satisfacao_global != null).map(p => p.satisfacao_global);
+      const respondidas = pedidos.filter(p => p.estado === "respondida").length;
+      const partes = [respondidas + " de " + pedidos.length + " respondidas"];
+      if (notas.length) {
+        partes.push("média " + (notas.reduce((s,n) => s+n, 0) / notas.length).toFixed(1) + "/10");
+      }
+      media.textContent = partes.join(" · ");
+    } catch (e) {
+      console.error("Erro ao carregar as avaliações:", e);
+      lista.innerHTML = '<p class="hint" style="margin:0;">Não foi possível carregar as avaliações. '
+        + "Se a migração 017 ainda não foi executada, é normal.</p>";
     }
   }
 

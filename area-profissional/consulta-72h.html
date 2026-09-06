@@ -729,11 +729,34 @@
         + esc(falhados.join("; ")) + ". Faça a alteração diretamente na Jornada ou no Plano de Tratamento.</div></div>");
     }
 
-    partes.push('<p class="hint" style="margin:0;">A alteração da prioridade fica registada neste contacto. O ajuste do plano de seguimento é feito pela equipa.</p>');
+    partes.push('<p class="hint" style="margin:0 0 16px;">A alteração da prioridade fica registada neste contacto. O ajuste do plano de seguimento é feito pela equipa.</p>');
+
+    // O fim da consulta é o momento certo para pedir a avaliação: aqui, e não
+    // numa página à parte que se esquece de visitar.
+    partes.push('<hr class="divider" style="margin:0 0 16px;">'
+      + '<p class="eyebrow" style="margin-bottom:8px;">Avaliação da consulta</p>'
+      + '<p class="hint" style="margin:0 0 12px;">O doente recebe um email com a ligação e um convite quando entrar na plataforma. Pode recusar.</p>'
+      + '<button type="button" class="btn btn-flame btn-sm" id="btn-satisfacao" onclick="pedirAvaliacao()">Pedir avaliação desta consulta ao doente</button>'
+      + '<span class="hint" style="margin-left:10px;" id="estado-satisfacao"></span>');
     document.getElementById("resumo-contacto").innerHTML = partes.join("");
     const c = document.getElementById("confirmacao");
     c.style.display = "block";
     c.scrollIntoView({ behavior: "smooth" });
+  }
+
+  async function pedirAvaliacao(){
+    const btn = document.getElementById("btn-satisfacao");
+    const estado = document.getElementById("estado-satisfacao");
+    btn.disabled = true; estado.textContent = "A enviar o convite...";
+    try {
+      await fenixApi.pedirAvaliacaoSatisfacao(DOENTE.id, "breve", null);
+      btn.textContent = "Avaliação pedida ✓";
+      estado.textContent = "O doente foi convidado.";
+    } catch (e) {
+      console.error("Erro ao pedir a avaliação:", e);
+      estado.textContent = "Não foi possível pedir: " + (e.message || e);
+      btn.disabled = false;
+    }
   }
 
   async function carregarContexto(){

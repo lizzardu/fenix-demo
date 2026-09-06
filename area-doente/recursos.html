@@ -411,6 +411,7 @@
     }
     DOENTE_ID = sessao.perfil.doente_id;
     atualizarBadgeDuvidas(DOENTE_ID);
+    verificarSatisfacaoPendente(DOENTE_ID);
     document.getElementById("badge-utilizador").textContent = "Olá, " + sessao.perfil.nome.split(" ")[0];
     carregarAvaliacoes();
   })();

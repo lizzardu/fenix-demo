@@ -207,6 +207,19 @@ tr.row-link:hover{ background:var(--paper-tint); }
 .sidebar a{ display:flex; align-items:center; gap:10px; padding:11px 28px; color:var(--ink-soft); text-decoration:none; font-size:.88rem; font-weight:500; border-left:3px solid transparent; }
 .sidebar a.active{ color:var(--blue-deep); border-left-color:var(--flame-deep); background:var(--paper-tint); font-weight:600; }
 .sidebar a:hover:not(.active){ background:var(--paper-tint); }
+/* Pop-up modal. Estava só dentro do prom.html, onde nasceu; passa para aqui
+   porque o convite para avaliar a consulta aparece em qualquer página do
+   doente e é construído em main.js. */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(16,35,59,.55); backdrop-filter:blur(2px);
+  display:none; align-items:center; justify-content:center; z-index:1000; padding:20px;
+}
+.modal-box{
+  background:#fff; border-radius:var(--radius-lg); padding:32px; max-width:420px; width:100%;
+  text-align:center; box-shadow:0 20px 60px rgba(16,35,59,.35);
+  max-height:calc(100vh - 40px); overflow-y:auto;
+}
+
 /* min-width:0 porque um item de grelha não encolhe abaixo do seu conteúdo
    mínimo por omissão: bastava um rótulo que não parte para a coluna ficar
    mais larga do que o ecrã e a página inteira deslizar na horizontal. */

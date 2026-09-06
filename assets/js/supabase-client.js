@@ -218,6 +218,68 @@ const fenixApi = {
   },
 
   /* ---------------------------------------------------------------------
+     SATISFAÇÃO (PREM)
+     A equipa pede, o doente responde ou recusa. Responder e recusar passam
+     por funções da base de dados: o doente não escreve diretamente na
+     tabela, senão poderia reescrever quem pediu e de que tipo era.
+     Requer 017_satisfacao.sql.
+     --------------------------------------------------------------------- */
+  async pedirAvaliacaoSatisfacao(doenteId, tipo, agendamentoId) {
+    const sessao = await this.utilizadorAtual();
+    if (!sessao || !sessao.perfil) throw new Error("Sessão não iniciada.");
+    const { data, error } = await sb.from("satisfacao_pedidos").insert({
+      doente_id: doenteId,
+      tipo: tipo,
+      pedido_por_id: sessao.user.id,
+      pedido_por_nome: sessao.perfil.nome,
+      agendamento_id: agendamentoId || null
+    }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async listarPedidosSatisfacao(doenteId) {
+    const { data, error } = await sb.from("satisfacao_pedidos").select("*")
+      .eq("doente_id", doenteId).order("criado_em", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  /** O pedido por responder mais recente, ou null. É o que faz aparecer o
+   *  pop-up ao doente. Devolve null em silêncio se a migração ainda não
+   *  tiver corrido: o resto da plataforma não deve parar por causa disto. */
+  async pedidoSatisfacaoPendente(doenteId) {
+    const { data, error } = await sb.from("satisfacao_pedidos").select("*")
+      .eq("doente_id", doenteId).eq("estado", "pendente")
+      .order("criado_em", { ascending: false }).limit(1).maybeSingle();
+    if (error) { console.warn("Satisfação indisponível:", error.message); return null; }
+    return data;
+  },
+
+  async obterPedidoSatisfacao(pedidoId) {
+    const { data, error } = await sb.from("satisfacao_pedidos").select("*")
+      .eq("id", pedidoId).maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  async responderSatisfacao(pedidoId, respostas, global) {
+    const { data, error } = await sb.rpc("responder_satisfacao", {
+      p_pedido: pedidoId,
+      p_respostas: respostas,
+      p_global: (global === null || global === undefined || global === "") ? null : Number(global)
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  async recusarSatisfacao(pedidoId) {
+    const { data, error } = await sb.rpc("recusar_satisfacao", { p_pedido: pedidoId });
+    if (error) throw error;
+    return data;
+  },
+
+  /* ---------------------------------------------------------------------
      PROMs
      --------------------------------------------------------------------- */
   async submeterProm(doenteId, instrumento, respostas, scores) {
