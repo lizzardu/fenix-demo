@@ -1717,8 +1717,20 @@ if (document.readyState === "loading") {
    ======================================================================== */
 const CHAVE_ADIADO = "fenix-satisfacao-adiada";
 
+/** Diz se a ligação à base de dados já existe e tem o método pedido.
+ *
+ *  Cuidado com a armadilha que isto resolve: o supabase-client.js declara
+ *  "const fenixApi = {...}", e uma constante de topo NÃO fica pendurada em
+ *  window — vive no âmbito lexical global. Testar window.fenixApi dá sempre
+ *  falso, mesmo com tudo carregado, e foi o que fez este convite nunca
+ *  aparecer. Na consola parecia estar tudo bem, porque aí o nome resolve-se
+ *  pelo âmbito e não pelo objeto window. */
+function haApi(metodo) {
+  return typeof fenixApi !== "undefined" && fenixApi && typeof fenixApi[metodo] === "function";
+}
+
 async function verificarSatisfacaoPendente(doenteId) {
-  if (!doenteId || !window.fenixApi || !fenixApi.pedidoSatisfacaoPendente) return;
+  if (!doenteId || !haApi("pedidoSatisfacaoPendente")) return;
   try {
     const pedido = await fenixApi.pedidoSatisfacaoPendente(doenteId);
     if (!pedido) return;
@@ -1802,7 +1814,7 @@ async function arrancarConviteSatisfacao() {
   if (caminho.indexOf("/area-doente/") < 0) { diz("fora da área do doente (" + caminho + ")"); return; }
   // a meio de um questionário, não: nem o de PROMs nem o de satisfação
   if (/prom\.html|satisfacao\.html/.test(caminho)) { diz("página de questionário, não interrompe"); return; }
-  if (!window.fenixApi || !fenixApi.utilizadorAtual) { diz("fenixApi ainda não disponível"); return; }
+  if (!haApi("utilizadorAtual")) { diz("fenixApi ainda não disponível"); return; }
 
   try {
     // A sessão é reposta a partir do armazenamento local e pode ainda não
