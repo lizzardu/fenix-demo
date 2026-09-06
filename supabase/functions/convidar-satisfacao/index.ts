@@ -118,18 +118,29 @@ Deno.serve(async (req) => {
     return new Response("Pedido não encontrado", { status: 404 });
   }
 
-  // O endereço pode estar em dois sítios, e nem sempre nos dois:
-  //   1. no convite de acesso, se foi a equipa a registá-lo;
-  //   2. na conta de autenticação, que é o endereço com que o doente entra.
-  // Contas criadas antes de haver convites, ou criadas à mão no painel do
-  // Supabase, só têm o segundo. Procurar apenas no primeiro deixava esses
-  // doentes sem convite, sem nada que o explicasse.
-  const { data: conta } = await sb
-    .from("contas_acesso").select("email")
-    .eq("doente_id", pedido.doente_id).eq("ativada", true)
-    .order("criado_em", { ascending: false }).limit(1).maybeSingle();
+  // O endereço pode estar em três sítios, e a ordem importa:
+  //   1. na ficha do doente, que é onde o Formulário de Alta o grava — é o
+  //      endereço que a equipa escreveu de propósito para contactar o doente;
+  //   2. no convite de acesso, se a conta foi criada por aí;
+  //   3. na conta de autenticação, que é só o endereço com que ele entra e
+  //      pode não ser aquele por onde quer ser contactado.
+  // Ir buscar o terceiro quando existe o primeiro foi o erro que aqui esteve:
+  // a equipa tinha escrito um endereço no formulário e o convite seguia para
+  // outro.
+  let para: string | undefined;
+  let origem = "";
 
-  let para = conta?.email?.trim();
+  const { data: doente } = await sb
+    .from("doentes").select("email").eq("id", pedido.doente_id).maybeSingle();
+  if (doente?.email?.trim()) { para = doente.email.trim(); origem = "ficha do doente"; }
+
+  if (!para) {
+    const { data: conta } = await sb
+      .from("contas_acesso").select("email, ativada")
+      .eq("doente_id", pedido.doente_id)
+      .order("criado_em", { ascending: false }).limit(1).maybeSingle();
+    if (conta?.email?.trim()) { para = conta.email.trim(); origem = "convite de acesso"; }
+  }
 
   if (!para) {
     const { data: perfil } = await sb
@@ -138,10 +149,11 @@ Deno.serve(async (req) => {
       .limit(1).maybeSingle();
     if (perfil?.id) {
       const { data: utilizador } = await sb.auth.admin.getUserById(perfil.id);
-      para = utilizador?.user?.email?.trim();
-      if (para) console.log("Endereço obtido da conta de autenticação.");
+      if (utilizador?.user?.email) { para = utilizador.user.email.trim(); origem = "conta de autenticação"; }
     }
   }
+
+  if (para) console.log("Endereço obtido da " + origem + ".");
 
   if (!para) {
     // Não é um erro: nem todos os doentes deram email, e alguns usam só SMS.
@@ -176,9 +188,14 @@ Deno.serve(async (req) => {
     }
     // O motivo vai no corpo da resposta para aparecer em net._http_response,
     // sem ser preciso ir aos registos de cada vez.
+    // O destinatário vai mascarado: chega para perceber se foi para o
+    // endereço certo, sem escrever o email de um doente numa tabela de
+    // diagnóstico.
+    const mascarado = para.replace(/^(.{2}).*@/, "$1***@");
     return Response.json(
       { enviado: false, estado: resposta.status, motivo: detalhe.slice(0, 300),
-        remetente: REMETENTE, chave_encontrada: !!RESEND_API_KEY },
+        remetente: REMETENTE, chave_encontrada: !!RESEND_API_KEY,
+        destinatario: mascarado, origem_do_endereco: origem },
       { status: 502 },
     );
   }
