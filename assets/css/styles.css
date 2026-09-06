@@ -375,6 +375,67 @@ tr.row-link:hover{ background:var(--paper-tint); }
 
 .mini-scale .scale-opt span{ width:36px; height:36px; font-size:.76rem; }
 
+/* Texto que existe para o significado, não para a vista: lido por leitores de
+   ecrã e presente no que se grava, invisível no ecrã. Na matriz serve para a
+   linha mostrar "Dor" e o registo guardar "Importância: Dor". */
+.so-leitor{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0;
+}
+
+/* ---------- matriz de importância ----------
+   Seis sintomas com quatro níveis cada dariam vinte e quatro pastilhas, com
+   os mesmos quatro rótulos repetidos seis vezes: muito para ler e difícil de
+   comparar entre linhas. Aqui os níveis são escritos uma só vez, no
+   cabeçalho, e cada linha traz apenas os botões alinhados por baixo — a
+   leitura passa a ser vertical, que é como se compara.
+
+   O texto de cada opção continua no HTML, apenas reduzido a zero: é dele
+   que sai o valor gravado, e é ele que os leitores de ecrã anunciam. */
+.matriz-escala{ border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden; margin-bottom:6px; }
+.matriz-cabecalho, .matriz-escala .subfield{
+  display:grid; grid-template-columns:minmax(120px, 1.3fr) repeat(5, minmax(56px, 1fr));
+  align-items:center; gap:0; margin:0;
+}
+.matriz-cabecalho{ background:var(--paper-tint); border-bottom:1px solid var(--line); }
+.matriz-cabecalho span{
+  padding:10px 6px; text-align:center; font-size:.72rem; font-weight:600;
+  color:var(--ink-soft); line-height:1.25;
+}
+.matriz-escala .subfield{ border-top:1px solid var(--line); }
+.matriz-escala .subfield:first-of-type{ border-top:none; }
+.matriz-escala .subfield:nth-of-type(even){ background:rgba(242,246,250,.5); }
+.matriz-escala .subfield > label{ margin:0; padding:12px 14px; font-size:.86rem; }
+.matriz-escala .chip-group{ display:contents; }
+.matriz-escala .chip{ display:flex; justify-content:center; align-items:center; padding:10px 4px; }
+.matriz-escala .chip:hover{ background:var(--paper-tint); }
+.matriz-escala .chip span{
+  width:22px; height:22px; padding:0; border-radius:50%; font-size:0;
+  border:2px solid var(--line); background:#fff;
+}
+.matriz-escala .chip input:checked + span{
+  background:var(--blue-deep); border-color:var(--blue-deep);
+  box-shadow:inset 0 0 0 3px #fff;
+}
+
+/* Em ecrãs estreitos a matriz não cabe: cada linha volta a ser a pergunta
+   com as quatro respostas escritas por extenso, que é o que funciona ao
+   polegar. */
+@media (max-width:700px){
+  .matriz-escala{ border:none; }
+  .matriz-cabecalho{ display:none; }
+  .matriz-escala .subfield{ display:block; padding:0 0 16px; background:none; border-top:1px solid var(--line); }
+  .matriz-escala .subfield > label{ padding:14px 0 8px; }
+  .matriz-escala .chip-group{ display:flex; flex-wrap:wrap; gap:8px; }
+  .matriz-escala .chip{ display:inline-flex; padding:0; }
+  .matriz-escala .chip:hover{ background:none; }
+  .matriz-escala .chip span{
+    width:auto; height:auto; min-height:40px; border-radius:20px; font-size:.83rem;
+    padding:8px 14px; border-width:1.5px; box-shadow:none;
+  }
+  .matriz-escala .chip input:checked + span{ box-shadow:none; color:#fff; }
+}
+
 .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px 22px; }
 @media (max-width:640px){ .form-row{ grid-template-columns:1fr; } }
 

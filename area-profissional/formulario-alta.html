@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulário de Alta — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260915">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260916">
 </head>
 <body>
 <header class="topbar">
@@ -635,71 +635,76 @@
 
           <hr class="divider" style="margin:22px 0;">
           <p class="eyebrow" style="margin-bottom:6px;">Grau de importância</p>
-          <p class="scale-note" style="margin-bottom:16px;">
-            Qual o grau de importância que o doente dá a cada um destes sintomas. Não é
-            a intensidade com que os sente — é o peso que lhes dá. Dois doentes com a
-            mesma dor podem querer coisas diferentes do seguimento.
-          </p>
+          <p class="scale-note" style="margin-bottom:14px;">Que peso o doente dá a cada um destes sintomas. Não é a intensidade com que os sente — é a importância que lhes atribui. Dois doentes com a mesma dor podem querer coisas diferentes do seguimento.</p>
 
-          <div class="form-row">
+          <div class="matriz-escala">
+            <div class="matriz-cabecalho" aria-hidden="true">
+              <span></span><span>Nada<br>importante</span><span>Pouco<br>importante</span><span>Moderadamente<br>importante</span><span>Importante</span><span>Muito<br>importante</span>
+            </div>
+
             <div class="subfield">
-              <label>Importância: Dor</label>
+              <label><span class="so-leitor">Importância: </span>Dor</label>
               <div class="chip-group">
-                <label class="chip"><input type="radio" name="imp-dor"><span>Muito importante</span></label>
-                <label class="chip"><input type="radio" name="imp-dor"><span>Importante</span></label>
-                <label class="chip"><input type="radio" name="imp-dor"><span>Pouco importante</span></label>
                 <label class="chip"><input type="radio" name="imp-dor"><span>Nada importante</span></label>
+                <label class="chip"><input type="radio" name="imp-dor"><span>Pouco importante</span></label>
+                <label class="chip"><input type="radio" name="imp-dor"><span>Moderadamente importante</span></label>
+                <label class="chip"><input type="radio" name="imp-dor"><span>Importante</span></label>
+                <label class="chip"><input type="radio" name="imp-dor"><span>Muito importante</span></label>
               </div>
             </div>
+
             <div class="subfield">
-              <label>Importância: Sono</label>
+              <label><span class="so-leitor">Importância: </span>Sono</label>
               <div class="chip-group">
-                <label class="chip"><input type="radio" name="imp-sono"><span>Muito importante</span></label>
-                <label class="chip"><input type="radio" name="imp-sono"><span>Importante</span></label>
-                <label class="chip"><input type="radio" name="imp-sono"><span>Pouco importante</span></label>
                 <label class="chip"><input type="radio" name="imp-sono"><span>Nada importante</span></label>
+                <label class="chip"><input type="radio" name="imp-sono"><span>Pouco importante</span></label>
+                <label class="chip"><input type="radio" name="imp-sono"><span>Moderadamente importante</span></label>
+                <label class="chip"><input type="radio" name="imp-sono"><span>Importante</span></label>
+                <label class="chip"><input type="radio" name="imp-sono"><span>Muito importante</span></label>
               </div>
             </div>
-          </div>
 
-          <div class="form-row">
             <div class="subfield">
-              <label>Importância: Prurido</label>
+              <label><span class="so-leitor">Importância: </span>Prurido</label>
               <div class="chip-group">
-                <label class="chip"><input type="radio" name="imp-prurido"><span>Muito importante</span></label>
-                <label class="chip"><input type="radio" name="imp-prurido"><span>Importante</span></label>
-                <label class="chip"><input type="radio" name="imp-prurido"><span>Pouco importante</span></label>
                 <label class="chip"><input type="radio" name="imp-prurido"><span>Nada importante</span></label>
+                <label class="chip"><input type="radio" name="imp-prurido"><span>Pouco importante</span></label>
+                <label class="chip"><input type="radio" name="imp-prurido"><span>Moderadamente importante</span></label>
+                <label class="chip"><input type="radio" name="imp-prurido"><span>Importante</span></label>
+                <label class="chip"><input type="radio" name="imp-prurido"><span>Muito importante</span></label>
               </div>
             </div>
-            <div class="subfield">
-              <label>Importância: Ansiedade</label>
-              <div class="chip-group">
-                <label class="chip"><input type="radio" name="imp-ansiedade"><span>Muito importante</span></label>
-                <label class="chip"><input type="radio" name="imp-ansiedade"><span>Importante</span></label>
-                <label class="chip"><input type="radio" name="imp-ansiedade"><span>Pouco importante</span></label>
-                <label class="chip"><input type="radio" name="imp-ansiedade"><span>Nada importante</span></label>
-              </div>
-            </div>
-          </div>
 
-          <div class="form-row">
             <div class="subfield">
-              <label>Importância: Imagem corporal</label>
+              <label><span class="so-leitor">Importância: </span>Ansiedade</label>
               <div class="chip-group">
-                <label class="chip"><input type="radio" name="imp-imagem"><span>Muito importante</span></label>
-                <label class="chip"><input type="radio" name="imp-imagem"><span>Importante</span></label>
-                <label class="chip"><input type="radio" name="imp-imagem"><span>Pouco importante</span></label>
-                <label class="chip"><input type="radio" name="imp-imagem"><span>Nada importante</span></label>
+                <label class="chip"><input type="radio" name="imp-ansiedade"><span>Nada importante</span></label>
+                <label class="chip"><input type="radio" name="imp-ansiedade"><span>Pouco importante</span></label>
+                <label class="chip"><input type="radio" name="imp-ansiedade"><span>Moderadamente importante</span></label>
+                <label class="chip"><input type="radio" name="imp-ansiedade"><span>Importante</span></label>
+                <label class="chip"><input type="radio" name="imp-ansiedade"><span>Muito importante</span></label>
               </div>
             </div>
+
             <div class="subfield">
-              <label>Importância: Bem-estar emocional</label>
+              <label><span class="so-leitor">Importância: </span>Imagem corporal</label>
               <div class="chip-group">
-                <label class="chip"><input type="radio" name="imp-emocional"><span>Muito importante</span></label>
-                <label class="chip"><input type="radio" name="imp-emocional"><span>Importante</span></label>
-                <label class="chip"><input type="radio" name="imp-emocional"><span>Pouco importante</span></label>
+                <label class="chip"><input type="radio" name="imp-imagem"><span>Nada importante</span></label>
+                <label class="chip"><input type="radio" name="imp-imagem"><span>Pouco importante</span></label>
+                <label class="chip"><input type="radio" name="imp-imagem"><span>Moderadamente importante</span></label>
+                <label class="chip"><input type="radio" name="imp-imagem"><span>Importante</span></label>
+                <label class="chip"><input type="radio" name="imp-imagem"><span>Muito importante</span></label>
+              </div>
+            </div>
+
+            <div class="subfield">
+              <label><span class="so-leitor">Importância: </span>Bem-estar emocional</label>
+              <div class="chip-group">
                 <label class="chip"><input type="radio" name="imp-emocional"><span>Nada importante</span></label>
+                <label class="chip"><input type="radio" name="imp-emocional"><span>Pouco importante</span></label>
+                <label class="chip"><input type="radio" name="imp-emocional"><span>Moderadamente importante</span></label>
+                <label class="chip"><input type="radio" name="imp-emocional"><span>Importante</span></label>
+                <label class="chip"><input type="radio" name="imp-emocional"><span>Muito importante</span></label>
               </div>
             </div>
           </div>
@@ -841,7 +846,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260915"></script>
+<script src="../assets/js/main.js?v=20260916"></script>
 <script>
   let DOENTE_ID = null;
   let DOENTE_PROCESSO = null;
