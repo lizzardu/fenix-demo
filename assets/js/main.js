@@ -1796,23 +1796,48 @@ function caminhoParaAreaDoente() {
    pop-up já criado e não faz nada.
    ------------------------------------------------------------------------ */
 async function arrancarConviteSatisfacao() {
+  const diz = function (m) { console.log("Fénix · convite: " + m); };
+
   const caminho = window.location.pathname;
-  if (caminho.indexOf("/area-doente/") < 0) return;
+  if (caminho.indexOf("/area-doente/") < 0) { diz("fora da área do doente (" + caminho + ")"); return; }
   // a meio de um questionário, não: nem o de PROMs nem o de satisfação
-  if (/prom\.html|satisfacao\.html/.test(caminho)) return;
-  if (!window.fenixApi || !fenixApi.utilizadorAtual) return;
+  if (/prom\.html|satisfacao\.html/.test(caminho)) { diz("página de questionário, não interrompe"); return; }
+  if (!window.fenixApi || !fenixApi.utilizadorAtual) { diz("fenixApi ainda não disponível"); return; }
 
   try {
-    const sessao = await fenixApi.utilizadorAtual();
-    if (!sessao || !sessao.perfil || sessao.perfil.papel !== "doente") return;
-    await verificarSatisfacaoPendente(sessao.perfil.doente_id);
+    // A sessão é reposta a partir do armazenamento local e pode ainda não
+    // estar pronta no primeiro instante da página. Uma segunda tentativa
+    // resolve essa corrida sem obrigar o doente a recarregar.
+    let sessao = await fenixApi.utilizadorAtual();
+    if (!sessao || !sessao.perfil) {
+      diz("sessão ainda não pronta; nova tentativa dentro de 2 segundos");
+      await new Promise(function (r) { setTimeout(r, 2000); });
+      sessao = await fenixApi.utilizadorAtual();
+    }
+    if (!sessao || !sessao.perfil) { diz("sem sessão iniciada"); return; }
+    if (sessao.perfil.papel !== "doente") { diz("sessão não é de doente (" + sessao.perfil.papel + ")"); return; }
+    if (!sessao.perfil.doente_id) { diz("perfil sem doente_id"); return; }
+
+    const pedido = await fenixApi.pedidoSatisfacaoPendente(sessao.perfil.doente_id);
+    if (!pedido) { diz("não há pedido por responder"); return; }
+    if (sessionStorage.getItem(CHAVE_ADIADO) === pedido.id) { diz("adiado nesta visita"); return; }
+
+    diz("a mostrar o pedido " + pedido.id);
+    mostrarPedidoSatisfacao(pedido);
   } catch (e) {
-    console.warn("Não foi possível verificar o convite de avaliação:", e);
+    console.warn("Fénix · convite: falhou —", e);
   }
 }
 
+/* Corre no DOMContentLoaded e, por segurança, também no load: se algum
+   script da página falhar a meio, o primeiro evento pode não chegar a
+   disparar o que vem a seguir. Mostrar duas vezes não é problema —
+   mostrarPedidoSatisfacao ignora o segundo pedido. */
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", arrancarConviteSatisfacao);
 } else {
   arrancarConviteSatisfacao();
 }
+window.addEventListener("load", function () {
+  if (!document.getElementById("modal-satisfacao")) arrancarConviteSatisfacao();
+});
