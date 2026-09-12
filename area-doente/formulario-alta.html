@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Formulário de Alta — Fénix</title>
+<title>Formulário de Alta Hospitalar — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260918">
 <style>
   /* Vista só de leitura: pares campo/valor, sem controlos de formulário.
      As regras antigas — que reativavam a opacidade de campos desativados —
@@ -61,14 +61,14 @@
     <a href="historico.html">🗓️ Histórico</a>
     <a href="duvidas.html">💬 Dúvidas <span class="pill pill-alert" style="margin-left:6px;" id="badge-duvidas"></span></a>
     <a href="recursos.html">📚 Recursos</a>
-    <a href="formulario-alta.html" class="active">📝 Formulário de Alta</a>
-    <a href="alta-seguimento.html">🏁 Alta do acompanhamento</a>
+    <a href="formulario-alta.html" class="active">📝 Formulário de Alta Hospitalar</a>
+    <a href="alta-seguimento.html" id="menu-alta-seguimento" hidden>🏁 Alta do acompanhamento</a>
   </aside>
 
   <main class="main-area">
 
   <p class="eyebrow">Avaliação clínica</p>
-  <h1 style="font-size:1.9rem;">Formulário de Alta</h1>
+  <h1 style="font-size:1.9rem;">Formulário de Alta Hospitalar</h1>
   <p style="color:var(--ink-soft); max-width:70ch;">
     Esta é a avaliação que a sua equipa preencheu antes da alta — regista como estava
     a sua queimadura e cicatriz, a dor, o prurido, o movimento e a funcionalidade nessa
@@ -77,7 +77,7 @@
   </p>
 
   <div id="sem-formulario" class="banner-info" style="margin:20px 0; display:none;">
-    ℹ️ A sua equipa ainda não preencheu o formulário de alta. Assim que o fizer, fica visível aqui.
+    ℹ️ A sua equipa ainda não preencheu o formulário de alta hospitalar. Assim que o fizer, fica visível aqui.
   </div>
 
   <div id="bloco-formulario" style="display:none;">
@@ -102,12 +102,12 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260917"></script>
+<script src="../assets/js/main.js?v=20260918"></script>
 <script>
   let DOENTE_ID = null;
 
   /* =====================================================================
-     Vista só de leitura do Formulário de Alta.
+     Vista só de leitura do Formulário de Alta Hospitalar.
 
      Antes, esta página tinha uma CÓPIA do formulário da área profissional
      — as mesmas nove secções escritas outra vez — e limitava-se a
@@ -267,7 +267,7 @@
     try {
       registo = await fenixApi.obterUltimoFormularioAlta(DOENTE_ID);
     } catch (e) {
-      console.error("Erro ao carregar o formulário de alta:", e);
+      console.error("Erro ao carregar o formulário de alta hospitalar:", e);
       const aviso = document.getElementById("sem-formulario");
       aviso.innerHTML = "⚠️ Não foi possível carregar o formulário: " + esc(e.message || e);
       aviso.style.display = "flex";

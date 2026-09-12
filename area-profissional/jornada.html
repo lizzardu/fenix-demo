@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jornada e Metas — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260918">
 </head>
 <body>
 <header class="topbar">
@@ -35,7 +35,7 @@
       <p style="margin:0; font-weight:600; color:var(--blue-deep); font-size:.88rem;" id="sidebar-nome-doente">A carregar...</p>
     </div>
     <a href="doente.html" data-processo-link>🗂️ Resumo</a>
-    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
+    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta Hospitalar</a>
     <a href="consulta-72h.html" data-processo-link>⏱️ 1.º Contacto</a>
     <a href="consultas.html" data-processo-link>🩺 Consultas</a>
     <a href="plano-tratamento.html" data-processo-link>🏋️ Plano de Tratamento</a>
@@ -53,20 +53,20 @@
     <p class="eyebrow" id="titulo-doente">Jornada de recuperação</p>
     <h1 style="font-size:1.9rem;">Definir e rever metas</h1>
     <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
-      As metas iniciais devem ser definidas após o Formulário de Alta e ficam sempre
+      As metas iniciais devem ser definidas após o Formulário de Alta Hospitalar e ficam sempre
       visíveis e editáveis para o doente. Devem refletir aquilo que o próprio doente
       considera importante — não apenas objetivos clínicos.
     </p>
 
     <div class="banner-info" style="margin:20px 0 24px;">
       💡 O quadro abaixo vem da secção <strong>8. Outcomes Centrados no Doente</strong> do
-      Formulário de Alta — é aí que se regista o que o doente mais receia não conseguir fazer
+      Formulário de Alta Hospitalar — é aí que se regista o que o doente mais receia não conseguir fazer
       sozinho e o que mais o incomoda. Use essa informação para propor metas alinhadas com as
       prioridades dele, e não apenas com a evolução clínica.
     </div>
 
     <div class="card" style="margin-bottom:28px; background:var(--paper-tint);" id="painel-outcomes">
-      <p class="eyebrow" style="margin-bottom:10px;">O que o doente indicou como importante (Formulário de Alta)</p>
+      <p class="eyebrow" style="margin-bottom:10px;">O que o doente indicou como importante (Formulário de Alta Hospitalar)</p>
       <div id="outcomes-conteudo"><p class="hint" style="margin:0;">A carregar...</p></div>
     </div>
 
@@ -106,7 +106,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260917"></script>
+<script src="../assets/js/main.js?v=20260918"></script>
 <script>
   let DOENTE_ID = null;
 
@@ -211,7 +211,7 @@
   }
 
   /* ---------------------------------------------------------------------
-     Quadro 8 do Formulário de Alta ("Outcomes Centrados no Doente"),
+     Quadro 8 do Formulário de Alta Hospitalar ("Outcomes Centrados no Doente"),
      lido do último formulário gravado. Antes estava escrito à mão no HTML
      com os dados da demonstração, pelo que mostrava sempre o mesmo
      independentemente do doente.
@@ -244,12 +244,12 @@
     try {
       formulario = await fenixApi.obterUltimoFormularioAlta(DOENTE_ID);
     } catch (e) {
-      console.error("Erro ao carregar o Formulário de Alta:", e);
-      el.innerHTML = `<p class="hint" style="margin:0;">⚠️ Não foi possível carregar o Formulário de Alta: ${escaparTexto(e.message || e)}</p>`;
+      console.error("Erro ao carregar o Formulário de Alta Hospitalar:", e);
+      el.innerHTML = `<p class="hint" style="margin:0;">⚠️ Não foi possível carregar o Formulário de Alta Hospitalar: ${escaparTexto(e.message || e)}</p>`;
       return;
     }
     if (!formulario) {
-      el.innerHTML = `<p class="hint" style="margin:0;">Ainda não há Formulário de Alta gravado para este doente. Preencha-o primeiro — a secção 8 aparece aqui e os objetivos passam a metas automaticamente.</p>`;
+      el.innerHTML = `<p class="hint" style="margin:0;">Ainda não há Formulário de Alta Hospitalar gravado para este doente. Preencha-o primeiro — a secção 8 aparece aqui e os objetivos passam a metas automaticamente.</p>`;
       return;
     }
 

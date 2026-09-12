@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Consultas — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260918">
 <style>
   .linha-marcacao{ display:flex; gap:14px; align-items:flex-start; padding:16px 0; border-bottom:1px solid var(--line); }
   .linha-marcacao:last-child{ border-bottom:none; }
@@ -47,7 +47,7 @@
       <p style="margin:0; font-weight:600; color:var(--blue-deep); font-size:.88rem;" id="sidebar-nome-doente">A carregar...</p>
     </div>
     <a href="doente.html" data-processo-link>🗂️ Resumo</a>
-    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
+    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta Hospitalar</a>
     <a href="consulta-72h.html" data-processo-link>⏱️ 1.º Contacto</a>
     <a href="consultas.html" data-processo-link class="active">🩺 Consultas</a>
     <a href="plano-tratamento.html" data-processo-link>🏋️ Plano de Tratamento</a>
@@ -172,7 +172,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260917"></script>
+<script src="../assets/js/main.js?v=20260918"></script>
 <script>
   let DOENTE = null;
 
@@ -455,10 +455,10 @@
     try {
       const alta = await fenixApi.obterUltimoFormularioAlta(DOENTE.id);
       partes.push(alta
-        ? '<li>Formulário de Alta de ' + esc(dataCurta(alta.data_alta || alta.criado_em))
+        ? '<li>Formulário de Alta Hospitalar de ' + esc(dataCurta(alta.data_alta || alta.criado_em))
           + ' — <a href="formulario-alta.html?processo=' + encodeURIComponent(DOENTE.processo) + '">abrir</a></li>'
-        : "<li>Ainda não há Formulário de Alta.</li>");
-    } catch (e) { partes.push("<li>Formulário de Alta indisponível.</li>"); }
+        : "<li>Ainda não há Formulário de Alta Hospitalar.</li>");
+    } catch (e) { partes.push("<li>Formulário de Alta Hospitalar indisponível.</li>"); }
     try {
       const c72 = await fenixApi.obterUltimaConsulta72h(DOENTE.id);
       partes.push(c72

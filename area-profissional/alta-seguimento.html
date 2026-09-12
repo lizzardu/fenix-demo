@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alta do seguimento — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260918">
 <style>
   .calculado{ background:var(--paper-tint); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:16px; }
   .calculado .eyebrow{ margin-bottom:8px; }
@@ -46,7 +46,7 @@
       <p style="margin:0; font-weight:600; color:var(--blue-deep); font-size:.88rem;" id="sidebar-nome-doente">A carregar...</p>
     </div>
     <a href="doente.html" data-processo-link>🗂️ Resumo</a>
-    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
+    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta Hospitalar</a>
     <a href="consulta-72h.html" data-processo-link>⏱️ 1.º Contacto</a>
     <a href="consultas.html" data-processo-link>🩺 Consultas</a>
     <a href="plano-tratamento.html" data-processo-link>🏋️ Plano de Tratamento</a>
@@ -65,10 +65,10 @@
     <p class="eyebrow" id="titulo-doente">Alta do seguimento</p>
     <h1 style="font-size:1.9rem;">Relatório de alta do seguimento</h1>
     <p style="color:var(--ink-soft); max-width:74ch; margin-top:6px;">
-      Fecha o acompanhamento em telessaúde e consolida o percurso. Não é o
-      Formulário de Alta — esse é da alta hospitalar e é a porta de entrada.
-      Este é a saída. Grande parte do conteúdo é calculada do que já está
-      gravado; o que escreve é a leitura clínica e o que o doente leva consigo.
+      Fecha o acompanhamento em telessaúde e consolida o percurso. Não confundir
+      com o Formulário de Alta Hospitalar, que é a porta de entrada na
+      plataforma — este é a saída. Grande parte do conteúdo é calculada do que já
+      está gravado; o que escreve é a leitura clínica e o que o doente leva consigo.
     </p>
 
     <div id="banner-estado" class="banner-info" style="margin:20px 0; display:none;"></div>
@@ -241,7 +241,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260917"></script>
+<script src="../assets/js/main.js?v=20260918"></script>
 <script>
   let DOENTE = null;
   let ALTA = null;

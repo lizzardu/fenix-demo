@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Formulário de Alta — Fénix</title>
+<title>Formulário de Alta Hospitalar — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260918">
 </head>
 <body>
 <header class="topbar">
@@ -35,7 +35,7 @@
       <p style="margin:0; font-weight:600; color:var(--blue-deep); font-size:.88rem;" id="sidebar-nome-doente">A carregar...</p>
     </div>
     <a href="doente.html" data-processo-link>🗂️ Resumo</a>
-    <a href="formulario-alta.html" data-processo-link class="active">📝 Formulário de Alta</a>
+    <a href="formulario-alta.html" data-processo-link class="active">📝 Formulário de Alta Hospitalar</a>
     <a href="consulta-72h.html" data-processo-link>⏱️ 1.º Contacto</a>
     <a href="consultas.html" data-processo-link>🩺 Consultas</a>
     <a href="plano-tratamento.html" data-processo-link>🏋️ Plano de Tratamento</a>
@@ -54,7 +54,7 @@
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap; gap:16px;">
       <div>
         <p class="eyebrow">Avaliação clínica</p>
-        <h1 style="font-size:1.9rem;" id="titulo-formulario">Formulário de Alta — Avaliação Inicial Pré-Alta</h1>
+        <h1 style="font-size:1.9rem;" id="titulo-formulario">Formulário de Alta Hospitalar — Avaliação Inicial Pré-Alta</h1>
         <p style="color:var(--ink-soft); max-width:70ch; margin-top:6px;">
           Preenchido pela equipa antes da alta hospitalar. Regista a avaliação clínica e
           funcional inicial do doente e serve de base de comparação para as avaliações
@@ -850,7 +850,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260917"></script>
+<script src="../assets/js/main.js?v=20260918"></script>
 <script>
   let DOENTE_ID = null;
   let DOENTE_PROCESSO = null;
@@ -1641,10 +1641,10 @@
     DOENTE_ID = doente.id;
     DOENTE_REGISTO = doente;
     DOENTE_PROCESSO = doente.processo;
-    document.getElementById("titulo-formulario").textContent = "Formulário de Alta — " + doente.nome;
+    document.getElementById("titulo-formulario").textContent = "Formulário de Alta Hospitalar — " + doente.nome;
     document.getElementById("sidebar-nome-doente").textContent = doente.nome;
     ligarSidebarAoProcesso(doente.processo);
-    montarCabecalhoImpressao("Formulário de Alta", doente);
+    montarCabecalhoImpressao("Formulário de Alta Hospitalar", doente);
 
     if (doente.email) document.getElementById('doente-email').value = doente.email;
     if (doente.genero) {

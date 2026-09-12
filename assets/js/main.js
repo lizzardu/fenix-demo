@@ -1830,6 +1830,9 @@ async function arrancarConviteSatisfacao() {
     if (sessao.perfil.papel !== "doente") { diz("sessão não é de doente (" + sessao.perfil.papel + ")"); return; }
     if (!sessao.perfil.doente_id) { diz("perfil sem doente_id"); return; }
 
+    // aproveita a sessão já carregada para a outra verificação da área do doente
+    revelarAltaSeguimento(sessao.perfil.doente_id);
+
     const pedido = await fenixApi.pedidoSatisfacaoPendente(sessao.perfil.doente_id);
     if (!pedido) { diz("não há pedido por responder"); return; }
     if (sessionStorage.getItem(CHAVE_ADIADO) === pedido.id) { diz("adiado nesta visita"); return; }
@@ -2036,4 +2039,28 @@ async function evolucaoPromsDoAcompanhamento(doenteId) {
       variacao: variacao, sentido: sentido, respostas: lista.length
     };
   }).filter(function (p) { return p.final != null; });
+}
+
+/* ========================================================================
+   ALTA DO ACOMPANHAMENTO NO MENU DO DOENTE
+
+   O relatório final só existe no fim. Deixar a entrada no menu durante todo
+   o acompanhamento seria anunciar uma saída que ainda não há — e quem lá
+   fosse encontrava uma página vazia.
+
+   A entrada nasce escondida no HTML e só se revela quando houver relatório.
+   Note-se que a pergunta "existe?" já traz a resposta certa sozinha: a base
+   de dados só entrega ao doente relatórios emitidos, portanto um rascunho da
+   equipa devolve nada e o menu continua escondido.
+   ======================================================================== */
+async function revelarAltaSeguimento(doenteId) {
+  const item = document.getElementById("menu-alta-seguimento");
+  if (!item || !doenteId || !haApi("obterAltaSeguimento")) return;
+  try {
+    const alta = await fenixApi.obterAltaSeguimento(doenteId);
+    if (alta) item.hidden = false;
+  } catch (e) {
+    // sem relatório acessível o menu fica como está, escondido
+    console.warn("Alta do acompanhamento indisponível:", e);
+  }
 }

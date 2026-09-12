@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Recursos — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260918">
 <style>
   /* Avaliação (👍/👎) de cada recurso — não existe em styles.css, por isso
      reutilizam-se aqui as mesmas variáveis de cor do resto do site. */
@@ -51,8 +51,8 @@
     <a href="historico.html">🗓️ Histórico</a>
     <a href="duvidas.html">💬 Dúvidas <span class="pill pill-alert" style="margin-left:6px;" id="badge-duvidas"></span></a>
     <a href="recursos.html" class="active">📚 Recursos</a>
-    <a href="formulario-alta.html">📝 Formulário de Alta</a>
-    <a href="alta-seguimento.html">🏁 Alta do acompanhamento</a>
+    <a href="formulario-alta.html">📝 Formulário de Alta Hospitalar</a>
+    <a href="alta-seguimento.html" id="menu-alta-seguimento" hidden>🏁 Alta do acompanhamento</a>
   </aside>
 
   <main class="main-area">
@@ -342,7 +342,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260917"></script>
+<script src="../assets/js/main.js?v=20260918"></script>
 <script>
   let DOENTE_ID = null;
   let AVALIACOES = {}; // recurso_id -> true (👍) | false (👎)

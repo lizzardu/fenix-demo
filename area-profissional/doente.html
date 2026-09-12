@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maria Santos — Ficha do doente · Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260918">
 <script src="../assets/js/vendor/chart.umd.js"></script>
 </head>
 <body>
@@ -36,7 +36,7 @@
       <p style="margin:0; font-weight:600; color:var(--blue-deep); font-size:.88rem;" id="sidebar-nome-doente">A carregar...</p>
     </div>
     <a href="doente.html" data-processo-link class="active">🗂️ Resumo</a>
-    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
+    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta Hospitalar</a>
     <a href="consulta-72h.html" data-processo-link>⏱️ 1.º Contacto</a>
     <a href="consultas.html" data-processo-link>🩺 Consultas</a>
     <a href="plano-tratamento.html" data-processo-link>🏋️ Plano de Tratamento</a>
@@ -59,7 +59,7 @@
       </div>
       <div style="display:flex; gap:10px;">
         <button class="btn btn-ghost" onclick="guardarEmPDF()">🖨️ Guardar em PDF</button>
-        <a class="btn btn-primary" id="link-formulario-alta" href="formulario-alta.html">Ver formulário de alta</a>
+        <a class="btn btn-primary" id="link-formulario-alta" href="formulario-alta.html">Ver formulário de alta hospitalar</a>
       </div>
     </div>
 
@@ -200,7 +200,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260917"></script>
+<script src="../assets/js/main.js?v=20260918"></script>
 <script>
   let DOENTE = null;
 
@@ -249,7 +249,7 @@
     // avaliação da satisfação (PREM)
     carregarSatisfacao();
 
-    // prioridade de seguimento, derivada do Formulário de Alta
+    // prioridade de seguimento, derivada do Formulário de Alta Hospitalar
     carregarPrioridade();
 
     // evolução do check-in rápido de humor
@@ -506,7 +506,7 @@
   }
 
   /* ---------------------------------------------------------------------
-     Prioridade de seguimento, derivada do último Formulário de Alta.
+     Prioridade de seguimento, derivada do último Formulário de Alta Hospitalar.
      A lógica e os pesos estão em main.js (calcularPrioridadeSeguimento).
      Aqui só se apresenta — incluindo os fatores que contribuíram, porque
      uma classificação que não se consegue explicar não deve ser seguida.
@@ -536,19 +536,19 @@
     try {
       formulario = await fenixApi.obterUltimoFormularioAlta(DOENTE.id);
     } catch (e) {
-      console.error("Erro ao carregar o Formulário de Alta para a prioridade:", e);
+      console.error("Erro ao carregar o Formulário de Alta Hospitalar para a prioridade:", e);
       el.innerHTML = `<p class="hint" style="margin:0;">⚠️ Não foi possível calcular: ${escaparHtml(e.message || e)}</p>`;
       return;
     }
     if (!formulario) {
-      el.innerHTML = `<p class="hint" style="margin:0;">A prioridade é calculada a partir do Formulário de Alta, que ainda não foi preenchido para este doente.</p>`;
+      el.innerHTML = `<p class="hint" style="margin:0;">A prioridade é calculada a partir do Formulário de Alta Hospitalar, que ainda não foi preenchido para este doente.</p>`;
       return;
     }
 
     const anos = idadeEmAnos(DOENTE.data_nascimento);
     const p = calcularPrioridadeSeguimento(formulario.dados, anos);
     if (!p) {
-      el.innerHTML = `<p class="hint" style="margin:0;">O Formulário de Alta gravado não tem dados suficientes para calcular a prioridade.</p>`;
+      el.innerHTML = `<p class="hint" style="margin:0;">O Formulário de Alta Hospitalar gravado não tem dados suficientes para calcular a prioridade.</p>`;
       return;
     }
 

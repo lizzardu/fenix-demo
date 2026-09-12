@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulário 1.º Contacto — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260918">
 </head>
 <body>
 <header class="topbar">
@@ -35,7 +35,7 @@
       <p style="margin:0; font-weight:600; color:var(--blue-deep); font-size:.88rem;" id="sidebar-nome-doente">A carregar...</p>
     </div>
     <a href="doente.html" data-processo-link>🗂️ Resumo</a>
-    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta</a>
+    <a href="formulario-alta.html" data-processo-link>📝 Formulário de Alta Hospitalar</a>
     <a href="consulta-72h.html" data-processo-link class="active">⏱️ 1.º Contacto</a>
     <a href="consultas.html" data-processo-link>🩺 Consultas</a>
     <a href="plano-tratamento.html" data-processo-link>🏋️ Plano de Tratamento</a>
@@ -469,10 +469,10 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260917"></script>
+<script src="../assets/js/main.js?v=20260918"></script>
 <script>
   let DOENTE = null;
-  let PRIORIDADE_ALTA = null;   // a que ficou definida no Formulário de Alta
+  let PRIORIDADE_ALTA = null;   // a que ficou definida no Formulário de Alta Hospitalar
   let METAS = [];
   let EXERCICIOS = [];
 
@@ -840,7 +840,7 @@
   }
 
   async function carregarContexto(){
-    // prioridade definida no Formulário de Alta
+    // prioridade definida no Formulário de Alta Hospitalar
     const alvo = document.getElementById("prioridade-alta");
     try {
       const formulario = await fenixApi.obterUltimoFormularioAlta(DOENTE.id);
@@ -852,10 +852,10 @@
           + nomes[PRIORIDADE_ALTA] + "</span>"
           + '<p style="margin:10px 0 0; font-size:.9rem; color:var(--ink-soft);">' + CADENCIA_POR_PRIORIDADE[PRIORIDADE_ALTA] + "</p>";
       } else if (formulario) {
-        alvo.innerHTML = '<p class="hint" style="margin:0;">O Formulário de Alta deste doente foi gravado antes de a prioridade passar a ser calculada. Escolha a decisão como se a prioridade de partida fosse intermédia.</p>';
+        alvo.innerHTML = '<p class="hint" style="margin:0;">O Formulário de Alta Hospitalar deste doente foi gravado antes de a prioridade passar a ser calculada. Escolha a decisão como se a prioridade de partida fosse intermédia.</p>';
         PRIORIDADE_ALTA = "intermedia";
       } else {
-        alvo.innerHTML = '<p class="hint" style="margin:0;">Ainda não há Formulário de Alta para este doente, por isso não há prioridade de partida.</p>';
+        alvo.innerHTML = '<p class="hint" style="margin:0;">Ainda não há Formulário de Alta Hospitalar para este doente, por isso não há prioridade de partida.</p>';
       }
     } catch (e) {
       console.error("Erro ao carregar a prioridade da alta:", e);
