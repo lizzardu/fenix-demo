@@ -296,6 +296,47 @@ const fenixApi = {
   },
 
   /* ---------------------------------------------------------------------
+     ALTA DO SEGUIMENTO
+     O relatório final. Requer 020_alta_seguimento.sql.
+     --------------------------------------------------------------------- */
+  async criarAltaSeguimento(doenteId, dados) {
+    const sessao = await this.utilizadorAtual();
+    if (!sessao || !sessao.perfil) throw new Error("Sessão não iniciada.");
+    const { data, error } = await sb.from("altas_seguimento").insert({
+      doente_id: doenteId,
+      data_admissao: dados.data_admissao || null,
+      data_alta: dados.data_alta || null,
+      profissional_id: sessao.user.id,
+      profissional_nome: sessao.perfil.nome,
+      dados: dados.dados || {},
+      resumo: dados.resumo || null,
+      estado: dados.estado || "rascunho",
+      emitida_em: dados.estado === "emitida" ? new Date().toISOString() : null
+    }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async atualizarAltaSeguimento(id, campos) {
+    const patch = Object.assign({ atualizado_em: new Date().toISOString() }, campos);
+    if (campos.estado === "emitida" && !campos.emitida_em) {
+      patch.emitida_em = new Date().toISOString();
+    }
+    const { data, error } = await sb.from("altas_seguimento").update(patch)
+      .eq("id", id).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async obterAltaSeguimento(doenteId) {
+    const { data, error } = await sb.from("altas_seguimento").select("*")
+      .eq("doente_id", doenteId).order("criado_em", { ascending: false })
+      .limit(1).maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  /* ---------------------------------------------------------------------
      ANEXOS DAS MARCAÇÕES
      Ficheiros num balde privado. O doente nunca recebe um endereço fixo:
      recebe um endereço assinado, válido por uma hora. Um endereço público

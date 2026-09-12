@@ -1988,3 +1988,52 @@ function montarCabecalhoImpressao(titulo, doente) {
     + '<div style="font-size:10pt;">' + ((doente && doente.nome) || "") + proc
     + " — impresso em " + new Date().toLocaleString("pt-PT") + "</div>";
 }
+
+/**
+ * Evolução de cada instrumento do princípio ao fim do acompanhamento.
+ * Ao contrário de resumoPromsParaConsulta, que compara as duas últimas
+ * respostas, aqui o que interessa é a primeira contra a última — é essa a
+ * pergunta do relatório de alta: o doente saiu melhor do que entrou?
+ */
+async function evolucaoPromsDoAcompanhamento(doenteId) {
+  let respostas = [];
+  try {
+    respostas = await fenixApi.listarPromsDoente(doenteId);
+  } catch (e) {
+    console.warn("Não foi possível carregar os PROMs:", e);
+    return [];
+  }
+
+  const porInstrumento = {};
+  respostas.forEach(function (r) {
+    if (!porInstrumento[r.instrumento]) porInstrumento[r.instrumento] = [];
+    porInstrumento[r.instrumento].push(r);
+  });
+
+  return Object.keys(INSTRUMENTOS_PROM).map(function (chave) {
+    const meta = INSTRUMENTOS_PROM[chave];
+    const lista = (porInstrumento[chave] || []).slice()
+      .sort(function (a, b) { return String(a.data_resposta).localeCompare(String(b.data_resposta)); });
+
+    const primeiro = lista[0] || null;
+    const ultimo = lista[lista.length - 1] || null;
+    const vInicial = primeiro && primeiro.scores ? primeiro.scores.total : null;
+    const vFinal = ultimo && ultimo.scores ? ultimo.scores.total : null;
+
+    let variacao = null, sentido = null;
+    // com uma só resposta não há evolução nenhuma para reportar
+    if (vInicial != null && vFinal != null && lista.length > 1) {
+      variacao = vFinal - vInicial;
+      if (variacao === 0) sentido = "igual";
+      else if (variacao > 0) sentido = meta.subir === "melhor" ? "melhor" : "pior";
+      else sentido = meta.subir === "melhor" ? "pior" : "melhor";
+    }
+
+    return {
+      instrumento: chave, nome: meta.nome, maximo: meta.maximo,
+      inicial: vInicial, dataInicial: primeiro ? primeiro.data_resposta : null,
+      final: vFinal, dataFinal: ultimo ? ultimo.data_resposta : null,
+      variacao: variacao, sentido: sentido, respostas: lista.length
+    };
+  }).filter(function (p) { return p.final != null; });
+}
