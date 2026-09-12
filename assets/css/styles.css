@@ -205,6 +205,10 @@ tr.row-link:hover{ background:var(--paper-tint); }
   height:calc(100vh - 78px); overflow-y:auto; overscroll-behavior:contain;
 }
 .sidebar a{ display:flex; align-items:center; gap:10px; padding:11px 28px; color:var(--ink-soft); text-decoration:none; font-size:.88rem; font-weight:500; border-left:3px solid transparent; }
+/* Um link escondido com o atributo "hidden" continuava à vista: a regra
+   acima dá-lhe display:flex, e uma classe vence o [hidden] do browser.
+   Foi o que manteve a Alta do acompanhamento no menu do doente. */
+.sidebar a[hidden]{ display:none !important; }
 .sidebar a.active{ color:var(--blue-deep); border-left-color:var(--flame-deep); background:var(--paper-tint); font-weight:600; }
 .sidebar a:hover:not(.active){ background:var(--paper-tint); }
 /* Pop-up modal. Estava só dentro do prom.html, onde nasceu; passa para aqui
