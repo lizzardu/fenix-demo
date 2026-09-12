@@ -1853,3 +1853,77 @@ if (document.readyState === "loading") {
 window.addEventListener("load", function () {
   if (!document.getElementById("modal-satisfacao")) arrancarConviteSatisfacao();
 });
+
+/* ========================================================================
+   PROMs PARA A CONSULTA
+
+   O que o profissional precisa de ver quando abre uma consulta: o último
+   valor de cada instrumento, o anterior, e para que lado está a ir.
+
+   A direção "boa" não é a mesma em todos: no BSHS-B (qualidade de vida)
+   subir é melhorar; na dor, no prurido e no PHQ-9 subir é piorar. Sem isto
+   uma seta verde podia estar a assinalar um agravamento.
+   ======================================================================== */
+const INSTRUMENTOS_PROM = {
+  "NRS-dor":  { nome: "Dor (NRS)",            maximo: 10,  subir: "pior" },
+  "5D-itch":  { nome: "Prurido (5D-itch)",    maximo: 10,  subir: "pior" },
+  "PHQ-9":    { nome: "Humor (PHQ-9)",        maximo: 27,  subir: "pior" },
+  "BSHS-B":   { nome: "Qualidade de vida (BSHS-B)", maximo: 100, subir: "melhor" }
+};
+
+/**
+ * Últimos dois valores de cada instrumento, com a variação já interpretada.
+ * Devolve [] se a tabela não responder: uma consulta tem de poder ser
+ * registada mesmo que os PROMs estejam indisponíveis.
+ */
+async function resumoPromsParaConsulta(doenteId) {
+  let respostas = [];
+  try {
+    respostas = await fenixApi.listarPromsDoente(doenteId);
+  } catch (e) {
+    console.warn("Não foi possível carregar os PROMs:", e);
+    return [];
+  }
+
+  const porInstrumento = {};
+  respostas.forEach(function (r) {
+    if (!porInstrumento[r.instrumento]) porInstrumento[r.instrumento] = [];
+    porInstrumento[r.instrumento].push(r);
+  });
+
+  return Object.keys(INSTRUMENTOS_PROM).map(function (chave) {
+    const meta = INSTRUMENTOS_PROM[chave];
+    const lista = (porInstrumento[chave] || [])
+      .slice()
+      .sort(function (a, b) { return String(a.data_resposta).localeCompare(String(b.data_resposta)); });
+
+    const ultima = lista[lista.length - 1] || null;
+    const penultima = lista[lista.length - 2] || null;
+    const valor = ultima && ultima.scores ? ultima.scores.total : null;
+    const anterior = penultima && penultima.scores ? penultima.scores.total : null;
+
+    let variacao = null, sentido = null;
+    if (valor != null && anterior != null) {
+      variacao = valor - anterior;
+      if (variacao === 0) sentido = "igual";
+      else if (variacao > 0) sentido = meta.subir === "melhor" ? "melhor" : "pior";
+      else sentido = meta.subir === "melhor" ? "pior" : "melhor";
+    }
+
+    return {
+      instrumento: chave, nome: meta.nome, maximo: meta.maximo,
+      valor: valor, data: ultima ? ultima.data_resposta : null,
+      anterior: anterior, dataAnterior: penultima ? penultima.data_resposta : null,
+      variacao: variacao, sentido: sentido,
+      respostas: ultima ? ultima.respostas : null,
+      total: lista.length
+    };
+  });
+}
+
+/** Data curta para as fichas: "14 set 2026". */
+function dataCurta(iso) {
+  if (!iso) return "—";
+  const d = new Date(String(iso).length <= 10 ? iso + "T00:00:00" : iso);
+  return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
+}

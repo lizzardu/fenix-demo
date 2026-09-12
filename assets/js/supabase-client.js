@@ -218,6 +218,84 @@ const fenixApi = {
   },
 
   /* ---------------------------------------------------------------------
+     CONSULTAS DE SEGUIMENTO
+     A consulta nasce em rascunho e só fica visível ao doente quando for
+     concluída — a regra está na política da base de dados, não aqui.
+     Requer 018_consultas.sql.
+     --------------------------------------------------------------------- */
+  async criarConsulta(doenteId, dados) {
+    const sessao = await this.utilizadorAtual();
+    if (!sessao || !sessao.perfil) throw new Error("Sessão não iniciada.");
+    const { data, error } = await sb.from("consultas").insert({
+      doente_id: doenteId,
+      agendamento_id: dados.agendamento_id || null,
+      data_consulta: dados.data_consulta || new Date().toISOString(),
+      tipo: dados.tipo || null,
+      profissional_id: sessao.user.id,
+      profissional_nome: sessao.perfil.nome,
+      especialidade: dados.especialidade || sessao.perfil.especialidade || null,
+      dados: dados.dados || {},
+      proms_base: dados.proms_base || null,
+      estado: dados.estado || "rascunho",
+      concluida_em: dados.estado === "concluida" ? new Date().toISOString() : null
+    }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async atualizarConsulta(consultaId, campos) {
+    const patch = Object.assign({ atualizado_em: new Date().toISOString() }, campos);
+    if (campos.estado === "concluida" && !campos.concluida_em) {
+      patch.concluida_em = new Date().toISOString();
+    }
+    const { data, error } = await sb.from("consultas").update(patch)
+      .eq("id", consultaId).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async listarConsultas(doenteId) {
+    const { data, error } = await sb.from("consultas").select("*")
+      .eq("doente_id", doenteId).order("data_consulta", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  async obterConsulta(consultaId) {
+    const { data, error } = await sb.from("consultas").select("*")
+      .eq("id", consultaId).maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  /** Regista uma alteração a um valor que tinha vindo do doente. Escreve-se
+   *  uma linha por campo alterado; nunca se corrige nem se apaga. */
+  async registarAuditoriaConsulta(consultaId, doenteId, entrada) {
+    const sessao = await this.utilizadorAtual();
+    if (!sessao || !sessao.perfil) throw new Error("Sessão não iniciada.");
+    const { data, error } = await sb.from("consultas_auditoria").insert({
+      consulta_id: consultaId,
+      doente_id: doenteId,
+      campo: entrada.campo,
+      instrumento: entrada.instrumento || null,
+      valor_doente: entrada.valor_doente == null ? null : String(entrada.valor_doente),
+      valor_novo: entrada.valor_novo == null ? null : String(entrada.valor_novo),
+      motivo: entrada.motivo || null,
+      autor_id: sessao.user.id,
+      autor_nome: sessao.perfil.nome
+    }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async listarAuditoriaConsulta(consultaId) {
+    const { data, error } = await sb.from("consultas_auditoria").select("*")
+      .eq("consulta_id", consultaId).order("criado_em");
+    if (error) throw error;
+    return data;
+  },
+
+  /* ---------------------------------------------------------------------
      SATISFAÇÃO (PREM)
      A equipa pede, o doente responde ou recusa. Responder e recusar passam
      por funções da base de dados: o doente não escreve diretamente na
