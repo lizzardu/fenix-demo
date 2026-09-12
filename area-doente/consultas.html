@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Consultas — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260916">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
 <style>
   .consulta-cartao{ border:1px solid var(--line); border-radius:var(--radius-lg); padding:20px 22px; margin-bottom:14px; background:#fff; }
   .consulta-cartao.proxima{ border-left:4px solid var(--flame-deep); }
@@ -75,7 +75,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260916"></script>
+<script src="../assets/js/main.js?v=20260917"></script>
 <script>
   let DOENTE_ID = null;
 
@@ -122,11 +122,45 @@
                    ? '<a class="btn btn-primary btn-sm" style="margin-top:12px;" href="' + esc(m.ligacao)
                      + '" target="_blank" rel="noopener">Entrar na teleconsulta</a>'
                    : "")
+             +   '<div id="doc-' + m.id + '"></div>'
              + "</div>";
       }).join("");
+
+      futuras.forEach(function(m){ mostrarDocumentos(m.id); });
     } catch (e) {
       console.error("Erro ao carregar marcações:", e);
       el.innerHTML = '<p class="hint">Não foi possível carregar as marcações.</p>';
+    }
+  }
+
+  /* Documentos que a equipa juntou à marcação. Carregam-se depois dos
+     cartões: se falharem — a migração pode ainda não ter corrido — a
+     marcação continua a aparecer, que é o que interessa ao doente. */
+  async function mostrarDocumentos(idMarcacao){
+    const zona = document.getElementById("doc-" + idMarcacao);
+    if (!zona) return;
+    try {
+      const lista = await fenixApi.listarAnexos(DOENTE_ID, idMarcacao);
+      if (!lista.length) return;
+      zona.innerHTML = '<p class="detalhe" style="margin-top:14px; font-weight:600;">Documentos para esta consulta</p>'
+        + lista.map(function(a){
+            return '<p style="margin:6px 0 0;"><a href="#" onclick="abrirDocumento(event, \'' + esc(a.caminho) + '\')">📄 '
+                 + esc(a.nome) + "</a>"
+                 + (a.descricao ? ' <span class="hint">— ' + esc(a.descricao) + "</span>" : "") + "</p>";
+          }).join("");
+    } catch (e) {
+      console.warn("Documentos indisponíveis:", e);
+    }
+  }
+
+  async function abrirDocumento(ev, caminho){
+    ev.preventDefault();
+    try {
+      const url = await fenixApi.enderecoAnexo(caminho);
+      window.open(url, "_blank", "noopener");
+    } catch (e) {
+      console.error("Erro ao abrir o documento:", e);
+      alert("Não foi possível abrir o documento. Avise a equipa em Dúvidas.");
     }
   }
 

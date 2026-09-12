@@ -1927,3 +1927,64 @@ function dataCurta(iso) {
   const d = new Date(String(iso).length <= 10 ? iso + "T00:00:00" : iso);
   return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
 }
+
+/* ========================================================================
+   GUARDAR EM PDF
+
+   Imprimir uma página destas tem dois problemas que o CSS sozinho não
+   resolve: os quadros recolhidos não têm conteúdo desenhado, e as caixas de
+   texto cortam o que não cabe na altura visível — o texto está lá, mas o
+   papel mostra duas linhas e esconde o resto.
+
+   Daí este par de eventos: antes de imprimir abre tudo e faz cada caixa
+   crescer até ao seu conteúdo; depois de imprimir devolve o ecrã ao que
+   estava. O utilizador carrega em "Guardar em PDF" e escolhe, na janela do
+   browser, imprimir ou gravar como PDF — é a mesma janela.
+   ======================================================================== */
+let ALTURAS_ORIGINAIS = [];
+
+function prepararParaImprimir() {
+  if (typeof SECOES_REGISTADAS !== "undefined" && SECOES_REGISTADAS.length) {
+    abrirTodosOsQuadros();
+  }
+  ALTURAS_ORIGINAIS = [];
+  document.querySelectorAll("textarea").forEach(function (t) {
+    ALTURAS_ORIGINAIS.push({ el: t, altura: t.style.height, linhas: t.rows });
+    t.style.height = "auto";
+    t.style.height = t.scrollHeight + "px";
+  });
+}
+
+function restaurarDepoisDeImprimir() {
+  ALTURAS_ORIGINAIS.forEach(function (r) { r.el.style.height = r.altura; });
+  ALTURAS_ORIGINAIS = [];
+  if (typeof SECOES_REGISTADAS !== "undefined" && SECOES_REGISTADAS.length) {
+    abrirQuadro(SECOES_REGISTADAS[0].id, false);
+  }
+}
+
+window.addEventListener("beforeprint", prepararParaImprimir);
+window.addEventListener("afterprint", restaurarDepoisDeImprimir);
+
+/** Chamado pelo botão. A janela do browser oferece "Guardar como PDF". */
+function guardarEmPDF() {
+  prepararParaImprimir();
+  window.print();
+}
+
+/**
+ * Cabeçalho que só aparece no papel. Um documento clínico impresso sem
+ * identificação do doente e sem data não serve para nada — e a página no
+ * ecrã já mostra tudo isso noutro sítio, pelo que no ecrã este bloco
+ * estorvaria.
+ */
+function montarCabecalhoImpressao(titulo, doente) {
+  const el = document.getElementById("print-cabecalho");
+  if (!el) return;
+  const proc = doente && doente.processo ? " · Processo " + doente.processo : "";
+  el.innerHTML =
+      '<div style="font-size:9pt; letter-spacing:.06em; text-transform:uppercase;">ULS São José · Unidade de Queimados · Fénix</div>'
+    + '<div style="font-size:14pt; font-weight:700; margin:4px 0 2px;">' + titulo + "</div>"
+    + '<div style="font-size:10pt;">' + ((doente && doente.nome) || "") + proc
+    + " — impresso em " + new Date().toLocaleString("pt-PT") + "</div>";
+}

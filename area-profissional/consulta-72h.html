@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulário 1.º Contacto — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260916">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
 </head>
 <body>
 <header class="topbar">
@@ -46,6 +46,7 @@
   </aside>
 
   <div class="main-area">
+    <div class="print-cabecalho" id="print-cabecalho"></div>
 
     <a href="doente.html" class="hint" id="link-voltar" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha do doente</a>
 
@@ -448,6 +449,7 @@
       </section>
 
       <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick="guardarEmPDF()">🖨️ Guardar em PDF</button>
         <a href="doente.html" class="btn btn-ghost" id="btn-cancelar">Voltar</a>
         <button type="submit" class="btn btn-primary" id="btn-guardar">Guardar 1.º contacto</button>
       </div>
@@ -466,7 +468,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260916"></script>
+<script src="../assets/js/main.js?v=20260917"></script>
 <script>
   let DOENTE = null;
   let PRIORIDADE_ALTA = null;   // a que ficou definida no Formulário de Alta
@@ -902,6 +904,7 @@
     document.getElementById("titulo-doente").textContent = "Formulário 1.º Contacto — " + DOENTE.nome;
     document.getElementById("sidebar-nome-doente").textContent = DOENTE.nome;
     ligarSidebarAoProcesso(DOENTE.processo);
+    montarCabecalhoImpressao("Formulário 1.º Contacto (72 horas)", DOENTE);
     const voltar = `doente.html?processo=${encodeURIComponent(DOENTE.processo)}`;
     document.getElementById("link-voltar").href = voltar;
     document.getElementById("btn-cancelar").href = voltar;

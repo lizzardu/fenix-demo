@@ -296,6 +296,71 @@ const fenixApi = {
   },
 
   /* ---------------------------------------------------------------------
+     ANEXOS DAS MARCAÇÕES
+     Ficheiros num balde privado. O doente nunca recebe um endereço fixo:
+     recebe um endereço assinado, válido por uma hora. Um endereço público
+     de um documento clínico é um documento clínico publicado.
+     Requer 019_anexos.sql.
+     --------------------------------------------------------------------- */
+  async carregarAnexo(doenteId, agendamentoId, ficheiro, descricao) {
+    const sessao = await this.utilizadorAtual();
+    if (!sessao || !sessao.perfil) throw new Error("Sessão não iniciada.");
+
+    // o nome vai limpo de acentos e espaços: o Storage aceita-os, mas dão
+    // problemas em endereços e em downloads no Windows
+    const seguro = ficheiro.name
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^A-Za-z0-9._-]/g, "-");
+    const caminho = "doentes/" + doenteId + "/agendamentos/" + (agendamentoId || "geral")
+                  + "/" + Date.now() + "-" + seguro;
+
+    const { error: erroUpload } = await sb.storage.from("anexos")
+      .upload(caminho, ficheiro, { contentType: ficheiro.type || undefined });
+    if (erroUpload) throw erroUpload;
+
+    const { data, error } = await sb.from("anexos").insert({
+      doente_id: doenteId,
+      agendamento_id: agendamentoId || null,
+      caminho: caminho,
+      nome: ficheiro.name,
+      descricao: descricao || null,
+      tipo_mime: ficheiro.type || null,
+      tamanho: ficheiro.size || null,
+      carregado_por: sessao.user.id,
+      carregado_nome: sessao.perfil.nome
+    }).select().single();
+    if (error) {
+      // não deixar o ficheiro órfão no balde se o índice falhar
+      await sb.storage.from("anexos").remove([caminho]);
+      throw error;
+    }
+    return data;
+  },
+
+  async listarAnexos(doenteId, agendamentoId) {
+    let query = sb.from("anexos").select("*").eq("doente_id", doenteId)
+      .order("criado_em", { ascending: false });
+    if (agendamentoId) query = query.eq("agendamento_id", agendamentoId);
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  },
+
+  /** Endereço temporário para abrir o ficheiro. Uma hora chega para o ler. */
+  async enderecoAnexo(caminho) {
+    const { data, error } = await sb.storage.from("anexos").createSignedUrl(caminho, 3600);
+    if (error) throw error;
+    return data.signedUrl;
+  },
+
+  async removerAnexo(anexo) {
+    const { error: erroFicheiro } = await sb.storage.from("anexos").remove([anexo.caminho]);
+    if (erroFicheiro) throw erroFicheiro;
+    const { error } = await sb.from("anexos").delete().eq("id", anexo.id);
+    if (error) throw error;
+  },
+
+  /* ---------------------------------------------------------------------
      SATISFAÇÃO (PREM)
      A equipa pede, o doente responde ou recusa. Responder e recusar passam
      por funções da base de dados: o doente não escreve diretamente na

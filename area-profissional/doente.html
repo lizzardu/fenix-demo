@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maria Santos — Ficha do doente · Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260916">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
 <script src="../assets/js/vendor/chart.umd.js"></script>
 </head>
 <body>
@@ -57,7 +57,7 @@
         <p class="mono" style="color:var(--ink-soft); font-size:.85rem;" id="meta-doente"></p>
       </div>
       <div style="display:flex; gap:10px;">
-        <button class="btn btn-ghost" onclick="window.print()">🖨️ Gerar PDF-resumo</button>
+        <button class="btn btn-ghost" onclick="guardarEmPDF()">🖨️ Guardar em PDF</button>
         <a class="btn btn-primary" id="link-formulario-alta" href="formulario-alta.html">Ver formulário de alta</a>
       </div>
     </div>
@@ -199,7 +199,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260916"></script>
+<script src="../assets/js/main.js?v=20260917"></script>
 <script>
   let DOENTE = null;
 
@@ -221,6 +221,7 @@
     document.getElementById("nome-doente").textContent = DOENTE.nome;
     document.getElementById("sidebar-nome-doente").textContent = DOENTE.nome;
     ligarSidebarAoProcesso(DOENTE.processo);
+    montarCabecalhoImpressao("Ficha de seguimento pós-alta", DOENTE);
     document.getElementById("meta-doente").textContent =
       `${DOENTE.processo}${DOENTE.data_alta ? " · Alta em " + formatarData(DOENTE.data_alta) : ""}`;
     document.getElementById("ctx-tbsa").innerHTML = (DOENTE.tbsa != null ? DOENTE.tbsa : "—") + '<span style="font-size:1.1rem;">%TBSA</span>';

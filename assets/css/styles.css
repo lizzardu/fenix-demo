@@ -550,7 +550,62 @@ tr.row-link:hover{ background:var(--paper-tint); }
 body.page-tint{ background:var(--paper-tint); }
 
 @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
-@media print{ .topbar, .sidebar, footer, .btn{ display:none !important; } body{ background:#fff; } }
+/* ========================================================================
+   IMPRESSÃO / GUARDAR EM PDF
+
+   O que sai em papel não é a página: é o documento. Um formulário impresso
+   com as caixas todas, incluindo as opções que ninguém escolheu, seria
+   ilegível e ocuparia o triplo das folhas.
+
+   Por isso: as opções não escolhidas desaparecem e as escolhidas passam a
+   texto simples. O que fica é o que foi respondido, na ordem em que foi
+   perguntado — que é o que alguém quer ler num processo clínico.
+   ======================================================================== */
+@media print{
+  .topbar, .sidebar, footer, .btn, .form-indice, .form-actions,
+  .secao-toggle .seta, .secao-progresso, .matriz-cabecalho{ display:none !important; }
+
+  body{ background:#fff; color:#000; font-size:11pt; }
+  .app-shell{ display:block; }
+  .main-area{ padding:0; }
+  .card, .form-section{ border:none !important; box-shadow:none; padding:0; margin:0 0 14px; background:none !important; }
+
+  /* quadros recolhidos abrem para o papel */
+  .secao-corpo[hidden]{ display:block !important; }
+  .section-head{ break-after:avoid; }
+  .form-section, .subfield, .prom-linha, .consulta-cartao{ break-inside:avoid; }
+
+  /* só as respostas dadas, e em texto */
+  .chip:has(input:not(:checked)), .scale-opt:has(input:not(:checked)){ display:none !important; }
+  .chip span, .scale-opt span{
+    border:none !important; background:none !important; color:#000 !important;
+    padding:0 !important; width:auto !important; height:auto !important;
+    border-radius:0 !important; box-shadow:none !important; font-weight:600;
+  }
+  .chip-group{ gap:0 10px; }
+
+  /* a matriz vira lista: sintoma e o nível escolhido */
+  .matriz-escala{ border:none !important; }
+  .matriz-escala .subfield{ display:flex !important; gap:10px; border:none !important; background:none !important; padding:2px 0; }
+  .matriz-escala .subfield > label{ padding:0 !important; min-width:150px; }
+  .matriz-escala .chip-group{ display:flex !important; }
+  .matriz-escala .chip{ padding:0 !important; }
+  .matriz-escala .chip span{ font-size:11pt !important; }
+
+  /* campos de texto sem aspeto de campo */
+  input, textarea, select{
+    border:none !important; padding:0 !important; background:none !important;
+    color:#000 !important; font-size:11pt !important; resize:none;
+  }
+  textarea{ overflow:visible !important; }
+  .subfield > label{ color:#000 !important; }
+  .scale-note, .hint{ color:#444 !important; }
+
+  /* cabeçalho próprio do documento, escondido no ecrã */
+  .print-cabecalho{ display:block !important; border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:18px; }
+  a[href]::after{ content:""; }   /* sem URLs no meio do texto */
+}
+.print-cabecalho{ display:none; }
 
 /* ---------- Formulário de Alta: quadros recolhíveis ----------
    São 9 quadros e cerca de 90 campos. Tudo aberto ao mesmo tempo dava uma
@@ -638,10 +693,7 @@ body.page-tint{ background:var(--paper-tint); }
 
 /* Ao imprimir, nada disto se aplica: o formulário sai inteiro, com todos os
    quadros abertos e sem o índice. */
-@media print{
-  .secao-corpo[hidden]{ display:block !important; }
-  .form-indice, .secao-toggle .seta, .secao-progresso{ display:none !important; }
-}
+/* (as regras de impressão dos quadros estão na secção de impressão, acima) */
 
 /* O formulário ocupa uma coluna estreita, onde nove rótulos não cabem lado a
    lado — ficavam empilhados e o índice ocupava mais espaço do que poupava.

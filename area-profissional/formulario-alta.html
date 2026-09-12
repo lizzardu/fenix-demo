@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulário de Alta — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260916">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
 </head>
 <body>
 <header class="topbar">
@@ -46,6 +46,7 @@
   </aside>
 
   <div class="main-area">
+    <div class="print-cabecalho" id="print-cabecalho"></div>
 
     <a href="dashboard.html" class="hint" id="link-voltar" style="display:inline-block; margin-bottom:14px;">← Voltar à lista de doentes</a>
 
@@ -826,6 +827,7 @@
         </section>
 
         <div class="form-actions">
+          <button type="button" class="btn btn-ghost" onclick="guardarEmPDF()">🖨️ Guardar em PDF</button>
           <button type="button" class="btn btn-ghost">Guardar rascunho</button>
           <button type="submit" class="btn btn-primary" id="btn-submeter-alta">Guardar e ativar plano de seguimento</button>
         </div>
@@ -847,7 +849,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260916"></script>
+<script src="../assets/js/main.js?v=20260917"></script>
 <script>
   let DOENTE_ID = null;
   let DOENTE_PROCESSO = null;
@@ -1641,6 +1643,7 @@
     document.getElementById("titulo-formulario").textContent = "Formulário de Alta — " + doente.nome;
     document.getElementById("sidebar-nome-doente").textContent = doente.nome;
     ligarSidebarAoProcesso(doente.processo);
+    montarCabecalhoImpressao("Formulário de Alta", doente);
 
     if (doente.email) document.getElementById('doente-email').value = doente.email;
     if (doente.genero) {

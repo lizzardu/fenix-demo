@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Consultas — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260916">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260917">
 <style>
   .linha-marcacao{ display:flex; gap:14px; align-items:flex-start; padding:16px 0; border-bottom:1px solid var(--line); }
   .linha-marcacao:last-child{ border-bottom:none; }
@@ -58,6 +58,7 @@
   </aside>
 
   <div class="main-area">
+    <div class="print-cabecalho" id="print-cabecalho"></div>
 
     <a href="doente.html" class="hint" id="link-voltar" style="display:inline-block; margin-bottom:14px;">← Voltar à ficha do doente</a>
 
@@ -170,7 +171,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260916"></script>
+<script src="../assets/js/main.js?v=20260917"></script>
 <script>
   let DOENTE = null;
 
@@ -248,7 +249,7 @@
     if (m.profissional_nome) detalhes.push(esc(m.profissional_nome));
     if (m.local) detalhes.push(esc(m.local));
 
-    let acoes = "";
+    let acoes = '<button type="button" class="btn btn-ghost btn-sm" onclick="alternarAnexos(\'' + m.id + '\')">📎 Documentos</button>';
     if (m.estado === "agendado") {
       const abrir = "consulta.html?processo=" + encodeURIComponent(DOENTE.processo) + "&agendamento=" + m.id;
       acoes = '<a class="btn ' + (passou ? "btn-flame" : "btn-ghost") + ' btn-sm" href="' + abrir + '">'
@@ -266,7 +267,92 @@
          +     (m.instrucoes ? '<p class="hint" style="margin:6px 0 0;">📋 ' + esc(m.instrucoes) + "</p>" : "")
          +   "</div>"
          +   '<div style="display:flex; gap:8px; flex-wrap:wrap;">' + acoes + "</div>"
-         + "</div>";
+         + "</div>"
+         + '<div id="anexos-' + m.id + '" hidden style="padding:0 0 16px 126px; border-bottom:1px solid var(--line);"></div>';
+  }
+
+  /* ---------- documentos associados a uma marcação ---------- */
+  async function alternarAnexos(id){
+    const zona = document.getElementById("anexos-" + id);
+    if (!zona.hidden) { zona.hidden = true; return; }
+    zona.hidden = false;
+    zona.innerHTML = '<p class="hint" style="margin:0;">A carregar...</p>';
+    await desenharAnexos(id);
+  }
+
+  async function desenharAnexos(id){
+    const zona = document.getElementById("anexos-" + id);
+    if (!zona || zona.hidden) return;
+    let lista = [];
+    try {
+      lista = await fenixApi.listarAnexos(DOENTE.id, id);
+    } catch (e) {
+      zona.innerHTML = '<p class="hint" style="margin:0;">Não foi possível carregar os documentos. '
+        + "Se a migração 019 ainda não foi executada, é normal.</p>";
+      console.error(e);
+      return;
+    }
+
+    const itens = lista.length
+      ? lista.map(function(a){
+          const kb = a.tamanho ? Math.round(a.tamanho / 1024) + " KB" : "";
+          return '<div style="display:flex; gap:10px; align-items:center; padding:6px 0;">'
+               +   '<a href="#" onclick="abrirAnexo(event, \'' + esc(a.caminho) + '\')">📄 ' + esc(a.nome) + "</a>"
+               +   '<span class="hint" style="margin:0;">' + esc(a.descricao || "") + " " + kb + "</span>"
+               +   '<button type="button" class="btn btn-ghost btn-sm" onclick="apagarAnexo(\'' + a.id + "','" + id + '\')">Remover</button>'
+               + "</div>";
+        }).join("")
+      : '<p class="hint" style="margin:0 0 10px;">Sem documentos associados a esta marcação.</p>';
+
+    zona.innerHTML = itens
+      + '<div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:10px;">'
+      +   '<div class="field" style="margin:0;"><label for="fich-' + id + '">Novo documento</label>'
+      +     '<input type="file" id="fich-' + id + '"></div>'
+      +   '<div class="field" style="margin:0;"><label for="desc-' + id + '">Para que serve</label>'
+      +     '<input type="text" id="desc-' + id + '" placeholder="ex.: preparação para o exame"></div>'
+      +   '<button type="button" class="btn btn-flame btn-sm" onclick="enviarAnexo(\'' + id + '\')">Anexar</button>'
+      +   '<span class="hint" style="margin:0;" id="estado-anexo-' + id + '"></span>'
+      + "</div>"
+      + '<p class="scale-note" style="margin:8px 0 0;">O doente vê estes documentos junto à marcação, na área dele.</p>';
+    // guarda a lista para o apagar não ter de voltar a consultar
+    zona.dataset.anexos = JSON.stringify(lista);
+  }
+
+  async function abrirAnexo(ev, caminho){
+    ev.preventDefault();
+    try {
+      const url = await fenixApi.enderecoAnexo(caminho);
+      window.open(url, "_blank", "noopener");
+    } catch (e) { mostrarErro(e, "Não foi possível abrir o documento"); }
+  }
+
+  async function enviarAnexo(id){
+    const campo = document.getElementById("fich-" + id);
+    const estado = document.getElementById("estado-anexo-" + id);
+    if (!campo.files || !campo.files.length) { estado.textContent = "Escolha um ficheiro."; return; }
+    const ficheiro = campo.files[0];
+    if (ficheiro.size > 10 * 1024 * 1024) { estado.textContent = "Ficheiro demasiado grande (máximo 10 MB)."; return; }
+
+    estado.textContent = "A enviar...";
+    try {
+      await fenixApi.carregarAnexo(DOENTE.id, id, ficheiro, document.getElementById("desc-" + id).value.trim());
+      await desenharAnexos(id);
+    } catch (e) {
+      estado.textContent = "";
+      mostrarErro(e, "Não foi possível anexar");
+    }
+  }
+
+  async function apagarAnexo(anexoId, marcacaoId){
+    const zona = document.getElementById("anexos-" + marcacaoId);
+    const lista = JSON.parse(zona.dataset.anexos || "[]");
+    const anexo = lista.find(function(a){ return a.id === anexoId; });
+    if (!anexo) return;
+    if (!confirm('Remover "' + anexo.nome + '"? O doente deixa de o ver.')) return;
+    try {
+      await fenixApi.removerAnexo(anexo);
+      await desenharAnexos(marcacaoId);
+    } catch (e) { mostrarErro(e, "Não foi possível remover"); }
   }
 
   async function carregarMarcacoes(){
@@ -405,6 +491,7 @@
     document.getElementById("titulo-doente").textContent = "Consultas — " + DOENTE.nome;
     document.getElementById("sidebar-nome-doente").textContent = DOENTE.nome;
     ligarSidebarAoProcesso(DOENTE.processo);
+    montarCabecalhoImpressao("Consultas de seguimento", DOENTE);
     document.getElementById("link-voltar").href = "doente.html?processo=" + encodeURIComponent(DOENTE.processo);
 
     carregarMarcacoes();
