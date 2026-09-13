@@ -234,6 +234,22 @@
         <span class="hint" style="margin:0;" id="estado-guardar"></span>
       </div>
 
+      <!-- Só aparece depois de o relatório estar emitido: pedir a avaliação
+           final de um acompanhamento que ainda não terminou oficialmente não
+           faz sentido, e o doente ainda nem viu o documento de alta. -->
+      <div class="card" id="cartao-satisfacao-final" hidden style="margin-top:20px;">
+        <p class="eyebrow" style="margin-bottom:8px;">Avaliação final do acompanhamento</p>
+        <p class="hint" style="margin:0 0 12px;">
+          Questionário de fecho, 13 perguntas, cerca de três minutos. O doente recebe
+          um convite quando entrar na plataforma, e um email com a ligação. Pode
+          responder, adiar ou recusar — a recusa também fica registada.
+        </p>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button type="button" class="btn btn-flame btn-sm" id="btn-satisfacao-final" onclick="pedirAvaliacaoFinal()">Pedir avaliação final ao doente</button>
+          <span class="hint" style="margin:0;" id="estado-satisfacao-final"></span>
+        </div>
+      </div>
+
     </form>
   </div>
 </div>
@@ -424,6 +440,45 @@
       el.innerHTML = "<div>📝 Rascunho. Só a equipa vê isto — o doente não vê nada até ser emitido.</div>";
     }
     el.style.display = "flex";
+    atualizarCartaoSatisfacaoFinal();
+  }
+
+  /* ---------- avaliação final do acompanhamento ---------- */
+  async function atualizarCartaoSatisfacaoFinal(){
+    const cartao = document.getElementById("cartao-satisfacao-final");
+    const emitida = ALTA && ALTA.estado === "emitida";
+    cartao.hidden = !emitida;
+    if (!emitida) return;
+
+    // Um acompanhamento só tem um fecho: se já foi pedida a avaliação final
+    // para este doente, dizer o estado em vez de convidar a pedir outra vez.
+    try {
+      const pedidos = await fenixApi.listarPedidosSatisfacao(DOENTE.id);
+      const existente = pedidos.find(function(p){ return p.tipo === "final"; });
+      if (existente) {
+        const estados = { pendente: "por responder", respondida: "já respondida", recusada: "dispensada pelo doente" };
+        document.getElementById("btn-satisfacao-final").disabled = true;
+        document.getElementById("btn-satisfacao-final").textContent = "Avaliação final já pedida";
+        document.getElementById("estado-satisfacao-final").textContent = "Estado: " + (estados[existente.estado] || existente.estado) + ".";
+      }
+    } catch (e) {
+      console.warn("Não foi possível verificar pedidos anteriores:", e);
+    }
+  }
+
+  async function pedirAvaliacaoFinal(){
+    const btn = document.getElementById("btn-satisfacao-final");
+    const estado = document.getElementById("estado-satisfacao-final");
+    btn.disabled = true; estado.textContent = "A enviar o convite...";
+    try {
+      await fenixApi.pedirAvaliacaoSatisfacao(DOENTE.id, "final", null);
+      btn.textContent = "Avaliação final pedida ✓";
+      estado.textContent = "O doente foi convidado.";
+    } catch (e) {
+      console.error("Erro ao pedir a avaliação final:", e);
+      estado.textContent = "Não foi possível pedir: " + (e.message || e);
+      btn.disabled = false;
+    }
   }
 
   function repovoar(dados){
