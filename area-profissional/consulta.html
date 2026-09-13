@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Registo de consulta — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260920">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260921">
 <style>
   .prom-linha{ border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:12px; }
   .prom-linha.alterado{ border-color:var(--flame-deep); background:var(--flame-mist); }
@@ -306,6 +306,21 @@
         <span class="hint" style="margin:0;" id="estado-guardar"></span>
       </div>
 
+      <!-- Só aparece depois de a consulta estar concluída: pedir a opinião
+           sobre uma consulta que ainda está em rascunho seria pedi-la antes
+           de o doente ter visto o que ficou registado. -->
+      <div class="card" id="cartao-satisfacao" hidden style="margin-top:20px;">
+        <p class="eyebrow" style="margin-bottom:8px;">Avaliação da consulta</p>
+        <p class="hint" style="margin:0 0 12px;">
+          O doente recebe um convite quando entrar na plataforma, e um email com a
+          ligação. Pode responder, adiar ou recusar — a recusa também fica registada.
+        </p>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button type="button" class="btn btn-flame btn-sm" id="btn-satisfacao" onclick="pedirAvaliacao()">Pedir avaliação desta consulta ao doente</button>
+          <span class="hint" style="margin:0;" id="estado-satisfacao"></span>
+        </div>
+      </div>
+
     </form>
 
   </div>
@@ -314,7 +329,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260920"></script>
+<script src="../assets/js/main.js?v=20260921"></script>
 <script>
   let DOENTE = null;
   let CONSULTA = null;        // linha em consultas, quando já existe
@@ -537,6 +552,46 @@
       el.innerHTML = "<div>📝 Rascunho. Só a equipa vê isto — o doente não vê nada até concluir.</div>";
     }
     el.style.display = "flex";
+    atualizarCartaoSatisfacao();
+  }
+
+  /* ---------- avaliação da consulta ---------- */
+  async function atualizarCartaoSatisfacao(){
+    const cartao = document.getElementById("cartao-satisfacao");
+    const concluida = CONSULTA && CONSULTA.estado === "concluida";
+    cartao.hidden = !concluida;
+    if (!concluida) return;
+
+    // Se esta consulta veio de uma marcação e já há pedido para ela, dizê-lo:
+    // reabrir o registo não deve convidar a pedir a mesma avaliação duas vezes.
+    if (!CONSULTA.agendamento_id) return;
+    try {
+      const pedidos = await fenixApi.listarPedidosSatisfacao(DOENTE.id);
+      const existente = pedidos.find(function(p){ return p.agendamento_id === CONSULTA.agendamento_id; });
+      if (existente) {
+        const estados = { pendente: "por responder", respondida: "já respondida", recusada: "dispensada pelo doente" };
+        document.getElementById("btn-satisfacao").disabled = true;
+        document.getElementById("btn-satisfacao").textContent = "Avaliação já pedida";
+        document.getElementById("estado-satisfacao").textContent = "Estado: " + (estados[existente.estado] || existente.estado) + ".";
+      }
+    } catch (e) {
+      console.warn("Não foi possível verificar pedidos anteriores:", e);
+    }
+  }
+
+  async function pedirAvaliacao(){
+    const btn = document.getElementById("btn-satisfacao");
+    const estado = document.getElementById("estado-satisfacao");
+    btn.disabled = true; estado.textContent = "A enviar o convite...";
+    try {
+      await fenixApi.pedirAvaliacaoSatisfacao(DOENTE.id, "breve", CONSULTA.agendamento_id || null);
+      btn.textContent = "Avaliação pedida ✓";
+      estado.textContent = "O doente foi convidado.";
+    } catch (e) {
+      console.error("Erro ao pedir a avaliação:", e);
+      estado.textContent = "Não foi possível pedir: " + (e.message || e);
+      btn.disabled = false;
+    }
   }
 
   /* ---------- repovoar um registo já gravado ---------- */
