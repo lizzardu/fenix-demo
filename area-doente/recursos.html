@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Recursos — Fénix</title>
 <link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260919">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260920">
 <style>
   /* Avaliação (👍/👎) de cada recurso — não existe em styles.css, por isso
      reutilizam-se aqui as mesmas variáveis de cor do resto do site. */
@@ -71,6 +71,32 @@
     <a href="#" class="hint">Ver todos</a>
   </div>
   <div class="grid g-3" style="margin-top:16px;">
+
+    <!-- Vídeo real, alojado no próprio site. preload="metadata" para não
+         descarregar os 15 MB só por abrir a página — num telemóvel com dados
+         móveis isso seria gastar-lhe o tarifário sem ele ter pedido nada.
+         playsinline para o iPhone não o abrir em ecrã inteiro à força. -->
+    <div class="video-card">
+      <div class="video-real">
+        <video controls preload="metadata" playsinline
+               src="../assets/videos/massagem-cicatriz.mp4"
+               aria-label="Vídeo: massagem da cicatriz"
+               onloadedmetadata="mostrarDuracao(this)">
+          O seu navegador não consegue reproduzir este vídeo.
+          <a href="../assets/videos/massagem-cicatriz.mp4">Abrir o vídeo</a>.
+        </video>
+      </div>
+      <div class="body">
+        <span class="pill pill-flame" style="margin-bottom:8px;">Cuidados com a pele</span>
+        <h3>Massagem da cicatriz</h3>
+        <p class="hint" style="margin:0;">Unidade de Queimados<span class="duracao-video"></span></p>
+        <div class="rating-row" data-recurso-id="video-massagem-cicatriz" data-recurso-tipo="video">
+          <span class="hint">Foi útil?</span>
+          <button type="button" class="rating-btn" data-valor="up" onclick="avaliarRecurso(this)" aria-label="Gostei">👍</button>
+          <button type="button" class="rating-btn" data-valor="down" onclick="avaliarRecurso(this)" aria-label="Não gostei">👎</button>
+        </div>
+      </div>
+    </div>
 
     <div class="video-card">
       <div class="video-thumb">
@@ -342,7 +368,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260919"></script>
+<script src="../assets/js/main.js?v=20260920"></script>
 <script>
   let DOENTE_ID = null;
   let AVALIACOES = {}; // recurso_id -> true (👍) | false (👎)
@@ -398,6 +424,15 @@
     } catch (e) {
       console.error("Não foi possível carregar as avaliações de recursos:", e);
     }
+  }
+
+  /* A duração lê-se do próprio ficheiro, em vez de ficar escrita à mão:
+     se o vídeo for substituído por uma versão mais curta, o número acompanha. */
+  function mostrarDuracao(video){
+    const s = Math.round(video.duration);
+    if (!isFinite(s) || s <= 0) return;
+    const alvo = video.closest(".video-card").querySelector(".duracao-video");
+    if (alvo) alvo.textContent = " · " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
   }
 
   function terminarSessao(ev){
