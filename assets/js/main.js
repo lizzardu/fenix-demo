@@ -9,7 +9,9 @@ const BADGES = {
   "funcional":      { nome: "Movimento Conquistado", icon: "💪", desc: "Por recuperar mobilidade ou função." },
   "psicossocial":   { nome: "Passo em Frente",      icon: "🌟", desc: "Por retomar rotinas e vida social." },
   "prom":           { nome: "Voz Ouvida",           icon: "📋", desc: "Por completar uma avaliação PROM." },
-  "pessoal":        { nome: "Meta Pessoal",         icon: "🔥", desc: "Por alcançar algo que definiu como importante para si." }
+  // 🔥 de propósito fora daqui: são doentes queimados, e o fogo não é um
+  // símbolo de conquista para este público — é o que lhes causou a lesão.
+  "pessoal":        { nome: "Meta Pessoal",         icon: "🏆", desc: "Por alcançar algo que definiu como importante para si." }
 };
 
 const DEMO_PATIENT = {
