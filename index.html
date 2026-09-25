@@ -6,7 +6,7 @@
 <title>Fénix — Seguimento pós-alta, Unidade de Queimados · ULS São José</title>
 <meta name="description" content="Fénix é a plataforma de seguimento pós-alta da Unidade de Queimados da ULS São José: jornada de recuperação, PROMs e dashboard clínico.">
 <link rel="icon" type="image/png" href="assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="assets/css/styles.css?v=20260922">
+<link rel="stylesheet" href="assets/css/styles.css?v=20260925">
 </head>
 <body>
 <a class="skip-link" href="#conteudo">Saltar para o conteúdo</a>
@@ -44,7 +44,7 @@
         <h1>Da alta ao recomeço,<br>uma jornada acompanhada.</h1>
         <p style="font-size:1.08rem;">
           O <strong>Fénix</strong> liga o doente queimado à equipa da Unidade de Queimados
-          da ULS São José depois da alta: recolhe o que o próprio doente sente e relata,
+          <span class="uls-ref">da ULS São José </span>depois da alta: recolhe o que o próprio doente sente e relata,
           organiza a recuperação numa jornada clara, e dá à equipa clínica um retrato
           fiável da evolução — em cada etapa, até à alta clínica definitiva.
         </p>
@@ -181,7 +181,7 @@
 
 <footer>
   <div class="wrap">
-    <span>Fénix — Unidade de Queimados, ULS São José. Protótipo de demonstração, dados fictícios.</span>
+    <span>Fénix — Unidade de Queimados<span class="uls-ref">, ULS São José</span>. Protótipo de demonstração, dados fictícios.</span>
     <span class="mono">Modelo de dados: HL7 FHIR R4</span>
   </div>
 </footer>
@@ -189,7 +189,7 @@
 <script src="assets/js/vendor/supabase.js"></script>
 <script src="assets/js/supabase-config.js"></script>
 <script src="assets/js/supabase-client.js"></script>
-<script src="assets/js/main.js?v=20260922"></script>
+<script src="assets/js/main.js?v=20260925"></script>
 <script>
   function mudarAuthTab(nome){
     document.querySelectorAll(".auth-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === nome));

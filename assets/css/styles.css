@@ -86,6 +86,13 @@ img{ max-width:100%; display:block; }
 .uls-logo .uls-text{ font-family:var(--f-body); font-weight:600; font-size:.82rem; line-height:1.15; letter-spacing:.01em; }
 .uls-logo .uls-text small{ display:block; font-weight:400; font-size:.7rem; opacity:.72; }
 .brand-divider{ width:1px; height:30px; background:var(--blue-line); }
+
+/* OCULTAR ULS — bloco único de interruptor. Esconde o logótipo da ULS São
+   José (presente em todas as páginas) e as referências textuais marcadas
+   com a classe .uls-ref (usadas pontualmente no index.html). Para voltar a
+   mostrar tudo, basta apagar (ou comentar) este bloco — nada foi removido
+   do markup, só escondido. */
+.uls-logo, .brand-divider, .uls-ref{ display:none !important; }
 .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; }
 .brand svg{ height:34px; width:auto; flex:none; }
 .brand img{ height:40px; width:auto; flex:none; }
