@@ -344,10 +344,12 @@ tr.row-link:hover{ background:var(--paper-tint); }
 .faq-item[open] summary::after{ transform:rotate(45deg); }
 .faq-item .faq-a{ padding:0 4px 20px; color:var(--ink-soft); font-size:.9rem; max-width:70ch; }
 
-/* ---------- logo Fénix em destaque no hero ---------- */
+/* ---------- logo Tive alta, e agora? em destaque no hero ---------- */
 .hero-logo-wrap{ text-align:center; margin-bottom:8px; }
-.hero-logo{ height:220px; width:auto; margin:0 auto; filter:drop-shadow(0 18px 40px rgba(0,0,0,.35)); }
-@media (max-width:640px){ .hero-logo{ height:150px; } }
+.hero-logo{ height:120px; width:auto; margin:0 auto; filter:drop-shadow(0 12px 28px rgba(0,0,0,.35)); }
+.hero-wordmark{ font-family:var(--f-display); font-weight:700; font-size:1.9rem; letter-spacing:.01em;
+                 color:#fff; margin:14px 0 0; }
+@media (max-width:640px){ .hero-logo{ height:82px; } .hero-wordmark{ font-size:1.4rem; } }
 
 /* ========================================================================
    Formulário de Alta (avaliação clínica pré-alta)

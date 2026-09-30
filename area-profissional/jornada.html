@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jornada e Metas — Fénix</title>
-<link rel="icon" type="image/png" href="../assets/img/fenix-logo-icon.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20260925">
+<title>Jornada e Metas — Tive alta, e agora?</title>
+<link rel="icon" type="image/png" href="../assets/img/tivealta-logo-icon.png">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20260930">
 </head>
 <body>
 <header class="topbar">
@@ -16,8 +16,8 @@
       </a>
       <span class="brand-divider"></span>
       <a class="brand" href="../index.html">
-        <img src="../assets/img/fenix-logo-icon.png" alt="Fénix">
-        <span class="brand-name">Fénix<small>Unidade de Queimados</small></span>
+        <img src="../assets/img/tivealta-logo-icon.png" alt="Tive alta, e agora?">
+        <span class="brand-name">Tive alta, e agora?<small>Unidade de Queimados</small></span>
       </a>
     </div>
     <nav>
@@ -106,7 +106,7 @@
 <script src="../assets/js/vendor/supabase.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/main.js?v=20260925"></script>
+<script src="../assets/js/main.js?v=20260930"></script>
 <script>
   let DOENTE_ID = null;
 
@@ -297,7 +297,7 @@
       window.location.href = "../index.html#acesso";
       return;
     }
-    document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa Fénix");
+    document.getElementById("badge-profissional").textContent = sessao.perfil.nome + " · " + (sessao.perfil.especialidade || "Equipa clínica");
 
     const doente = await fenixApi.obterDoentePorProcesso(obterProcessoDaURL("PROC-2026-0142"));
     DOENTE_ID = doente.id;

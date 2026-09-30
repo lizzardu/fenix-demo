@@ -1810,7 +1810,7 @@ function caminhoParaAreaDoente() {
    pop-up já criado e não faz nada.
    ------------------------------------------------------------------------ */
 async function arrancarConviteSatisfacao() {
-  const diz = function (m) { console.log("Fénix · convite: " + m); };
+  const diz = function (m) { console.log("convite: " + m); };
 
   const caminho = window.location.pathname;
   if (caminho.indexOf("/area-doente/") < 0) { diz("fora da área do doente (" + caminho + ")"); return; }
@@ -1842,7 +1842,7 @@ async function arrancarConviteSatisfacao() {
     diz("a mostrar o pedido " + pedido.id);
     mostrarPedidoSatisfacao(pedido);
   } catch (e) {
-    console.warn("Fénix · convite: falhou —", e);
+    console.warn("convite: falhou —", e);
   }
 }
 
@@ -1988,7 +1988,7 @@ function montarCabecalhoImpressao(titulo, doente) {
   if (!el) return;
   const proc = doente && doente.processo ? " · Processo " + doente.processo : "";
   el.innerHTML =
-      '<div style="font-size:9pt; letter-spacing:.06em; text-transform:uppercase;">ULS São José · Unidade de Queimados · Fénix</div>'
+      '<div style="font-size:9pt; letter-spacing:.06em; text-transform:uppercase;">Tive alta, e agora? · Unidade de Queimados</div>'
     + '<div style="font-size:14pt; font-weight:700; margin:4px 0 2px;">' + titulo + "</div>"
     + '<div style="font-size:10pt;">' + ((doente && doente.nome) || "") + proc
     + " — impresso em " + new Date().toLocaleString("pt-PT") + "</div>";
